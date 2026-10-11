@@ -83,6 +83,19 @@ async def get_current_user(
     return decode_access_token(credentials.credentials)
 
 
+async def get_current_user_optional(
+    credentials: HTTPAuthorizationCredentials | None = Security(security_scheme),
+) -> AuthUser | None:
+    """FastAPI dependency to optionally extract user context if credentials present."""
+    if not credentials:
+        return None
+    try:
+        return decode_access_token(credentials.credentials)
+    except HTTPException:
+        return None
+
+
+
 def require_role(*allowed_roles: str):
     """Dependency factory restricting access to specified roles."""
 

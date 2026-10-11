@@ -376,3 +376,56 @@ class MtcResult(Base):
     conformance = Column(Text, nullable=True)  # CONFORMS, FAILS, INCOMPLETE, UNVERIFIED_REFERENCE, REQUIRES_REVIEW
     reference_verified = Column(Boolean, server_default="false", nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=text("now()"))
+
+
+class OemPartSupersession(Base):
+    __tablename__ = "oem_part_supersessions"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    manufacturer = Column(Text, nullable=False)
+    old_pn = Column(Text, nullable=False)
+    new_pn = Column(Text, nullable=False)
+    note = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=text("now()"))
+
+    __table_args__ = (UniqueConstraint("manufacturer", "old_pn", name="uq_oem_supersession_mfr_old_pn"),)
+
+
+class OemCatalogueBatch(Base):
+    __tablename__ = "oem_catalogue_batches"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    org_id = Column(Text, ForeignKey("organizations.id"), nullable=False)
+    oem_name = Column(Text, nullable=False)
+    filename = Column(Text, nullable=False)
+    file_hash = Column(Text, nullable=False)
+    total_rows = Column(Integer, server_default="0", nullable=False)
+    status = Column(Text, server_default="UPLOADED", nullable=False)
+    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    summary = Column(JSONB, server_default="{}", nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=text("now()"))
+
+
+class OemProposal(Base):
+    __tablename__ = "oem_proposals"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    batch_id = Column(UUID(as_uuid=True), ForeignKey("oem_catalogue_batches.id"), nullable=False)
+    org_id = Column(Text, ForeignKey("organizations.id"), nullable=False)
+    oem_name = Column(Text, nullable=False)
+    raw_part_number = Column(Text, nullable=False)
+    norm_part_number = Column(Text, nullable=False)
+    effective_part_number = Column(Text, nullable=False)
+    superseded_from = Column(Text, nullable=True)
+    drawing_no = Column(Text, nullable=True)
+    parent_equipment_model = Column(Text, nullable=True)
+    raw_description = Column(Text, nullable=False)
+    subcategory = Column(Text, nullable=True)
+    evidence_spans = Column(JSONB, server_default="{}", nullable=False)
+    status = Column(Text, server_default="PROPOSED", nullable=False)  # PROPOSED, ACCEPTED, REJECTED, APPROVED
+    golden_id = Column(UUID(as_uuid=True), ForeignKey("golden_masters.id"), nullable=True)
+    task_id = Column(BigInteger, ForeignKey("steward_tasks.id"), nullable=True)
+    reviewed_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    reviewed_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=text("now()"))
+

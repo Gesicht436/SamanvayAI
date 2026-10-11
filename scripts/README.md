@@ -14,8 +14,7 @@ The scripts provide developer conveniences:
 
 ## 2. File Index
 
-| Script | Purpose |
-|---|---|
+| [seed_clusters.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/scripts/seed_clusters.py) | Mathematical calculation and database seeding of all 14 Section 19.2 clusters with scenario savings ranges (Low 0.5x, Base 1.0x, High 1.25x capped at 25%). |
 | [eval_harness.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/scripts/eval_harness.py) | Comprehensive evaluation harness: 3 baselines comparison, sector and organisation parity, metrics.json generation, and release gate runner. |
 | [gate_check.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/scripts/gate_check.py) | Hard release gate auditor verifying zero false merges, 100% missing attribute routing, OCR/MTC invariants, and precision targets. |
 | [clopper_pearson.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/scripts/clopper_pearson.py) | Standard-library implementation of exact Clopper-Pearson binomial confidence intervals and sample size calculators. |

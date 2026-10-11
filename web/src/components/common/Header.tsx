@@ -13,6 +13,10 @@ import {
   ShieldCheck,
   Building2,
   UserCheck,
+  BarChart3,
+  Factory,
+  Boxes,
+  FileCheck,
 } from "lucide-react";
 
 export function Header() {
@@ -20,10 +24,14 @@ export function Header() {
   const { user, selectedOrg, setSelectedOrg, setRole, availableOrgs } = useAuth();
 
   const navLinks = [
+    { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
     { href: "/standardizer", label: "Standardizer", icon: Search },
-    { href: "/diff", label: "Diff Inspector", icon: GitCompare },
-    { href: "/queue", label: "Stewardship Queue", icon: ListTodo },
-    { href: "/eval", label: "Evaluation Gate", icon: ShieldCheck },
+    { href: "/diff", label: "Diff", icon: GitCompare },
+    { href: "/queue", label: "Queue", icon: ListTodo },
+    { href: "/oem", label: "OEM Wizard", icon: Factory },
+    { href: "/lots", label: "Lots & Life", icon: Boxes },
+    { href: "/docs", label: "Intake & MTC", icon: FileCheck },
+    { href: "/eval", label: "Eval Gate", icon: ShieldCheck },
   ];
 
   return (

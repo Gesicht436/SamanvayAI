@@ -12,12 +12,15 @@ from api.routers import (
     audit_router,
     auth_router,
     compare_router,
+    dashboard_router,
     docs_router,
     extract_router,
     health_router,
     ingest_router,
     lots_router,
     match_router,
+    metrics_router,
+    oem_router,
     tasks_router,
 )
 
@@ -56,6 +59,8 @@ app.add_middleware(
 
 # Register routers
 app.include_router(health_router)
+app.include_router(metrics_router)
+app.include_router(dashboard_router)
 app.include_router(auth_router)
 app.include_router(audit_router)
 app.include_router(ingest_router)
@@ -65,3 +70,5 @@ app.include_router(match_router)
 app.include_router(tasks_router)
 app.include_router(docs_router)
 app.include_router(lots_router)
+app.include_router(oem_router)
+

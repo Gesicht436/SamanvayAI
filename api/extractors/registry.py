@@ -408,7 +408,10 @@ class SpecRegistry:
 
     def get_spec(self, subcategory: str) -> SubcategorySpecDef | None:
         """Returns the specification for a subcategory, if registered."""
+        if not self._specs:
+            self.load_packs("packs")
         return self._specs.get(subcategory)
+
 
     def list_subcategories(self) -> list[str]:
         """Returns sorted list of registered subcategory codes."""

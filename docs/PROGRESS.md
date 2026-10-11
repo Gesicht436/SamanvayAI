@@ -6,10 +6,10 @@ This log tracks execution progress across phases and agent sessions. It records 
 
 ## Current Status
 
-- **Completed Phase:** Phase 8 (Stewardship Governance & Release Evaluation) / **Module 7**
-- **Next Phase:** Phase 9 (Core Frontend Web Application) / **Module 8**
+- **Completed Phase:** Phase 11 (Dashboards, Observability & Hardening) / **Module 10**
+- **Next Phase:** Complete / Production Ready
 - **Date Completed:** 2026-10-11
-- **Status:** Phase 8 Accepted
+- **Status:** Phase 11 Accepted
 
 
 
@@ -580,6 +580,71 @@ Suggested tag: `git tag phase-9`
 
 **Gate Status: ACCEPTED**
 Suggested tag: `git tag phase-10`
+
+---
+
+## Phase 11: Dashboards, Observability & Hardening (Module 10)
+
+### What Was Built
+1. **Database Schema & Migrations (`db/migrations/versions/0003_oem_supersession.py`):**
+   - Tables added: `oem_part_supersessions`, `oem_catalogue_batches`, `oem_proposals`.
+   - Unique constraints: `uq_oem_supersession_mfr_old_pn` on `(manufacturer, old_pn)`.
+   - Row-Level Security (RLS) enabled on all tenant-isolated tables with fail-closed policies.
+   - SQLAlchemy ORM models mapped in `api/models/entities.py` (`OemPartSupersession`, `OemCatalogueBatch`, `OemProposal`).
+2. **Observability & Prometheus Metrics Service (`api/services/observability.py`, `api/routers/metrics.py`):**
+   - Thread-safe Prometheus metrics registry supporting Counters, Gauges, and Histograms with non-double-accumulated cumulative bucket rendering.
+   - **Privacy Invariant:** Strict validation prohibiting tenant identifiers (`org`, `org_id`), user identifiers (`user_id`, `actor`), and item identifiers (`item_code`, `raw_id`, `description`) in metric labels.
+   - Real-time gauge collection from PostgreSQL: review queue depth by domain, active RED risk lots, queued background jobs, audit log record count, and cryptographic hash chain integrity status.
+   - Mounted at `GET /metrics`.
+3. **Multi-Factor Catalog Health Scorecard (`api/services/health.py`, `api/routers/dashboard.py`):**
+   - Multi-factor item completeness per Section 20.1:
+     $$\text{item\_completeness} = \frac{\sum \text{weight}(a) \text{ for applicable and unflagged}}{\sum \text{weight}(a)}$$
+     with weights: $HARD = 2$, $REQUIRED = 1$, $SOFT = 0$.
+   - Evaluates conditional attribute applicability when-conditions (such as `form in [BRICK, PRECAST_SHAPE]`).
+   - Non-blended indicators reported separately: classified share, uncertain items count, extraction flag rates, duplicate rate, top missing attributes per subcategory, and statutory missing attributes.
+   - Executive dashboard endpoint `GET /dashboard/summary` combining queue depth, tier distribution, harmonization compression ratio, catalog health, OCR readiness, and audit integrity.
+4. **OEM Catalogue Onboarding Wizard (`api/services/oem.py`, `api/routers/oem.py`):**
+   - Ingests bulk OEM spares catalogue rows with part number normalization and manufacturer name normalization.
+   - Automatic supersession mapping: links superseded older part numbers (`OLD-PUMP-01`) to effective new part numbers (`NEWPUMP02`).
+   - Generates draft master proposals under `OEM_PN` identity mode with character offset evidence spans.
+   - Dual-governance workflow: Maker reviews individual proposals (ACCEPT/REJECT), Checker approves batch with Maker != Checker and domain tag validation.
+   - On approval, publishes active Golden Masters and records effective and superseded part number aliases in `golden_aliases`, writing transactional audit records to `audit_log`.
+5. **14 Material Clusters Mathematical Calculation & Database Seeding (`scripts/seed_clusters.py`):**
+   - Pure mathematical calculations matching Section 19.2 exact rupee spend amounts, pooling classes, table percentages, and scenario savings ranges:
+     - Low savings = $0.5 \times \text{table\_pct} \times \text{annual\_spend}$.
+     - Base savings = $1.0 \times \text{table\_pct} \times \text{annual\_spend}$.
+     - High savings = $1.25 \times \text{table\_pct} \times \text{annual\_spend}$ (capped at 25%).
+   - Seeding verified in PostgreSQL: 14 golden masters, 42 raw items, and stock lots created with deliberate safety moments. Offline JSON report exported to `data/seed_clusters_report.json`.
+6. **Frontend Web Application Screens (`web/`):**
+   - `web/src/app/dashboard/page.tsx`: Executive Dashboard with queue depths by domain, tier distribution, catalog health scorecard, and the complete 14 cluster savings scenario table.
+   - `web/src/app/oem/page.tsx`: OEM Catalogue Onboarding Wizard with drag-and-drop / sample upload, proposals table with supersession badges, character offset evidence spans, Maker review, and Checker dual governance approval.
+   - `web/src/app/lots/page.tsx`: Stock Lots & Life Monitor with risk status badges (GREEN, AMBER, RED), multi-basis tracking, and First-Expired-First-Out (FEFO) disposition ladder recommendations.
+   - `web/src/app/docs/page.tsx`: Document Intake & MTC screen with pre-procurement duplicate precheck, elemental chemistry inputs, $CE_{IIW}$ calculation, ASTM A105 limits verification, and Invariant S15 gating.
+   - `web/src/components/common/Header.tsx`: Integrated navigation for all 8 application screens.
+7. **Comprehensive Testing Suite:**
+   - 13 new backend unit and integration tests passing in `tests/test_observability.py`, `tests/test_catalog_health.py`, `tests/test_oem_onboarding.py`, and `tests/test_seed_clusters.py`.
+   - 192 total passing tests across the backend Python test suite.
+   - 20 passing unit tests in `web/` (Vitest).
+   - 8 passing end-to-end integration tests in `web/` (Playwright on Chromium).
+   - Production Next.js build passes with 0 compilation errors and all static routes prerendered.
+
+### Acceptance Gate Evaluation (Phase 11)
+
+| Check | Requirement | Result | Output / Evidence |
+|---|---|---|---|
+| 1. Code Quality & Linting | `uv run ruff check .` | **PASS** | `All checks passed!` |
+| 2. Prometheus Metrics & Privacy | `/metrics` endpoint with zero tenant/item identifiers | **PASS** | `tests/test_observability.py` (4 tests PASSED) |
+| 3. Multi-Factor Catalog Health | Section 20.1 completeness (HARD=2, REQ=1, SOFT=0) and non-blended indicators | **PASS** | `tests/test_catalog_health.py` (4 tests PASSED) |
+| 4. OEM Onboarding & Supersession | Part normalization, supersession chains, Maker != Checker approval | **PASS** | `tests/test_oem_onboarding.py` (2 tests PASSED) |
+| 5. 14 Cluster Calculations & Seeding | Pure mathematical computation of Section 19.2 clusters and financial savings | **PASS** | `tests/test_seed_clusters.py` (3 tests PASSED) |
+| 6. Frontend Unit Tests | `npm test` (Vitest) in `web/` | **PASS** | **20 passed across 6 test suites in 1.89s** |
+| 7. Frontend E2E Tests | `npx playwright test` in `web/` | **PASS** | **8 passed in 3.4s** on Desktop Chromium |
+| 8. Frontend Production Build | `npm run build` in `web/` | **PASS** | Compiled in 659ms; all 9 application routes prerendered |
+| 9. Full Python Test Suite | `uv run pytest tests/` | **PASS** | **192 passed in 9.57s** |
+| 10. Evaluation Release Gate | All 5 hard release gates pass via `python scripts/eval_harness.py` | **PASS** | **ALL GATES PASSED** (0 false merges, 100% missing-attribute routing) |
+
+**Gate Status: ACCEPTED**
+Suggested tag: `git tag phase-11`
 
 
 

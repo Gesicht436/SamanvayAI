@@ -63,4 +63,40 @@ test.describe("Samanvay AI Frontend Screens E2E", () => {
     await statusFilter.selectOption("APPROVED");
     await expect(page.getByText("POWER.TRANSFORMER")).toBeVisible();
   });
+
+  test("Dashboard screen displays catalog health and 14 clusters table", async ({ page }) => {
+    await page.goto("/dashboard");
+    await expect(
+      page.getByRole("heading", { name: /Executive Catalog Health & Inter-CPSE Dashboard/ })
+    ).toBeVisible();
+    await expect(page.getByText(/Item Completeness/)).toBeVisible();
+    await expect(page.getByText(/88.4%/)).toBeVisible();
+    await expect(page.getByText(/Audit Chain:/)).toBeVisible();
+    await expect(page.getByText(/Motors 55 kW 4P B3 Ex d IIB T4 IE3/)).toBeVisible();
+  });
+
+  test("OEM wizard screen displays draft proposals and supersessions", async ({ page }) => {
+    await page.goto("/oem");
+    await expect(
+      page.getByRole("heading", { name: /Bulk OEM Spares Ingestion & Supersession Mapping/ })
+    ).toBeVisible();
+    await expect(page.getByRole("cell", { name: "OLD-PUMP-01", exact: true })).toBeVisible();
+    await expect(page.getByText("NEWPUMP02")).toBeVisible();
+  });
+
+  test("Lots screen renders stock lots and FEFO ladder", async ({ page }) => {
+    await page.goto("/lots");
+    await expect(
+      page.getByRole("heading", { name: /Lot-Level Physical Life & FEFO Disposition Ladder/ })
+    ).toBeVisible();
+    await expect(page.getByText(/FEFO Disposition Ladder Hierarchy/)).toBeVisible();
+  });
+
+  test("Docs screen renders MTC evaluation and precheck", async ({ page }) => {
+    await page.goto("/docs");
+    await expect(
+      page.getByRole("heading", { name: /Document Ingestion & Material Test Certificate/ })
+    ).toBeVisible();
+    await expect(page.getByText(/Calculated CE_IIW:/)).toBeVisible();
+  });
 });

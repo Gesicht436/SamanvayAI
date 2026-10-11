@@ -309,31 +309,31 @@ export function TaskQueue() {
                 <div className="mt-2.5 text-xs font-mono text-slate-300 bg-slate-950/70 p-2.5 rounded border border-slate-800/80">
                   {task.kind === "LINK" && (
                     <div>
-                      Link Raw: <span className="text-slate-100">{task.payload.raw_description}</span> → Master:{" "}
-                      <span className="text-emerald-400 font-bold">{task.payload.golden_code}</span>
+                      Link Raw: <span className="text-slate-100">{String(task.payload.raw_description ?? "")}</span> → Master:{" "}
+                      <span className="text-emerald-400 font-bold">{String(task.payload.golden_code ?? "")}</span>
                     </div>
                   )}
                   {task.kind === "CREATE_MASTER" && (
                     <div>
-                      Create Master: <span className="text-emerald-300 font-semibold">{task.payload.descriptor}</span>
+                      Create Master: <span className="text-emerald-300 font-semibold">{String(task.payload.descriptor ?? "")}</span>
                     </div>
                   )}
                   {task.kind === "MERGE" && (
                     <div>
-                      Merge Source <span className="text-rose-400">{task.payload.source_code}</span> into{" "}
-                      <span className="text-emerald-400">{task.payload.target_code}</span>
+                      Merge Source <span className="text-rose-400">{String(task.payload.source_code ?? "")}</span> into{" "}
+                      <span className="text-emerald-400">{String(task.payload.target_code ?? "")}</span>
                     </div>
                   )}
                   {task.kind === "CORRECT_ATTR" && (
                     <div>
-                      Correct Attribute <span className="text-amber-400">{task.payload.attr_name}</span>:{" "}
-                      <span className="line-through text-slate-500">{task.payload.old_value}</span> →{" "}
-                      <span className="text-emerald-400">{task.payload.new_value}</span>
+                      Correct Attribute <span className="text-amber-400">{String(task.payload.attr_name ?? "")}</span>:{" "}
+                      <span className="line-through text-slate-500">{String(task.payload.old_value ?? "")}</span> →{" "}
+                      <span className="text-emerald-400">{String(task.payload.new_value ?? "")}</span>
                     </div>
                   )}
                   {task.kind === "DOC_REVIEW" && (
                     <div>
-                      Doc OCR Review: <span className="text-slate-200">{task.payload.ocr_text}</span>
+                      Doc OCR Review: <span className="text-slate-200">{String(task.payload.ocr_text ?? "")}</span>
                     </div>
                   )}
                 </div>

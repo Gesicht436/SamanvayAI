@@ -16,6 +16,9 @@ from api.models.entities import (
     Manufacturer,
     MatchCandidate,
     MtcResult,
+    OemCatalogueBatch,
+    OemPartSupersession,
+    OemProposal,
     Organization,
     ProcurementLine,
     RawItem,
@@ -42,6 +45,9 @@ __all__ = [
     "Manufacturer",
     "MatchCandidate",
     "MtcResult",
+    "OemCatalogueBatch",
+    "OemPartSupersession",
+    "OemProposal",
     "Organization",
     "ProcurementLine",
     "RawItem",
@@ -51,3 +57,4 @@ __all__ = [
     "UsageEvent",
     "User",
 ]
+

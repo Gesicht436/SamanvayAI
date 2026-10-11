@@ -45,6 +45,14 @@ The `api/routers/` directory exposes the REST endpoints of Samanvay:
 | `GET` | `/lots/{id}` | Authenticated | Returns full lot details, remaining life across bases, and disposition ladder. |
 | `POST` | `/lots/{id}/usage` | Authenticated | Records physical usage event, reducing quantity and remaining life (S8). |
 | `GET` | `/lots/{id}/disposition` | Authenticated | Returns ordered 4-step FEFO disposition ladder. |
+| `GET` | `/metrics` | Public | Prometheus scraping endpoint with privacy invariant (no tenant/item IDs). |
+| `GET` | `/dashboard/summary` | Public | Executive dashboard with queue depths, tier distribution, and catalog health. |
+| `GET` | `/metrics/catalog-health` | Public | Multi-factor catalog health metrics with non-blended indicators (Section 20.1). |
+| `POST` | `/oem/onboard` | Authenticated (Maker) | Ingests OEM catalogue and creates draft proposals with supersessions (Section 20.2). |
+| `GET` | `/oem/batches/{id}/proposals` | Authenticated | Lists draft proposals with evidence spans and supersession detection. |
+| `POST` | `/oem/proposals/{id}/review` | Authenticated (Maker) | Maker review of a draft catalogue proposal (ACCEPT/REJECT). |
+| `POST` | `/oem/batches/{id}/approve` | Authenticated (Checker) | Checker approval with Maker != Checker and domain tag validation. |
+| `POST` | `/oem/supersessions` | Authenticated (Maker) | Registers OEM part supersession mapping rules. |
 
 ---
 

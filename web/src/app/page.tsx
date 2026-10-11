@@ -11,12 +11,24 @@ import {
   Building2,
   ArrowRight,
   Lock,
+  BarChart3,
+  Factory,
+  Boxes,
+  FileCheck,
 } from "lucide-react";
 
 export default function HomePage() {
   const { selectedOrg } = useAuth();
 
   const featureCards = [
+    {
+      title: "Executive Dashboard & Health Scorecard",
+      description: "Real-time catalog completeness, queue depth by domain, directional harmonization, and 14 cluster savings scenario table.",
+      href: "/dashboard",
+      icon: BarChart3,
+      tag: "Module 10",
+      badge: "Live KPI",
+    },
     {
       title: "Material Standardizer",
       description: "Extract physical and statutory attributes with evidence spans from legacy descriptions. Retrieve ranked golden masters.",
@@ -42,11 +54,35 @@ export default function HomePage() {
       badge: "Governance",
     },
     {
+      title: "OEM Catalogue Onboarding Wizard",
+      description: "Bulk spares ingestion with part number normalization, supersession detection (OLD->NEW), and Maker-Checker approval.",
+      href: "/oem",
+      icon: Factory,
+      tag: "Module 10",
+      badge: "Supersession",
+    },
+    {
+      title: "Stock Lots & Life Monitor",
+      description: "Tracks physical shelf-life and usage across CPSE plants. Enforces Invariant S8 and ordered FEFO disposition ladder.",
+      href: "/lots",
+      icon: Boxes,
+      tag: "Module 5",
+      badge: "FEFO Ladder",
+    },
+    {
+      title: "Document Intake & MTC Conformance",
+      description: "Validates metallurgical test reports against ASTM/ASME standards, computes CE_IIW, and stops pre-procurement duplicates.",
+      href: "/docs",
+      icon: FileCheck,
+      tag: "Module 4",
+      badge: "Metallurgy S15",
+    },
+    {
       title: "Evaluation Gate & Parity",
       description: "3 Baselines side-by-side: Cosine (67.6% err) vs Trigram (55.9% err) vs Samanvay (0.0% err). Exact Clopper-Pearson bounds.",
       href: "/eval",
       icon: ShieldCheck,
-      tag: "Module 7 & 8",
+      tag: "Module 8",
       badge: "Release Gate",
     },
   ];

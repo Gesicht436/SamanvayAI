@@ -223,11 +223,52 @@ uv run python -c "from api.services.comparator import compare_items; from api.se
 - **Safety Invariant $S6$:** Expired lot or unknown expiry on `expiry_required` subcategories is never `GREEN`, never Stream A eligible.
 - **Safety Invariant $S7$:** Usage-based lot without usage events is never `GREEN` (`INSUFFICIENT_DATA` or `UNKNOWN`).
 - **Safety Invariant $S8$:** Adding usage never increases remaining life; risk never improves as simulated time advances.
-- Generates ordered First-Expired-First-Out (FEFO) disposition ladder (issue oldest first, redeploy near-expiry, vendor retest/return, disposal export).
+### 2.16 Observability and Prometheus Metrics Service (`observability.py`)
+- Implements bounded-cardinality Prometheus metrics registry (`/metrics`) per Section 15.2.
+- **Privacy Invariant:** Strictly prohibits tenant identifiers (`org_id`), user identifiers, item codes, or descriptions in Prometheus labels.
+- Live system gauges collected without tenant leakage: review queue depth by domain, active RED risk lot count, queued job count, audit log record count, and SHA-256 chain verification status.
+
+### 2.17 Catalog Health Scorecard Service (`health.py`)
+- Calculates multi-factor item completeness per Section 20.1:
+  $$\text{item\_completeness} = \frac{\sum \text{weight}(a) \text{ for applicable and unflagged}}{\sum \text{weight}(a)}$$
+  with weights: $HARD = 2$, $REQUIRED = 1$, $SOFT = 0$.
+- Evaluates attribute when-conditions (such as `form in [BRICK, PRECAST_SHAPE]`).
+- Reports distinct, non-blended indicators: classified share, uncertain items count, extraction flag rates, duplicate rate, top missing attributes per subcategory, and statutory missing attributes.
+
+### 2.18 OEM Catalogue Onboarding Service (`oem.py`)
+- Ingests bulk OEM catalogue files and normalizes part numbers and manufacturer names.
+- Traverses supersession mappings (`oem_part_supersessions`) to link older part numbers to effective superseding numbers.
+- Creates draft master proposals under `OEM_PN` identity mode with character offset evidence spans.
+- Enforces Maker-Checker dual governance ($Maker \ne Checker$) and domain-tag requirements before publishing golden masters and aliases.
+
+### 2.19 Transactional Audit Helper (`audit.py`)
+- Appends cryptographic SHA-256 hash-chain records to `audit_log` within the exact same database transaction as business state mutations.
 
 ---
 
-## 5. Connected Documentation
+## 3. File Index
+
+- [observability.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/observability.py): Prometheus metrics registry with strict privacy label guards.
+- [health.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/health.py): Multi-factor catalog health scorecard and non-blended metrics.
+- [oem.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/oem.py): OEM catalogue onboarding, part normalization, supersessions, and Maker-Checker approval.
+- [audit.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/audit.py): Transactional audit logging helper.
+- [comparator.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/comparator.py): Deterministic attribute comparator and directional substitution lattices.
+- [tiering.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/tiering.py): Safety tiering engine and single authoritative point of truth for Tier 1.
+- [stewardship.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/stewardship.py): Maker-Checker task governance, domain-tag access controls, feedback capture, and audit logging.
+- [classify.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/classify.py): Subcategory classifier across 21 families with uncertainty flags.
+- [candidates.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/candidates.py): 4-stage candidate retrieval pipeline and blocking keys.
+- [scoring.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/scoring.py): 9-feature pairwise scorer with Platt calibration.
+- [lifecycle.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/lifecycle.py): Golden master lifecycle management, merging, splitting, and audit logging.
+- [cold_start.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/cold_start.py): Cold-start deduplication engine, clustering, and reporting.
+- [script_detector.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/script_detector.py): Unicode script ranges and language identification.
+- [normalize.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/normalize.py): NFKC, quote mapping, Indic transliteration, and category-gated abbreviation expansion.
+- [uom.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/uom.py): Unit standardization and canonical physical conversions.
+- [ingest.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/ingest.py): File parsing, row-level validation, and transactional database storage.
+- [ocr.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/ocr.py): OCR provider protocol, PyMuPDF, and low-confidence gating.
+- [docs.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/docs.py): Multi-channel document intake and precheck.
+- [mtc.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/mtc.py): MTC certificate parser, chemistry bounds, CE/PREN, and reference verification.
+- [life.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/life.py): Life monitor, multi-basis remaining life, risk evaluation, and FEFO ladder.
+- [__init__.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/__init__.py): Module export interface.
 
 - [Root Architecture README](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/README.md): High-level system design.
 - [Extractor Framework README](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/extractors/README.md): Attribute extraction and Spec Registry.
