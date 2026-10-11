@@ -15,10 +15,10 @@ VALID_CLASSES: set[int] = CLASSES_FLANGED | CLASSES_FORGED | CLASSES_FITTING
 
 PN_VALID: set[float] = {2.5, 6, 10, 16, 25, 40, 63, 100, 160, 250, 320, 400}
 
-PRESSURE_CATEGORIES: set[str] = {"VALVES", "PIPES", "FLANGES", "FITTINGS"}
+PRESSURE_CATEGORIES: set[str] = {"VALVES", "PIPES", "FLANGES", "FITTINGS", "HEAVY", "PUMPS"}
 
 RE_CLASS_PREFIX = re.compile(
-    r"(?<![A-Z0-9])(?:CLASS|CLS|CL|RATING|ANSI|ASA)\s*[-.:#]?\s*(?P<c>\d{3,4})(?!\d)",
+    r"(?<![A-Z0-9])(?:CLASS|CLS|CL|RATING|ANSI|ASA)\s*[-.:#]?\s*(?P<c>\d{2,4})(?!\d)",
     re.IGNORECASE,
 )
 RE_CLASS_SUFFIX = re.compile(r"(?<!\d)(?P<c>\d{3,4})\s*(?:#|LBS?|LBF)(?![A-Z0-9])", re.IGNORECASE)
@@ -59,7 +59,13 @@ def extract_pressure_class(text: str, category: str | None = None) -> ExtractedV
 
     for rx in (RE_CLASS_PREFIX, RE_CLASS_SUFFIX, RE_HASH_PREFIX):
         for m in rx.finditer(t):
-            found.append(("ASME_CLASS", int(m.group("c")), m.span("c")))
+            val = int(m.group("c"))
+            if val in VALID_CLASSES:
+                found.append(("ASME_CLASS", val, m.span("c")))
+            elif float(val) in PN_VALID:
+                found.append(("PN", float(val), m.span("c")))
+            else:
+                found.append(("ASME_CLASS", val, m.span("c")))
 
     for m in RE_PN.finditer(t):
         found.append(("PN", float(m.group("pn")), m.span("pn")))

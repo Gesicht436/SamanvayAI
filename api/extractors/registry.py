@@ -16,8 +16,56 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.extractors.base import ExtractedValue
 from api.extractors.lexicon import LexiconExtractor
-from api.extractors.parsers.pressure_class import extract_pressure_class
-from api.extractors.parsers.size_nb import extract_size_nb
+from api.extractors.parsers import (
+    extract_motor_efficiency,
+    extract_motor_epl,
+    extract_motor_ex_groups,
+    extract_motor_ex_type,
+    extract_motor_frame,
+    extract_motor_frequency,
+    extract_motor_gas_group,
+    extract_motor_poles,
+    extract_motor_power,
+    extract_motor_speed,
+    extract_motor_statutory,
+    extract_motor_temp_class,
+    extract_motor_voltage,
+    extract_otr_construction,
+    extract_otr_ply_rating,
+    extract_otr_rim_diameter,
+    extract_otr_section_width,
+    extract_otr_star_rating,
+    extract_otr_tread_code,
+    extract_pressure_class,
+    extract_pump_design_standard,
+    extract_pump_discharge_nb,
+    extract_pump_driver_kw,
+    extract_pump_flange_class,
+    extract_pump_flow,
+    extract_pump_head,
+    extract_pump_impeller_dia,
+    extract_pump_seal_plan,
+    extract_pump_speed,
+    extract_pump_suction_nb,
+    extract_pump_type,
+    extract_refractory_bulk_density,
+    extract_refractory_chemistry,
+    extract_refractory_dimensions,
+    extract_refractory_material_class,
+    extract_refractory_service_temp,
+    extract_refractory_shelf_life,
+    extract_size_nb,
+    extract_transformer_cooling,
+    extract_transformer_frequency,
+    extract_transformer_hv,
+    extract_transformer_impedance,
+    extract_transformer_lv,
+    extract_transformer_phases,
+    extract_transformer_rating,
+    extract_transformer_rating_max,
+    extract_transformer_tap_changer,
+    extract_transformer_vector_group,
+)
 from api.models.entities import AttributeSpec, SubcategorySpec
 
 
@@ -59,7 +107,7 @@ class LifeDef(BaseModel):
     """Shelf life and operational life tracking specification."""
 
     basis: str
-    value: int | float
+    value: int | float | None = None
     source: str | None = None
 
 
@@ -88,9 +136,66 @@ class SpecRegistry:
         self._register_default_parsers()
 
     def _register_default_parsers(self) -> None:
-        """Registers core Python parsers for physical attributes."""
+        """Registers core Python parsers for physical attributes across all deep families."""
+        # Core physical parsers
         self.register_parser("size_nb", extract_size_nb)
         self.register_parser("pressure_class", extract_pressure_class)
+
+        # Motors (MOTORS.EX)
+        self.register_parser("power_kw", extract_motor_power)
+        self.register_parser("poles", extract_motor_poles)
+        self.register_parser("frame", extract_motor_frame)
+        self.register_parser("efficiency_class", extract_motor_efficiency)
+        self.register_parser("speed_rpm", extract_motor_speed)
+        self.register_parser("voltage_v", extract_motor_voltage)
+        self.register_parser("frequency_hz", extract_motor_frequency)
+        self.register_parser("ex_type", extract_motor_ex_type)
+        self.register_parser("ex_groups", extract_motor_ex_groups)
+        self.register_parser("gas_group", extract_motor_gas_group)
+        self.register_parser("temp_class", extract_motor_temp_class)
+        self.register_parser("epl", extract_motor_epl)
+        self.register_parser("statutory_approval_no", extract_motor_statutory)
+
+        # Transformers (POWER.TRANSFORMER)
+        self.register_parser("rating_kva", extract_transformer_rating)
+        self.register_parser("rating_kva_max", extract_transformer_rating_max)
+        self.register_parser("hv_kv", extract_transformer_hv)
+        self.register_parser("lv_kv", extract_transformer_lv)
+        self.register_parser("vector_group", extract_transformer_vector_group)
+        self.register_parser("cooling", extract_transformer_cooling)
+        self.register_parser("tap_changer", extract_transformer_tap_changer)
+        self.register_parser("impedance_pct", extract_transformer_impedance)
+        self.register_parser("phases", extract_transformer_phases)
+        self.register_parser("POWER.TRANSFORMER.frequency_hz", extract_transformer_frequency)
+
+        # Refractories (STEEL.REFRACTORY)
+        self.register_parser("STEEL.REFRACTORY.material_class", extract_refractory_material_class)
+        self.register_parser("dimensions_mm", extract_refractory_dimensions)
+        self.register_parser("key_chemistry", extract_refractory_chemistry)
+        self.register_parser("shelf_life_days", extract_refractory_shelf_life)
+        self.register_parser("bulk_density", extract_refractory_bulk_density)
+        self.register_parser("max_service_c", extract_refractory_service_temp)
+
+        # OTR Tyres (MINING.OTR_TYRE)
+        self.register_parser("section_width", extract_otr_section_width)
+        self.register_parser("construction", extract_otr_construction)
+        self.register_parser("rim_diameter_in", extract_otr_rim_diameter)
+        self.register_parser("tread_code", extract_otr_tread_code)
+        self.register_parser("star_rating", extract_otr_star_rating)
+        self.register_parser("ply_rating", extract_otr_ply_rating)
+
+        # Centrifugal Pumps (HEAVY.PUMP_CENTRIFUGAL)
+        self.register_parser("flow_m3h", extract_pump_flow)
+        self.register_parser("head_m", extract_pump_head)
+        self.register_parser("HEAVY.PUMP_CENTRIFUGAL.speed_rpm", extract_pump_speed)
+        self.register_parser("pump_type", extract_pump_type)
+        self.register_parser("HEAVY.PUMP_CENTRIFUGAL.design_standard", extract_pump_design_standard)
+        self.register_parser("suction_nb", extract_pump_suction_nb)
+        self.register_parser("discharge_nb", extract_pump_discharge_nb)
+        self.register_parser("flange_class", extract_pump_flange_class)
+        self.register_parser("impeller_dia_mm", extract_pump_impeller_dia)
+        self.register_parser("driver_kw", extract_pump_driver_kw)
+        self.register_parser("seal_plan", extract_pump_seal_plan)
 
     def register_parser(
         self,
@@ -216,8 +321,14 @@ class SpecRegistry:
         for attr_def in spec.attributes:
             name = attr_def.name
 
-            # Check dedicated Python parser
-            if name in self._python_parsers:
+            # Check dedicated Python parser (qualified name first, then generic)
+            qualified_key = f"{subcategory}.{name}"
+            if qualified_key in self._python_parsers:
+                parser_fn = self._python_parsers[qualified_key]
+                extracted = parser_fn(text, subcategory)
+                results[name] = extracted
+                continue
+            elif name in self._python_parsers:
                 parser_fn = self._python_parsers[name]
                 extracted = parser_fn(text, subcategory)
                 results[name] = extracted

@@ -43,8 +43,8 @@ def load_lexicon_data(path_or_dict: str | Path | dict) -> dict[str, Any]:
 
 def _synonym_regex(syn: str) -> re.Pattern:
     """Builds a token-boundary regex pattern for a multi-word synonym."""
-    tokens = syn.upper().split()
-    body = r"\s+".join(re.escape(token) for token in tokens)
+    tokens = syn.upper().replace("-", " ").split()
+    body = r"[\s\-]+".join(re.escape(token) for token in tokens)
     return re.compile(r"(?<![A-Z0-9])" + body + r"(?![A-Z0-9])")
 
 
