@@ -1,4 +1,4 @@
-.PHONY: setup up down db-reset migrate seed test test-pack lint format check eval eval-gate demo audit-verify verify-claims
+.PHONY: setup up down db-reset migrate seed test test-web test-pack lint format check eval eval-gate demo audit-verify verify-claims
 
 setup:
 	uv sync
@@ -20,6 +20,9 @@ seed:
 
 test:
 	uv run pytest tests/ -v
+
+test-web:
+	cd web && npm test && npx playwright test
 
 test-pack:
 	@if [ -z "$(PACK)" ]; then echo "Specify PACK=<name>"; exit 1; fi
