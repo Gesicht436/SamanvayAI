@@ -8,6 +8,7 @@ import hashlib
 import json
 from typing import Any
 
+# VERIFY: VERIFY-002 (Tamper-evident SHA-256 hash chaining formula)
 GENESIS = "0" * 64
 
 

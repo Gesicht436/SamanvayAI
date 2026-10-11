@@ -63,6 +63,7 @@ It is ideal for matching manufacturer codes, part numbers, and short brand token
 | [__init__.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/core/__init__.py) | Exports core helper functions. |
 | [verhoeff.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/core/verhoeff.py) | `check_digit()`, `is_valid()`, `make_code()`, `validate_code()`. |
 | [hashchain.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/core/hashchain.py) | `canonical()`, `entry_hash()`, `build_chain()`, `verify_chain()`. |
+| [hashchain_verify.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/core/hashchain_verify.py) | Command-line database audit chain verifier (`make audit-verify`). |
 | [trigram.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/core/trigram.py) | `trigrams()`, `similarity()`, `top_k()`. |
 | [jaro_winkler.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/core/jaro_winkler.py) | `jaro()`, `jaro_winkler()`. |
 
@@ -75,6 +76,11 @@ Run the unit tests using `uv`:
 ```powershell
 # Run the core utilities test suite via uv
 uv run pytest tests/test_core_utils.py -v
+
+# Run the command-line audit log hash chain verifier against PostgreSQL
+uv run python -m api.core.hashchain_verify
+# or
+make audit-verify
 ```
 
 To test manually in an interactive Python shell:

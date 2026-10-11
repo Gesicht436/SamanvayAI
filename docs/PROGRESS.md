@@ -44,6 +44,11 @@ This log tracks execution progress across phases and agent sessions. It records 
 5. **API & Test Suite:**
    - FastAPI app in `api/main.py` with `/health`, `/auth/demo-token`, and `/audit/verify`.
    - 25 unit and integration tests passing in `tests/` (`test_core_utils.py`, `test_auth.py`, `test_database_features.py`, `test_routes.py`).
+6. **Developer CLI Tooling (`scripts/` & `api/core/`):**
+   - `hashchain_verify.py`: Command-line verifier for the PostgreSQL audit log hash chain (`make audit-verify`).
+   - `verify_claims.py`: Static scanner verifying `# VERIFY:` code markers against `docs/verification.md` (`make verify-claims`).
+   - `demo_token.py`: Command-line JWT token generator for testing.
+   - `audit_imports.py`: Standard-library policy scanner.
 
 ### Acceptance Gate Evaluation (Phase 1)
 

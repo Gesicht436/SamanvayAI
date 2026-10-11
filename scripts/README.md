@@ -18,6 +18,7 @@ The scripts provide developer conveniences:
 |---|---|
 | [demo_token.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/scripts/demo_token.py) | Generates a signed HS256 JWT access token with selectable role and domain tags. |
 | [audit_imports.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/scripts/audit_imports.py) | Scans Python files to detect third-party packages and suggests standard-library alternatives. |
+| [verify_claims.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/scripts/verify_claims.py) | Verifies that every `# VERIFY:` marker in code has a corresponding registered claim in `docs/verification.md`. |
 
 ---
 
@@ -34,6 +35,11 @@ uv run python scripts/demo_token.py --org POWER-1 --role CHECKER --domains POWER
 
 # Run import auditor across the codebase
 uv run python scripts/audit_imports.py
+
+# Run verification claims checker across the codebase
+uv run python -m scripts.verify_claims
+# or
+make verify-claims
 ```
 
 ---

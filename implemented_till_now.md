@@ -24,7 +24,7 @@ This table shows the build status for every module. A module changes from `PENDI
 
 | Module | Name | Priority | Status | Gate Status | Completed Deliverables |
 |---|---|---|---|---|---|
-| **Module 0** | Foundation Core, Security & Data Persistence | `[P0]` | **DONE** | **PASSED (100%)** | Repo scaffold, Docker Postgres 18 with pgvector, Alembic migration `0001_initial_schema`, RLS policies, append-only SHA-256 audit triggers, Verhoeff `MPNG-` 17-char code, HashChain, Trigram, Jaro-Winkler, HS256 JWT auth, Maker-Checker rules, 4-org seed data, 25 tests passing. |
+| **Module 0** | Foundation Core, Security & Data Persistence | `[P0]` | **DONE** | **PASSED (100%)** | Repo scaffold, Docker Postgres 18 with pgvector, Alembic migration `0001_initial_schema`, RLS policies, append-only SHA-256 audit triggers, Verhoeff `MPNG-` 17-char code, HashChain, Trigram, Jaro-Winkler, HS256 JWT auth, Maker-Checker rules, 4-org seed data, CLI hash chain verifier (`hashchain_verify.py`), verify claims auditor (`verify_claims.py`), 25 tests passing. |
 | **Module 1** | Ingest, Text Normalization & UoM Engine | `[P0]` | **DONE** | **PASSED (100%)** | Dictionaries (`abbreviations.json`, `indic/*.json`, `section_properties.csv`), Script detector (`script_detector.py`), Text normalizer (`normalize.py` with NFKC, quote mapping, fastener STD rules, collision guards), UoM engine (`uom.py` with IS 808 lookup, rebar formula, MissingConversionAttribute guard), Ingest service (`ingest.py` for CSV/XLSX with idempotency on file hash and transactional audit log), Routers (`/normalize`, `/uom/convert`, `/ingest/upload`), 53 tests passing. |
 | **Module 2** | Extractor Framework & Spec Registry | `[P0]` | **READY TO START** | Not evaluated | - |
 

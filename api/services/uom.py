@@ -23,6 +23,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 DICTIONARIES_DIR = Path(__file__).resolve().parent.parent.parent / "dictionaries"
+# VERIFY: VERIFY-004 (IS 808 structural steel profile kg/m properties)
 SECTION_PROPERTIES_FILE = DICTIONARIES_DIR / "section_properties.csv"
 
 # Controlled Vocabulary (specsheet Section 7.6)

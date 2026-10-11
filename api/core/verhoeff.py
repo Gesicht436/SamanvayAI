@@ -1,5 +1,6 @@
 """Verhoeff check digit and MPNG code helpers. Standard library only."""
 
+# VERIFY: VERIFY-001 (Dihedral group D5 multiplication, permutation, and inverse tables)
 _D = [
     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
     [1, 2, 3, 4, 0, 6, 7, 8, 9, 5],

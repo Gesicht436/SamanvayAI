@@ -5,7 +5,6 @@ from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.core.hashchain import verify_chain
 from api.database import get_db
 from api.security.jwt_auth import AuthUser, get_current_user
 
@@ -44,37 +43,40 @@ async def verify_audit_log(
             status="OK",
         )
 
-    chain_records = []
-    head_hash = rows[-1].this_hash
-    for r in rows:
-        # Reconstruct canonical record dictionary
-        record_dict = {
-            "at": r.at.isoformat() if r.at else "",
-            "actor": str(r.actor) if r.actor else "",
-            "action": r.action,
-            "entity": r.entity,
-            "entity_id": r.entity_id,
-            "before": r.before or {},
-            "after": r.after or {},
-            "rationale": r.rationale or "",
-        }
-        chain_records.append(
-            {
-                "seq": r.seq,
-                "record": record_dict,
-                "prev_hash": r.prev_hash,
-                "hash": r.this_hash,
-            }
-        )
+    expected_prev = "0" * 64
+    first_broken_seq = None
+    import hashlib
+    import json
 
-    # Note: In-memory chain verification checks sequential linkage
-    ok, broken_seq = verify_chain(chain_records)
-    status_str = "OK" if ok else "TAMPERED"
+    head_hash = rows[-1].this_hash
+
+    for r in rows:
+        if r.prev_hash != expected_prev:
+            first_broken_seq = r.seq
+            break
+
+        at_str = r.at.strftime("%Y-%m-%dT%H:%M:%S.%fZ") if r.at else ""
+        actor_str = str(r.actor) if r.actor else ""
+        before_str = json.dumps(r.before) if r.before is not None else ""
+        after_str = json.dumps(r.after) if r.after is not None else ""
+        rationale_str = r.rationale or ""
+
+        payload = r.prev_hash + f"{at_str}|{actor_str}|{r.action}|{r.entity}|{r.entity_id}|{before_str}|{after_str}|{rationale_str}"
+        computed_hash = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+        if computed_hash != r.this_hash:
+            first_broken_seq = r.seq
+            break
+
+        expected_prev = r.this_hash
+
+    status_str = "OK" if first_broken_seq is None else "TAMPERED"
 
     return AuditVerifyResponse(
         verified_records=len(rows),
-        first_broken_seq=broken_seq,
+        first_broken_seq=first_broken_seq,
         head_hash=head_hash,
         anchored_head=None,
         status=status_str,
     )
+
