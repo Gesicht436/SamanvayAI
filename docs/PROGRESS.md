@@ -6,10 +6,10 @@ This log tracks execution progress across phases and agent sessions. It records 
 
 ## Current Status
 
-- **Completed Phase:** Phase 6 (Standard Domain Families) / **Module 5**
-- **Next Phase:** Phase 7 (Candidate Generation & Vector Engine) / **Module 6**
+- **Completed Phase:** Phase 7 (Candidate Generation, Scoring & Cold-Start Deduplication) / **Module 6**
+- **Next Phase:** Phase 8 (Stewardship Governance & Release Evaluation) / **Module 7**
 - **Date Completed:** 2026-10-11
-- **Status:** Phase 6 Accepted
+- **Status:** Phase 7 Accepted
 
 
 
@@ -350,6 +350,64 @@ Suggested tag: `git tag phase-5`
 
 **Gate Status: ACCEPTED**
 Suggested tag: `git tag phase-6`
+
+---
+
+## Phase 7: Candidate Retrieval, Scoring & Cold-Start Deduplication (Module 6)
+
+### What Was Built
+1. **Subcategory Classifier (`api/services/classify.py`):**
+   - High-precision keyword and regular expression rules covering all 21 domain material subcategories.
+   - Fallback centroid similarity using character token n-grams.
+   - Classification uncertainty flags: `CATEGORY_UNCERTAIN` when top confidence < 0.50, and `MULTI_CATEGORY_MATCH` when ambiguous tokens span distinct families.
+   - Safety Invariant S3 enforcement: Category ambiguity blocks auto-promotion to Tier 1.
+2. **Candidate Retrieval Pipeline (`api/services/candidates.py`):**
+   - 4-stage prioritized lookup architecture:
+     1. `alias_exact`: Direct match in catalog synonyms and previous mappings.
+     2. `mpn_exact`: Exact match on normalized OEM part number or drawing designation.
+     3. `block_key`: Deterministic blocking hash (`subcategory:size:rating:material`).
+     4. `fuzzy`: Trigram similarity within block, falling back to subcategory with `PARTIAL_BLOCK` flag.
+   - Hard cap at 200 candidates per query to guarantee bounded retrieval latency.
+   - Both async PostgreSQL database lookup (`retrieve_candidates_db`) and in-memory evaluation (`retrieve_candidates_in_memory`).
+3. **Calibrated Scorer & Feature Extraction (`api/services/scoring.py`):**
+   - 9 pairwise match features: `attr_agree_ratio`, `n_missing`, `n_mismatch`, `trigram_sim`, `cosine_sim`, `alnum_token_jaccard`, `mpn_exact`, `alias_exact`, `extraction_conf_min`.
+   - Sigmoid Platt calibration mapping feature vectors into well-calibrated probabilities $P \in [0.0, 1.0]$.
+   - Safety Invariant S9 enforcement: Scoring probabilities can only downgrade candidate tiers (e.g., adding `PROBABILITY_REVIEW_RANGE` for Tier 2 review or dropping to Tier 3); they can NEVER raise a gated item to Tier 1.
+4. **Golden Master Lifecycle Management (`api/services/lifecycle.py`):**
+   - Formal state machine: `DRAFT` -> `ACTIVE` -> `DEPRECATED`.
+   - Permanent 17-character `MPNG-` codes protected by the Verhoeff check digit.
+   - Operational master lifecycle commands: `create_golden_master`, `update_master_status`, `merge_golden_masters` (`MERGED_INTO`), `split_golden_master` (`SPLIT_INTO`), `correct_master_attributes`.
+   - Reassigns raw items and aliases to target masters upon consolidation.
+   - Transactional audit log recording: Every lifecycle action emits an immutable audit event to `audit_log` in the same database transaction.
+5. **Cold-Start Deduplication Engine & Scale CLI (`api/services/cold_start.py`, `scripts/cold_start_dedup.py`):**
+   - Groups legacy procurement items by `(subcategory, block_key)`.
+   - Clusters items by exact `HARD+REQUIRED` attribute signatures into proposed `DRAFT` golden masters.
+   - Tracks member raw item provenance, aggregated stock quantities, and inventory values in INR.
+   - Identifies subset near-matches differing only by missing attributes and flags them for human review (`needs_review`).
+   - High-throughput scale benchmark: processes 10,000 synthetic items in 1.79s (5,601 items/sec).
+   - Generates executive Intra-Organisation Deduplication Reports in 80% ASD-STE100.
+6. **End-to-End Harmonization Match API (`api/routers/match.py`):**
+   - `POST /match` endpoint conforming strictly to specsheet Section 15.1 contract.
+   - Orchestrates normalization, classification, attribute extraction, candidate retrieval, deterministic pairwise comparison, calibrated scoring, and safety tier assignment.
+   - Returns structured JSON with clean text, detected subcategory, extraction flags, attribute gap alerts, ranked candidates with golden codes, tiers, calibrated probabilities, and attribute verdicts.
+
+### Acceptance Gate Evaluation (Phase 7)
+
+| Check | Requirement | Result | Output / Evidence |
+|---|---|---|---|
+| 1. Code Quality & Linting | `uv run ruff check .` and `uv run ruff format --check .` | **PASS** | `All checks passed!` |
+| 2. End-to-End Match API Contract | `POST /match` conforms strictly to Section 15.1 schema | **PASS** | `tests/test_match_api.py` (5 tests PASSED) |
+| 3. Subcategory Classifier Accuracy | Identifies subcategories with ambiguity flags | **PASS** | `tests/test_classify.py` (4 tests PASSED) |
+| 4. Candidate Retrieval Pipeline | 4-stage retrieval, blocking keys, and candidate caps | **PASS** | `tests/test_candidates_scoring.py` (3 tests PASSED) |
+| 5. Scorer Calibration & Invariant S9 | Feature extraction, Platt scaling, S9 invariant | **PASS** | `test_scoring_invariant_s9` PASSED |
+| 6. Golden Master Lifecycle & Audit | State transitions, merge/split, Verhoeff codes | **PASS** | `tests/test_lifecycle.py` (5 tests PASSED) |
+| 7. Cold-Start Scale Benchmark | High-throughput deduplication at scale (>1,000 items/sec) | **PASS** | `scripts/cold_start_dedup.py --count 10000`:<br>**10,000 items in 1.79s (5,601.2 items/sec)**<br>Deduplication rate: 99.8% |
+| 8. Tier 1 Single Source of Truth | `scan_tier1.py` reports 0 unauthorized Tier 1 assignments | **PASS** | `0 location(s) outside ['tiering.py']` |
+| 9. Verification Register | All code markers match registered claims | **PASS** | `verify_claims.py`: 11 registered claims, 5 markers |
+| 10. Full Test Suite | All tests pass via `uv run pytest` | **PASS** | **148 passed in 7.19s** |
+
+**Gate Status: ACCEPTED**
+Suggested tag: `git tag phase-7`
 
 
 

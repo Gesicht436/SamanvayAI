@@ -83,12 +83,65 @@ flowchart LR
 - Enforces Stream A inventory pooling rules (lots with unknown or expired shelf-life are ineligible).
 - Identity is never substitution: directional upgrades route to Tier 2 review.
 
+### 2.7 Subcategory Classifier (`classify.py`)
+- Classifies descriptions into one of the 21 domain material subcategories.
+- Uses rule-based regex patterns, category hints, and token-centroid fallback similarity.
+- Flags `CATEGORY_UNCERTAIN` when ambiguity occurs or top confidence is below threshold (0.50).
+- Sets `MULTI_CATEGORY_MATCH` when multiple disjoint subcategories score equally high.
+- Enforces Safety Invariant S3: Never force an uncertain category into Tier 1.
+
+### 2.8 Candidate Retrieval Pipeline (`candidates.py`)
+- Implements 4-stage prioritized candidate retrieval:
+  1. Alias exact match (`alias_exact`).
+  2. OEM part number exact match (`mpn_exact`).
+  3. Blocking key match (`block_key = subcategory:size:rating:material`).
+  4. Trigram fuzzy search within the same blocking block.
+- Falls back to subcategory-wide search when the blocking key is partial, marking candidates with `PARTIAL_BLOCK`.
+- Enforces strict candidate cap at 200 items to bound latency and compute.
+- Supports both database queries (`retrieve_candidates_db`) and in-memory evaluation (`retrieve_candidates_in_memory`).
+
+### 2.9 Calibrated Scorer (`scoring.py`)
+- Computes 9 pairwise features between the requirement and candidate:
+  1. `attr_agree_ratio`: Ratio of matching mandatory attributes.
+  2. `n_missing`: Number of missing mandatory attributes.
+  3. `n_mismatch`: Number of mismatched mandatory attributes.
+  4. `trigram_sim`: Character trigram similarity between clean texts.
+  5. `cosine_sim`: Alphanumeric token cosine similarity.
+  6. `alnum_token_jaccard`: Alphanumeric token Jaccard similarity.
+  7. `mpn_exact`: Binary indicator of OEM part number match.
+  8. `alias_exact`: Binary indicator of catalog alias match.
+  9. `extraction_conf_min`: Minimum extraction confidence across mandatory attributes.
+- Uses logistic Sigmoid Platt calibration to compute continuous probability $P \in [0.0, 1.0]$.
+- Enforces Safety Invariant S9: The probabilistic score can downgrade an item to Tier 2 or Tier 3. It can never promote an item with missing or mismatched attributes into Tier 1.
+
+### 2.10 Golden Master Lifecycle Management (`lifecycle.py`)
+- Manages Golden Master state transitions: `DRAFT` -> `ACTIVE` -> `DEPRECATED`.
+- Generates permanent 17-character `MPNG-` codes protected by the Verhoeff check digit.
+- Handles catalog consolidation operations:
+  - `merge_golden_masters`: Merges a source master into a target master (`MERGED_INTO`), reassigning raw item links and aliases.
+  - `split_golden_master`: Splits an over-merged master into distinct target masters (`SPLIT_INTO`).
+  - `correct_master_attributes`: Corrects attributes of a master and creates a new immutable version.
+- Transactional audit trail: Every lifecycle event writes an immutable audit record to `audit_log` in the same database transaction.
+
+### 2.11 Cold-Start Deduplication Engine (`cold_start.py`)
+- Processes legacy procurement catalogs without pre-existing golden records.
+- Blocks raw items by `(subcategory, block_key)`.
+- Clusters items with identical `HARD` and `REQUIRED` attribute signatures into proposed `DRAFT` golden masters.
+- Calculates member provenance, aggregated stock quantities, and inventory value in INR.
+- Identifies near-matches differing only by missing attributes and flags them for steward review (`needs_review`).
+- Generates comprehensive Intra-Organisation Deduplication Reports in 80% ASD-STE100.
+
 ---
 
 ## 3. File Index
 
 - [comparator.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/comparator.py): Deterministic attribute comparator and directional substitution lattices.
 - [tiering.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/tiering.py): Safety tiering engine and single authoritative point of truth for Tier 1.
+- [classify.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/classify.py): Subcategory classifier across 21 families with uncertainty flags.
+- [candidates.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/candidates.py): 4-stage candidate retrieval pipeline and blocking keys.
+- [scoring.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/scoring.py): 9-feature pairwise scorer with Platt calibration.
+- [lifecycle.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/lifecycle.py): Golden master lifecycle management, merging, splitting, and audit logging.
+- [cold_start.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/cold_start.py): Cold-start deduplication engine, clustering, and reporting.
 - [script_detector.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/script_detector.py): Unicode script ranges and language identification.
 - [normalize.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/normalize.py): NFKC, quote mapping, Indic transliteration, and category-gated abbreviation expansion.
 - [uom.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/uom.py): Unit standardization and canonical physical conversions.
@@ -101,44 +154,39 @@ flowchart LR
 
 Run these commands using `uv`:
 
-### 4.1 Test Attribute Comparison
+### 4.1 Test Subcategory Classifier
+```powershell
+uv run python -c "from api.services.classify import classify_text; res = classify_text('GATE VALVE 2 INCH 150# WCB FLANGED'); print('Subcat:', res.subcategory, 'Conf:', res.confidence, 'Flags:', res.flags)"
+```
+
+### 4.2 Test Blocking Key Generation
+```powershell
+uv run python -c "from api.services.candidates import compute_block_key; print('Block key:', compute_block_key('VALVES.GATE', {'size_nb': 50, 'pressure_class': 'ASME_150', 'body_material': 'A216_WCB'}))"
+```
+
+### 4.3 Test Calibrated Scoring
+```powershell
+uv run python -c "from api.services.scoring import score_candidate; from api.services.comparator import compare_items; comp = compare_items({'size_nb': 50, 'pressure_class': 'ASME_150'}, {'size_nb': 50, 'pressure_class': 'ASME_150'}, 'VALVES.GATE'); score = score_candidate('VALVE 2 INCH 150#', 'GATE VALVE 2 INCH 150#', comp, {'size_nb': 50, 'pressure_class': 'ASME_150'}, {'size_nb': 50, 'pressure_class': 'ASME_150'}); print('Calibrated prob:', score.probability)"
+```
+
+### 4.4 Test Attribute Comparison
 ```powershell
 uv run python -c "from api.services.comparator import compare_items; res = compare_items({'size_nb': 100, 'pressure_class': 'ASME_150'}, {'size_nb': 100, 'pressure_class': 'ASME_300'}, 'VALVES.GATE'); print('Hard mismatch:', res.has_hard_mismatch)"
 ```
 
-### 4.2 Test Directional Substitution Upgrade
+### 4.5 Test Directional Substitution Upgrade
 ```powershell
 uv run python -c "from api.services.comparator import compare_items; res = compare_items({'gas_group': 'IIA', 'temp_class': 'T4'}, {'gas_group': 'IIC', 'temp_class': 'T6'}, 'MOTORS.EX'); print('Upgrade detected:', res.has_upgrade)"
 ```
 
-### 4.3 Test Tiering Engine Decision
+### 4.6 Test Tiering Engine Decision
 ```powershell
 uv run python -c "from api.services.comparator import compare_items; from api.services.tiering import assign_tier; comp = compare_items({'size_nb': 100, 'pressure_class': 'ASME_150'}, {'size_nb': 100, 'pressure_class': 'ASME_150'}, 'VALVES.GATE'); res = assign_tier(comp); print('Assigned Tier:', res.tier, 'Reasons:', res.reason_codes)"
 ```
 
-### 4.4 Test Script Detection
+### 4.7 Test Cold-Start Benchmark CLI
 ```powershell
-uv run python -c "from api.services.script_detector import detect_scripts; print(detect_scripts('वाल्व GATE VALVE'))"
-```
-
-### 4.5 Test Text Normalizer
-```powershell
-uv run python -c "from api.services.normalize import normalize_text; print(normalize_text('वाल्व 2″ SS 304 GT #150', category='VALVES'))"
-```
-
-### 4.6 Test Fasteners STD Rule
-```powershell
-uv run python -c "from api.services.normalize import normalize_text; print('With size:', normalize_text('HEX BOLT STD M16', category='FASTENERS').clean_text); print('Without size:', normalize_text('HEX BOLT STD', category='FASTENERS').clean_text, normalize_text('HEX BOLT STD', category='FASTENERS').flags)"
-```
-
-### 4.7 Test Canonical UoM Rebar Conversion
-```powershell
-uv run python -c "from api.services.uom import convert_to_canonical; print(convert_to_canonical(1000, 'M', category='REBAR', attributes={'diameter_mm': 12}))"
-```
-
-### 4.8 Test IS 808 Beam Mass Calculation
-```powershell
-uv run python -c "from api.services.uom import convert_to_canonical; print(convert_to_canonical(12, 'M', category='SECTIONS', attributes={'designation': 'ISMB 300'}))"
+uv run python scripts/cold_start_dedup.py --count 1000
 ```
 
 ---
@@ -147,7 +195,7 @@ uv run python -c "from api.services.uom import convert_to_canonical; print(conve
 
 - [Root Architecture README](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/README.md): High-level system design.
 - [Extractor Framework README](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/extractors/README.md): Attribute extraction and Spec Registry.
-- [Routers README](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/routers/README.md): HTTP endpoints including `/compare` and `/tier`.
+- [Routers README](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/routers/README.md): HTTP endpoints including `/compare`, `/tier`, and `/match`.
 - [Tests README](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/README.md): Safety invariant test suite.
 - [Dictionaries README](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/dictionaries/README.md): Reference tables and dictionaries.
 - [Verification Register](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/docs/verification.md): External standards tracking.

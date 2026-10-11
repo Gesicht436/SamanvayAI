@@ -29,6 +29,7 @@ The `api/routers/` directory exposes the REST endpoints of Samanvay:
 | `POST` | `/extract/sync` | Authenticated (Maker) | Synchronizes in-memory specifications into PostgreSQL database tables. |
 | `POST` | `/compare` | Public | Compares requirement attributes with candidate attributes with verdicts. |
 | `POST` | `/tier` | Public | Evaluates safety invariants S1-S15 and assigns harmonization tier (1, 2, 3). |
+| `POST` | `/match` | Authenticated | End-to-end harmonization matching raw query to golden masters with calibrated scoring. |
 
 ---
 
@@ -80,7 +81,15 @@ curl -X POST http://localhost:8000/tier `
   -d '{"subcategory": "VALVES.GATE", "requirement_attributes": {"size_nb": 100, "pressure_class": "ASME_150", "body_material": "A216_WCB", "end_connection": "FLANGED", "facing": "RF", "design_standard": "API_600", "trim_code": "TRIM_8", "bonnet_type": "BOLTED", "operator": "HANDWHEEL", "fire_safe": "API_607", "sour_service": "NO"}, "candidate_attributes": {"size_nb": 100, "pressure_class": "ASME_150", "body_material": "A216_WCB", "end_connection": "FLANGED", "facing": "RF", "design_standard": "API_600", "trim_code": "TRIM_8", "bonnet_type": "BOLTED", "operator": "HANDWHEEL", "fire_safe": "API_607", "sour_service": "NO"}, "probability": 0.98}'
 ```
 
-### 3.7 Verify Audit Chain
+### 3.7 Test End-to-End Match Endpoint
+```powershell
+curl -X POST http://localhost:8000/match `
+  -H "Content-Type: application/json" `
+  -H "Authorization: Bearer <TOKEN>" `
+  -d '{"text": "VALVE GATE 2 INCH 150# WCB FLANGED RF HANDWHEEL", "limit": 5}'
+```
+
+### 3.8 Verify Audit Chain
 ```powershell
 curl http://localhost:8000/audit/verify `
   -H "Authorization: Bearer <TOKEN>"

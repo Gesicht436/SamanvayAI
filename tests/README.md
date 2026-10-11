@@ -24,6 +24,11 @@ All tests run with `uv run pytest`.
 | [test_deep_families_eval.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_deep_families_eval.py) | `packs/`, `api/extractors/` | Evaluation release gate for 6 deep families: 45 fixtures/family, 16 hard-negative pairs/family, zero false merges in Tier 1, and >=90% extraction accuracy. |
 | [test_standard_parsers.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_standard_parsers.py) | `api/extractors/parsers/` | Unit tests for physical parsers across standard families: cables, structural steel, rebar, bearings, fasteners, instrumentation, breakers, boiler tubes, conveyor belts, mill rolls, wire ropes, hydraulic hoses, and drawings. |
 | [test_standard_families_eval.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_standard_families_eval.py) | `packs/`, `api/extractors/` | Evaluation release gate for 15 standard families: 22 fixtures/family (330 total), 10 adversarial pairs/family (150 total), zero false merges in Tier 1, 100% missing attributes in Tier 2, and >=90% extraction accuracy. |
+| [test_classify.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_classify.py) | `api/services/` | Subcategory classification across 21 families, category hints, low-confidence uncertainty flags, and ambiguity handling. |
+| [test_candidates_scoring.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_candidates_scoring.py) | `api/services/` | Blocking key generation, 4-stage candidate retrieval (alias, MPN, block, partial), 9-feature extraction, and Platt calibrated probability scoring. |
+| [test_lifecycle.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_lifecycle.py) | `api/services/` | Golden master creation with Verhoeff MPNG- codes, status transitions, golden master merging, splitting, attribute correction, and transactional audit logging. |
+| [test_cold_start.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_cold_start.py) | `api/services/` | Cold-start catalog deduplication, block clustering by attribute signature, provenance tracking, near-match linking, and markdown reporting. |
+| [test_match_api.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_match_api.py) | `api/routers/` | End-to-end `POST /match` endpoint authentication, request validation, candidate scoring, tier assignment, reason codes, and empty database fallback. |
 
 ---
 
@@ -34,6 +39,9 @@ Run tests using `uv`:
 ```powershell
 # Run all tests in the repository
 uv run pytest tests/ -v
+
+# Run Module 6 candidate retrieval, scoring, lifecycle, and match tests
+uv run pytest tests/test_classify.py tests/test_candidates_scoring.py tests/test_lifecycle.py tests/test_cold_start.py tests/test_match_api.py -v
 
 # Run safety invariants property suite (Hypothesis >=300 runs each)
 uv run pytest tests/test_safety_invariants.py -v
