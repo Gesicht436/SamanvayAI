@@ -16,6 +16,7 @@ from api.routers import (
     health_router,
     ingest_router,
     match_router,
+    tasks_router,
 )
 
 
@@ -59,3 +60,4 @@ app.include_router(ingest_router)
 app.include_router(extract_router)
 app.include_router(compare_router)
 app.include_router(match_router)
+app.include_router(tasks_router)

@@ -46,6 +46,13 @@ from api.services.scoring import (
     score_candidate,
 )
 from api.services.script_detector import ScriptDetectionResult, detect_scripts
+from api.services.stewardship import (
+    approve_steward_task,
+    create_steward_task,
+    get_steward_task,
+    list_steward_tasks,
+    reject_steward_task,
+)
 from api.services.tiering import Tier, TieringResult, assign_tier
 from api.services.uom import (
     CanonicalUoMResult,
@@ -75,21 +82,26 @@ __all__ = [
     "Tier",
     "TieringResult",
     "Verdict",
+    "approve_steward_task",
     "assign_tier",
     "classify_subcategory",
     "compare_items",
     "compute_block_key",
     "convert_to_canonical",
     "create_golden_master",
+    "create_steward_task",
     "detect_scripts",
     "evaluate_attribute_verdict",
     "extract_match_features",
     "generate_canonical_text",
     "generate_descriptor",
+    "get_steward_task",
     "ingest_tabular_document",
+    "list_steward_tasks",
     "merge_golden_masters",
     "normalize_text",
     "parse_tabular_bytes",
+    "reject_steward_task",
     "retrieve_candidates_db",
     "retrieve_candidates_in_memory",
     "score_candidate",

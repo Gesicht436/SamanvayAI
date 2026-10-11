@@ -7,6 +7,7 @@ from api.routers.extract import router as extract_router
 from api.routers.health import router as health_router
 from api.routers.ingest import router as ingest_router
 from api.routers.match import router as match_router
+from api.routers.tasks import router as tasks_router
 
 __all__ = [
     "audit_router",
@@ -16,4 +17,5 @@ __all__ = [
     "health_router",
     "ingest_router",
     "match_router",
+    "tasks_router",
 ]
