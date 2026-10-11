@@ -17,6 +17,50 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.extractors.base import ExtractedValue
 from api.extractors.lexicon import LexiconExtractor
 from api.extractors.parsers import (
+    extract_bearing_base_designation,
+    extract_bearing_cage,
+    extract_bearing_type,
+    extract_belt_cover_thickness,
+    extract_belt_ply_count,
+    extract_belt_strength_class,
+    extract_belt_width_mm,
+    extract_boiler_tube_ibr,
+    extract_boiler_tube_material_spec,
+    extract_boiler_tube_od,
+    extract_boiler_tube_route,
+    extract_boiler_tube_spec_body,
+    extract_boiler_tube_wall,
+    extract_boiler_tube_wall_basis,
+    extract_breaker_breaking_ka,
+    extract_breaker_current,
+    extract_breaker_duration_s,
+    extract_breaker_mounting,
+    extract_breaker_poles,
+    extract_breaker_voltage,
+    extract_cable_conductor_size,
+    extract_cable_core_count,
+    extract_cable_voltage,
+    extract_drawing_item_name,
+    extract_drawing_material_grade,
+    extract_drawing_number,
+    extract_drawing_owner,
+    extract_drawing_revision,
+    extract_fastener_length,
+    extract_fastener_thread_size,
+    extract_fastener_type,
+    extract_hose_dash_size,
+    extract_hose_dn_mm,
+    extract_hose_working_pressure_bar,
+    extract_instrument_process_conn,
+    extract_instrument_range_max,
+    extract_instrument_range_min,
+    extract_instrument_range_unit,
+    extract_mill_roll_barrel_dia,
+    extract_mill_roll_barrel_length,
+    extract_mill_roll_drawing_number,
+    extract_mill_roll_drawing_owner,
+    extract_mill_roll_hardness,
+    extract_mill_roll_revision,
     extract_motor_efficiency,
     extract_motor_epl,
     extract_motor_ex_groups,
@@ -48,6 +92,7 @@ from api.extractors.parsers import (
     extract_pump_speed,
     extract_pump_suction_nb,
     extract_pump_type,
+    extract_rebar_diameter,
     extract_refractory_bulk_density,
     extract_refractory_chemistry,
     extract_refractory_dimensions,
@@ -55,6 +100,8 @@ from api.extractors.parsers import (
     extract_refractory_service_temp,
     extract_refractory_shelf_life,
     extract_size_nb,
+    extract_structural_designation,
+    extract_structural_profile,
     extract_transformer_cooling,
     extract_transformer_frequency,
     extract_transformer_hv,
@@ -65,6 +112,10 @@ from api.extractors.parsers import (
     extract_transformer_rating_max,
     extract_transformer_tap_changer,
     extract_transformer_vector_group,
+    extract_wire_rope_approval,
+    extract_wire_rope_construction,
+    extract_wire_rope_diameter_mm,
+    extract_wire_rope_tensile_grade,
 )
 from api.models.entities import AttributeSpec, SubcategorySpec
 
@@ -196,6 +247,83 @@ class SpecRegistry:
         self.register_parser("impeller_dia_mm", extract_pump_impeller_dia)
         self.register_parser("driver_kw", extract_pump_driver_kw)
         self.register_parser("seal_plan", extract_pump_seal_plan)
+
+        # Cables (CABLES.POWER)
+        self.register_parser("CABLES.POWER.voltage_kv", extract_cable_voltage)
+        self.register_parser("CABLES.POWER.core_count", extract_cable_core_count)
+        self.register_parser("CABLES.POWER.conductor_size_sqmm", extract_cable_conductor_size)
+
+        # Structural Steel (STEEL.STRUCTURAL)
+        self.register_parser("STEEL.STRUCTURAL.section_designation", extract_structural_designation)
+        self.register_parser("STEEL.STRUCTURAL.profile_type", extract_structural_profile)
+
+        # Rebar (STEEL.REBAR)
+        self.register_parser("STEEL.REBAR.diameter_mm", extract_rebar_diameter)
+
+        # Bearings (BEARINGS.BEARING)
+        self.register_parser("BEARINGS.BEARING.base_designation", extract_bearing_base_designation)
+        self.register_parser("BEARINGS.BEARING.bearing_type", extract_bearing_type)
+        self.register_parser("BEARINGS.BEARING.cage_material", extract_bearing_cage)
+
+        # Fasteners (FASTENERS.STUD_BOLT)
+        self.register_parser("FASTENERS.STUD_BOLT.thread_size", extract_fastener_thread_size)
+        self.register_parser("FASTENERS.STUD_BOLT.length_mm", extract_fastener_length)
+        self.register_parser("FASTENERS.STUD_BOLT.fastener_type", extract_fastener_type)
+
+        # Instrumentation (INSTRUMENTS.TRANSMITTER)
+        self.register_parser("INSTRUMENTS.TRANSMITTER.range_max", extract_instrument_range_max)
+        self.register_parser("INSTRUMENTS.TRANSMITTER.range_min", extract_instrument_range_min)
+        self.register_parser("INSTRUMENTS.TRANSMITTER.range_unit", extract_instrument_range_unit)
+        self.register_parser("INSTRUMENTS.TRANSMITTER.process_connection", extract_instrument_process_conn)
+
+        # Circuit Breakers (POWER.BREAKER)
+        self.register_parser("POWER.BREAKER.voltage_kv", extract_breaker_voltage)
+        self.register_parser("POWER.BREAKER.current_a", extract_breaker_current)
+        self.register_parser("POWER.BREAKER.breaking_ka", extract_breaker_breaking_ka)
+        self.register_parser("POWER.BREAKER.duration_s", extract_breaker_duration_s)
+        self.register_parser("POWER.BREAKER.poles", extract_breaker_poles)
+        self.register_parser("POWER.BREAKER.mounting", extract_breaker_mounting)
+
+        # Boiler Tubes (POWER.BOILER_TUBE)
+        self.register_parser("POWER.BOILER_TUBE.od_mm", extract_boiler_tube_od)
+        self.register_parser("POWER.BOILER_TUBE.wall_mm", extract_boiler_tube_wall)
+        self.register_parser("POWER.BOILER_TUBE.wall_basis", extract_boiler_tube_wall_basis)
+        self.register_parser("POWER.BOILER_TUBE.material_spec", extract_boiler_tube_material_spec)
+        self.register_parser("POWER.BOILER_TUBE.manufacturing_route", extract_boiler_tube_route)
+        self.register_parser("POWER.BOILER_TUBE.spec_body", extract_boiler_tube_spec_body)
+        self.register_parser("POWER.BOILER_TUBE.ibr_cert", extract_boiler_tube_ibr)
+
+        # Conveyor Belts (STEEL.CONVEYOR_BELT)
+        self.register_parser("STEEL.CONVEYOR_BELT.strength_class", extract_belt_strength_class)
+        self.register_parser("STEEL.CONVEYOR_BELT.ply_count", extract_belt_ply_count)
+        self.register_parser("STEEL.CONVEYOR_BELT.belt_width_mm", extract_belt_width_mm)
+        self.register_parser("STEEL.CONVEYOR_BELT.cover_thickness", extract_belt_cover_thickness)
+
+        # Mill Rolls (STEEL.MILL_ROLL)
+        self.register_parser("STEEL.MILL_ROLL.drawing_number", extract_mill_roll_drawing_number)
+        self.register_parser("STEEL.MILL_ROLL.drawing_owner", extract_mill_roll_drawing_owner)
+        self.register_parser("STEEL.MILL_ROLL.barrel_diameter_mm", extract_mill_roll_barrel_dia)
+        self.register_parser("STEEL.MILL_ROLL.barrel_length_mm", extract_mill_roll_barrel_length)
+        self.register_parser("STEEL.MILL_ROLL.drawing_revision", extract_mill_roll_revision)
+        self.register_parser("STEEL.MILL_ROLL.hardness", extract_mill_roll_hardness)
+
+        # Wire Ropes (MINING.WIRE_ROPE)
+        self.register_parser("MINING.WIRE_ROPE.diameter_mm", extract_wire_rope_diameter_mm)
+        self.register_parser("MINING.WIRE_ROPE.construction", extract_wire_rope_construction)
+        self.register_parser("MINING.WIRE_ROPE.tensile_grade_mpa", extract_wire_rope_tensile_grade)
+        self.register_parser("MINING.WIRE_ROPE.approval_type", extract_wire_rope_approval)
+
+        # Hydraulic Hoses (HEAVY.HYDRAULIC_HOSE)
+        self.register_parser("HEAVY.HYDRAULIC_HOSE.dash_size", extract_hose_dash_size)
+        self.register_parser("HEAVY.HYDRAULIC_HOSE.dn_mm", extract_hose_dn_mm)
+        self.register_parser("HEAVY.HYDRAULIC_HOSE.working_pressure_bar", extract_hose_working_pressure_bar)
+
+        # Made to Drawing (HEAVY.MADE_TO_DRAWING)
+        self.register_parser("HEAVY.MADE_TO_DRAWING.drawing_number", extract_drawing_number)
+        self.register_parser("HEAVY.MADE_TO_DRAWING.drawing_owner", extract_drawing_owner)
+        self.register_parser("HEAVY.MADE_TO_DRAWING.drawing_revision", extract_drawing_revision)
+        self.register_parser("HEAVY.MADE_TO_DRAWING.material_grade", extract_drawing_material_grade)
+        self.register_parser("HEAVY.MADE_TO_DRAWING.item_name", extract_drawing_item_name)
 
     def register_parser(
         self,

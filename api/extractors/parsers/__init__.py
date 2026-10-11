@@ -1,5 +1,69 @@
 """Package for custom Python parsers (Physical attributes, sizing, and sector domains)."""
 
+from api.extractors.parsers.bearings import (
+    extract_bearing_base_designation,
+    extract_bearing_cage,
+    extract_bearing_type,
+)
+from api.extractors.parsers.boiler_tubes import (
+    extract_boiler_tube_ibr,
+    extract_boiler_tube_material_spec,
+    extract_boiler_tube_od,
+    extract_boiler_tube_route,
+    extract_boiler_tube_spec_body,
+    extract_boiler_tube_wall,
+    extract_boiler_tube_wall_basis,
+)
+from api.extractors.parsers.breakers import (
+    extract_breaker_breaking_ka,
+    extract_breaker_current,
+    extract_breaker_duration_s,
+    extract_breaker_mounting,
+    extract_breaker_poles,
+    extract_breaker_voltage,
+)
+from api.extractors.parsers.cables import (
+    extract_cable_conductor_size,
+    extract_cable_core_count,
+    extract_cable_voltage,
+)
+from api.extractors.parsers.conveyor_belts import (
+    extract_belt_cover_thickness,
+    extract_belt_ply_count,
+    extract_belt_strength_class,
+    extract_belt_width_mm,
+)
+from api.extractors.parsers.fasteners import (
+    extract_fastener_length,
+    extract_fastener_thread_size,
+    extract_fastener_type,
+)
+from api.extractors.parsers.hydraulic_hoses import (
+    extract_hose_dash_size,
+    extract_hose_dn_mm,
+    extract_hose_working_pressure_bar,
+)
+from api.extractors.parsers.instrumentation import (
+    extract_instrument_process_conn,
+    extract_instrument_range_max,
+    extract_instrument_range_min,
+    extract_instrument_range_unit,
+)
+from api.extractors.parsers.made_to_drawing import (
+    extract_drawing_item_name,
+    extract_drawing_material_grade,
+    extract_drawing_number,
+    extract_drawing_owner,
+    extract_drawing_revision,
+)
+from api.extractors.parsers.mill_rolls import (
+    extract_mill_roll_barrel_dia,
+    extract_mill_roll_barrel_length,
+    extract_mill_roll_drawing_number,
+    extract_mill_roll_drawing_owner,
+    extract_mill_roll_hardness,
+    extract_mill_roll_revision,
+)
 from api.extractors.parsers.motors import (
     extract_motor_efficiency,
     extract_motor_epl,
@@ -37,6 +101,7 @@ from api.extractors.parsers.pumps import (
     extract_pump_suction_nb,
     extract_pump_type,
 )
+from api.extractors.parsers.rebar import extract_rebar_diameter
 from api.extractors.parsers.refractory import (
     extract_refractory_bulk_density,
     extract_refractory_chemistry,
@@ -46,6 +111,10 @@ from api.extractors.parsers.refractory import (
     extract_refractory_shelf_life,
 )
 from api.extractors.parsers.size_nb import extract_size_nb
+from api.extractors.parsers.structural import (
+    extract_structural_designation,
+    extract_structural_profile,
+)
 from api.extractors.parsers.transformers import (
     extract_transformer_cooling,
     extract_transformer_frequency,
@@ -58,8 +127,58 @@ from api.extractors.parsers.transformers import (
     extract_transformer_tap_changer,
     extract_transformer_vector_group,
 )
+from api.extractors.parsers.wire_ropes import (
+    extract_wire_rope_approval,
+    extract_wire_rope_construction,
+    extract_wire_rope_diameter_mm,
+    extract_wire_rope_tensile_grade,
+)
 
 __all__ = [
+    "extract_bearing_base_designation",
+    "extract_bearing_cage",
+    "extract_bearing_type",
+    "extract_belt_cover_thickness",
+    "extract_belt_ply_count",
+    "extract_belt_strength_class",
+    "extract_belt_width_mm",
+    "extract_boiler_tube_ibr",
+    "extract_boiler_tube_material_spec",
+    "extract_boiler_tube_od",
+    "extract_boiler_tube_route",
+    "extract_boiler_tube_spec_body",
+    "extract_boiler_tube_wall",
+    "extract_boiler_tube_wall_basis",
+    "extract_breaker_breaking_ka",
+    "extract_breaker_current",
+    "extract_breaker_duration_s",
+    "extract_breaker_mounting",
+    "extract_breaker_poles",
+    "extract_breaker_voltage",
+    "extract_cable_conductor_size",
+    "extract_cable_core_count",
+    "extract_cable_voltage",
+    "extract_drawing_item_name",
+    "extract_drawing_material_grade",
+    "extract_drawing_number",
+    "extract_drawing_owner",
+    "extract_drawing_revision",
+    "extract_fastener_length",
+    "extract_fastener_thread_size",
+    "extract_fastener_type",
+    "extract_hose_dash_size",
+    "extract_hose_dn_mm",
+    "extract_hose_working_pressure_bar",
+    "extract_instrument_process_conn",
+    "extract_instrument_range_max",
+    "extract_instrument_range_min",
+    "extract_instrument_range_unit",
+    "extract_mill_roll_barrel_dia",
+    "extract_mill_roll_barrel_length",
+    "extract_mill_roll_drawing_number",
+    "extract_mill_roll_drawing_owner",
+    "extract_mill_roll_hardness",
+    "extract_mill_roll_revision",
     "extract_motor_efficiency",
     "extract_motor_epl",
     "extract_motor_ex_groups",
@@ -91,6 +210,7 @@ __all__ = [
     "extract_pump_speed",
     "extract_pump_suction_nb",
     "extract_pump_type",
+    "extract_rebar_diameter",
     "extract_refractory_bulk_density",
     "extract_refractory_chemistry",
     "extract_refractory_dimensions",
@@ -98,6 +218,8 @@ __all__ = [
     "extract_refractory_service_temp",
     "extract_refractory_shelf_life",
     "extract_size_nb",
+    "extract_structural_designation",
+    "extract_structural_profile",
     "extract_transformer_cooling",
     "extract_transformer_frequency",
     "extract_transformer_hv",
@@ -108,4 +230,8 @@ __all__ = [
     "extract_transformer_rating_max",
     "extract_transformer_tap_changer",
     "extract_transformer_vector_group",
+    "extract_wire_rope_approval",
+    "extract_wire_rope_construction",
+    "extract_wire_rope_diameter_mm",
+    "extract_wire_rope_tensile_grade",
 ]
