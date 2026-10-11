@@ -20,9 +20,9 @@ def test_load_all_packs_without_errors():
 
     subcats = registry.list_subcategories()
     expected_subcats = [
-        "FASTENERS.BOLT",
+        "FASTENERS.STUD_BOLT",
         "FLANGES.FLANGE",
-        "HEAVY.DRAWING_PART",
+        "HEAVY.MADE_TO_DRAWING",
         "HEAVY.PUMP_CENTRIFUGAL",
         "MINING.OTR_TYRE",
         "PIPES.PIPE",
@@ -50,7 +50,7 @@ def test_identity_modes_and_safety_flags():
 
     # Drawing mode
     assert registry.get_identity_mode("STEEL.MILL_ROLL") == IdentityMode.DRAWING
-    assert registry.get_identity_mode("HEAVY.DRAWING_PART") == IdentityMode.DRAWING
+    assert registry.get_identity_mode("HEAVY.MADE_TO_DRAWING") == IdentityMode.DRAWING
 
     # Mandatory expiry tracking
     refractory_spec = registry.get_spec("STEEL.REFRACTORY")
@@ -95,18 +95,44 @@ def test_multi_attribute_extraction_pipeline():
 
 def test_pack_unmounting_resilience():
     """Verify principle 1.3.7: removing or isolating any pack leaves other packs fully functional."""
-    # Isolated common pack registry
+    # 1. Isolated common pack registry
     common_registry = SpecRegistry()
     common_registry.load_packs("packs/common")
     subcats = common_registry.list_subcategories()
     assert "VALVES.GATE" in subcats
+    assert "PIPES.PIPE" in subcats
     assert "POWER.TRANSFORMER" not in subcats
+    res_valves = common_registry.extract_attributes("GATE VALVE 2 INCH CL300 WCB RF", "VALVES.GATE")
+    assert res_valves["size_nb"].value == 50
+    assert res_valves["pressure_class"].value == "ASME_300"
+    assert res_valves["body_material"].value == "A216_WCB"
 
-    # Common extraction works seamlessly in isolation
-    res = common_registry.extract_attributes("GATE VALVE 2 INCH CL300 WCB RF", "VALVES.GATE")
-    assert res["size_nb"].value == 50
-    assert res["pressure_class"].value == "ASME_300"
-    assert res["body_material"].value == "A216_WCB"
+    # 2. Isolated mining pack registry
+    mining_registry = SpecRegistry()
+    mining_registry.load_packs("packs/mining")
+    mining_subcats = mining_registry.list_subcategories()
+    assert "MINING.OTR_TYRE" in mining_subcats
+    assert "MINING.WIRE_ROPE" in mining_subcats
+    assert "VALVES.GATE" not in mining_subcats
+    res_rope = mining_registry.extract_attributes(
+        "WIRE ROPE 24MM 6X36 WS IWRC RHOL 1770 GALVANIZED", "MINING.WIRE_ROPE"
+    )
+    assert res_rope["diameter_mm"].value == 24
+    assert res_rope["construction"].value == "6X36 WS"
+    assert res_rope["tensile_grade_mpa"].value == 1770
+
+    # 3. Isolated power pack registry
+    power_registry = SpecRegistry()
+    power_registry.load_packs("packs/power")
+    power_subcats = power_registry.list_subcategories()
+    assert "POWER.TRANSFORMER" in power_subcats
+    assert "POWER.BREAKER" in power_subcats
+    assert "POWER.BOILER_TUBE" in power_subcats
+    assert "MINING.WIRE_ROPE" not in power_subcats
+    res_breaker = power_registry.extract_attributes("VCB 11KV 1250A 25KA/3S 3P WITHDRAWABLE", "POWER.BREAKER")
+    assert res_breaker["voltage_kv"].value == 11.0
+    assert res_breaker["current_a"].value == 1250
+    assert res_breaker["breaking_ka"].value == 25
 
 
 def test_extract_api_endpoints():
