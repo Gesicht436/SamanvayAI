@@ -12,9 +12,11 @@ from api.routers import (
     audit_router,
     auth_router,
     compare_router,
+    docs_router,
     extract_router,
     health_router,
     ingest_router,
+    lots_router,
     match_router,
     tasks_router,
 )
@@ -61,3 +63,5 @@ app.include_router(extract_router)
 app.include_router(compare_router)
 app.include_router(match_router)
 app.include_router(tasks_router)
+app.include_router(docs_router)
+app.include_router(lots_router)
