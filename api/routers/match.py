@@ -62,6 +62,7 @@ class CandidateMatch(BaseModel):
     reason_codes: list[str]
     verdicts: list[VerdictItem]
     attribute_gap_alert: str | None = None
+    ml_attribution: list[str] | None = None
 
 
 class MatchResponse(BaseModel):
@@ -157,6 +158,30 @@ async def execute_match_pipeline(
         )
         scoring = score_candidate(features)
 
+        # Optional ML layer reranker and TreeSHAP attribution (Section 8.1)
+        ml_attribution_bullets: list[str] | None = None
+        eval_prob = scoring.prob
+
+        from api.config import get_settings
+        if get_settings().ml_layer == "on":
+            from api.ml.explain import TreeSHAPExplainer
+            from api.ml.rerankers import SectorReranker, build_reranker_features
+
+            rf = build_reranker_features(
+                comparison=comparison,
+                sector=sub,
+                raw_attrs=extracted_flat,
+                candidate_attrs=cand.attributes,
+            )
+            reranker = SectorReranker(sector=sub)
+            ml_res = reranker.rerank(rf)
+            # Safety Invariant S9 & S14: Scorer may lower probability or tier, NEVER raise
+            eval_prob = min(scoring.prob, ml_res.prob)
+
+            explainer = TreeSHAPExplainer()
+            report = explainer.explain(rf, eval_prob)
+            ml_attribution_bullets = report.bullets
+
         # Authoritative tier decision enforcing Invariants S1 to S15
         spec = default_registry.get_spec(sub)
         identity_mode = spec.identity_mode if spec else cand.identity_mode
@@ -165,7 +190,7 @@ async def execute_match_pipeline(
             comparison=comparison,
             identity_mode=identity_mode,
             extraction_flags=flags,
-            probability=scoring.prob,
+            probability=eval_prob,
             tau_auto=0.95,
             tau_review=0.70,
             is_partial_block=cand.is_partial_block,
@@ -190,10 +215,11 @@ async def execute_match_pipeline(
                 golden_code=cand.golden_code,
                 descriptor=cand.descriptor,
                 tier=tier_res.tier,
-                prob=scoring.prob,
+                prob=eval_prob,
                 reason_codes=tier_res.reason_codes,
                 verdicts=verdict_items,
                 attribute_gap_alert=tier_res.attribute_gap_alert,
+                ml_attribution=ml_attribution_bullets,
             )
         )
 

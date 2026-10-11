@@ -6,10 +6,10 @@ This log tracks execution progress across phases and agent sessions. It records 
 
 ## Current Status
 
-- **Completed Phase:** Phase 11 (Dashboards, Observability & Hardening) / **Module 10**
-- **Next Phase:** Complete / Production Ready
+- **Completed Phase:** Phase 12 (ERP Interoperability & Optional ML Extensions) / **Module 11 Complete**
+- **Next Phase:** Production Deployment & Release
 - **Date Completed:** 2026-10-11
-- **Status:** Phase 11 Accepted
+- **Status:** Phase 12 Accepted
 
 
 
@@ -706,6 +706,67 @@ Suggested tag: `git tag phase-11`
 
 **Gate Status: ACCEPTED**
 Suggested tag: `git tag phase-12-part1`
+
+---
+
+## Phase 12: ERP Interoperability Feeds & Optional ML Extensions (Module 11 Part 2)
+
+### What Was Built
+1. **Database Migration `0005_subvectors_and_erp.py` & Model (`api/models/entities.py`):**
+   - Created table `golden_subvectors` with `golden_id`, `domain` (CHECK domain IN ('dim','met','pt','std')), `text_repr`, and primary key `(golden_id, domain)`.
+   - Conditionally provisioned pgvector `embedding vector(384)` and partial HNSW cosine index per domain (`dim`, `met`, `pt`, `std`).
+   - Registered `GoldenSubvector` ORM model in `api/models/entities.py` and exported in `api/models/__init__.py`.
+   - Migration applied cleanly with `uv run alembic upgrade head`.
+2. **ERP Interoperability & Export Feeds (`api/services/erp.py`, `api/routers/erp.py`):**
+   - Implemented cross-reference and classification export adapters for **SAP** (`MATNR` 18 chars, `MAKTX` short text 40 chars, `BISMT` carrying 17-char `MPNG-` national code), **Oracle Cloud ERP** (`DESCRIPTION` 60 chars, `CROSS_REFERENCE`), and **IBM Maximo** (`DESCRIPTION` 50 chars, `EXTERNAL_REF`).
+   - Resolved field lengths dynamically from `Organization.profile["field_lengths"]` with verified fallback defaults (`VERIFY-012`, `VERIFY-013`, `VERIFY-014`).
+   - `truncate_clean()` helper avoids chopping words mid-token and strips dangling punctuation.
+   - Built multi-sheet Microsoft Excel (.xlsx) generator using `openpyxl`, RFC 4180 CSV serializer, and structured JSON serializer.
+   - Recorded state changes and export operations to `audit_log` within the database transaction.
+   - Exposed endpoint `GET /erp/export?target=&format=&feed=` with JWT authentication.
+3. **Optional Machine Learning Layer Package (`api/ml/` behind `ML_LAYER=on`):**
+   - `subvectors.py`: Built 4-domain subvector text generator (`dim`, `met`, `pt`, `std`), family domain weighting table (Valves, Pipes, Motors, Transformers, Structural, Refractories, OTR tyres, Centrifugal pumps), active domain normalization, dense L2-normalized `EmbeddingProvider`, and Stage 5 vector recall.
+   - `ner.py`: Sequence classifier interface `NERExtractor` implementing BIO token tagging across 12 classes (`ITEM_TYPE`, `SIZE`, `PRESSURE`, `METALLURGY`, `SCHEDULE`, `FACING`, `END_CONN`, `STANDARD`, `TRIM`, `RATING_ELEC`, `OEM_NAME`, `OEM_PN`).
+   - `rerankers.py`: Five sector XGBoost rerankers (`common`, `power`, `steel`, `mining`, `heavy_eng`) using identity-safe features (no feature rewards a higher class or better metallurgy). Strictly enforces Invariants $S9$ and $S14$ (scores never raise an item to Tier 1; critical mismatches capped at $\le 0.20$).
+   - `explain.py`: `TreeSHAPExplainer` calculating local feature attributions and plain-language explanation bullets with disclaimer header `"Model score attribution (does not decide the tier)"`.
+   - `scripts/demo_embedding_limitation.py`: Report script dynamically computing and measuring cosine similarity of Class 150 vs Class 300 pair (computed, never typed), proving why embeddings alone fail on safety numbers and deterministic rules are required.
+4. **Candidate Retrieval Pipeline Update (`api/services/candidates.py`, `api/routers/match.py`):**
+   - Wired Stage 5 Vector Recall into database and in-memory retrieval pipelines when `ml_layer == "on"`, assigning `retrieval_method="VECTOR_RECALL"`.
+   - Wired optional TreeSHAP attribution into `POST /match` candidate results when `ml_layer == "on"`.
+5. **Frontend Web UI (`web/src/app/dashboard/page.tsx`):**
+   - Added live ERP Catalogue Interoperability panel on the Executive Dashboard.
+   - System switcher for SAP, Oracle, and IBM Maximo with field length limits and live item/classification counts.
+   - One-click downloads for JSON, CSV (Items), and Microsoft Excel (.xlsx).
+   - Live preview table showing host code, truncated description, and national Verhoeff code badge.
+6. **Documentation & Tests:**
+   - 80% ASD-STE100 `README.md` created in `api/ml/`.
+   - 7 new tests in `tests/test_erp_export.py` passing.
+   - 9 new tests in `tests/test_ml_layer.py` passing.
+   - Full Python test suite: **216 passed** across 34 test suites in 10.21s.
+   - Clean ruff linting (0 errors).
+   - Frontend unit tests: **22 passed** (Vitest).
+   - Frontend E2E tests: **10 passed** (Playwright).
+   - Production Next.js static build: **14/14 application routes prerendered** successfully.
+
+### Acceptance Gate Evaluation (Module 11 Part 2)
+
+| Check | Requirement | Result | Output / Evidence |
+|---|---|---|---|
+| 1. Code Quality & Linting | `uv run ruff check .` | **PASS** | `All checks passed!` |
+| 2. DB Migration & Entities | Migration `0005` applied with subvectors table & HNSW indices | **PASS** | `0005_subvectors_and_erp` applied; `GoldenSubvector` model verified |
+| 3. ERP Adapter Specs | SAP, Oracle, Maximo field clipping & national code in BISMT/Cross-Ref | **PASS** | `tests/test_erp_export.py` (7 tests PASSED) |
+| 4. Field Lengths Config | Dynamic resolution from org profile with verified defaults | **PASS** | `VERIFY-012`, `VERIFY-013`, `VERIFY-014` in `docs/verification.md` |
+| 5. Multi-Format Serialization | JSON, RFC 4180 CSV, and multi-sheet openpyxl Excel (.xlsx) | **PASS** | Streamed and verified in API tests |
+| 6. Number Limitation Demo | Dynamic Class 150 vs Class 300 cosine score calculation | **PASS** | `scripts/demo_embedding_limitation.py` (computed: single 0.8627, composite 0.9432) |
+| 7. Invariants S9 & S14 | ML reranker & vector recall never raise a gated item to Tier 1 | **PASS** | `test_safety_invariants_s9_s14_in_reranker` PASSED |
+| 8. TreeSHAP Attribution | Plain-language bullets + mandatory disclaimer title | **PASS** | `test_treeshap_feature_attribution_report` PASSED |
+| 9. Frontend Unit Tests | `npm test` (Vitest) in `web/` | **PASS** | **22 passed across 7 test suites** |
+| 10. Frontend E2E Tests | `npx playwright test` in `web/` | **PASS** | **10 passed in 3.7s** |
+| 11. Frontend Production Build | `npm run build` in `web/` | **PASS** | All 14 application routes prerendered |
+| 12. Full Python Test Suite | `uv run pytest tests/` | **PASS** | **216 passed in 10.21s** |
+
+**Gate Status: ACCEPTED**
+Suggested tag: `git tag phase-12`
 
 
 

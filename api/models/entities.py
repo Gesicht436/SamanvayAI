@@ -499,3 +499,12 @@ class TransferOrder(Base):
     updated_at = Column(DateTime(timezone=True), server_default=text("now()"))
 
 
+class GoldenSubvector(Base):
+    __tablename__ = "golden_subvectors"
+
+    golden_id = Column(UUID(as_uuid=True), ForeignKey("golden_masters.id", ondelete="CASCADE"), primary_key=True)
+    domain = Column(Text, primary_key=True)  # 'dim', 'met', 'pt', 'std'
+    text_repr = Column(Text, nullable=False, server_default="")
+    created_at = Column(DateTime(timezone=True), server_default=text("now()"))
+
+

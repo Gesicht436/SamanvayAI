@@ -249,6 +249,54 @@ async def retrieve_candidates_db(
             )
         )
 
+    # -------------------------------------------------------------
+    # Stage 5: Vector Recall (Section 8.1 - active only if ML_LAYER=on)
+    # -------------------------------------------------------------
+    from api.config import get_settings
+    if get_settings().ml_layer == "on" and len(results) < top_k:
+        from api.ml.subvectors import build_domain_texts, calculate_composite_cosine
+
+        raw_dom_texts = build_domain_texts(extracted_attrs)
+        vr_stmt = (
+            select(GoldenMaster)
+            .where(
+                GoldenMaster.status != "DEPRECATED",
+                GoldenMaster.subcategory == subcategory,
+            )
+            .limit(top_k * 4)
+        )
+        vr_res = await session.execute(vr_stmt)
+        vr_candidates = list(vr_res.scalars().all())
+        vr_scored: list[tuple[float, GoldenMaster]] = []
+        for master in vr_candidates:
+            if master.id in seen_ids:
+                continue
+            cand_dom_texts = build_domain_texts(master.attributes or {})
+            cos_score, _ = calculate_composite_cosine(raw_dom_texts, cand_dom_texts, subcategory)
+            if cos_score >= 0.40:
+                vr_scored.append((cos_score, master))
+        vr_scored.sort(key=lambda x: x[0], reverse=True)
+        for score, master in vr_scored:
+            if len(results) >= top_k:
+                break
+            seen_ids.add(master.id)
+            results.append(
+                RetrievedCandidate(
+                    golden_master_id=master.id,
+                    golden_code=master.code,
+                    descriptor=master.descriptor,
+                    subcategory=master.subcategory,
+                    canonical_text=master.canonical_text,
+                    attributes=master.attributes or {},
+                    block_key=master.block_key,
+                    identity_mode=IdentityMode(master.identity_mode),
+                    oem_name_norm=master.oem_name_norm,
+                    oem_part_number_norm=master.oem_part_number_norm,
+                    retrieval_score=score,
+                    retrieval_method="VECTOR_RECALL",
+                )
+            )
+
     return results[:top_k]
 
 
@@ -328,5 +376,28 @@ def retrieve_candidates_in_memory(
         cand.retrieval_score = score
         cand.retrieval_method = "fallback_subcategory" if is_fallback else "block_fuzzy"
         results.append(cand)
+
+    # 5. Vector Recall (Section 8.1 - active only if ML_LAYER=on)
+    from api.config import get_settings
+    if get_settings().ml_layer == "on" and len(results) < top_k:
+        from api.ml.subvectors import build_domain_texts, calculate_composite_cosine
+
+        raw_dom_texts = build_domain_texts(extracted_attrs)
+        vr_scored: list[tuple[float, RetrievedCandidate]] = []
+        for cand in candidate_pool:
+            if cand.golden_master_id in seen_ids or cand.subcategory != subcategory:
+                continue
+            cand_dom_texts = build_domain_texts(cand.attributes or {})
+            cos_score, _ = calculate_composite_cosine(raw_dom_texts, cand_dom_texts, subcategory)
+            if cos_score >= 0.40:
+                vr_scored.append((cos_score, cand))
+        vr_scored.sort(key=lambda x: x[0], reverse=True)
+        for score, cand in vr_scored:
+            if len(results) >= top_k:
+                break
+            seen_ids.add(cand.golden_master_id)
+            cand.retrieval_score = score
+            cand.retrieval_method = "VECTOR_RECALL"
+            results.append(cand)
 
     return results[:top_k]

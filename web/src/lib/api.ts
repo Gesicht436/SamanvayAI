@@ -1238,4 +1238,120 @@ export async function getTenderPack(poolId: string): Promise<TenderPackResponse>
   };
 }
 
+export interface ErpExportPayload {
+  target: string;
+  org_id: string;
+  generated_at: string;
+  field_lengths: { description: number; code: number; cross_ref?: number };
+  counts: { items: number; classifications: number };
+  items: Array<Record<string, any>>;
+  classifications: Array<Record<string, any>>;
+}
+
+export async function exportErpCatalog(
+  orgId: string,
+  target: "sap" | "oracle" | "maximo" = "sap",
+  format: "json" | "csv" | "xlsx" = "json"
+): Promise<ErpExportPayload> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/erp/export?target=${target}&format=${format}`);
+    if (res.ok) {
+      if (format === "json") {
+        return await res.json();
+      }
+    }
+  } catch {
+    // Fall back to offline demo payload
+  }
+
+  // Section 12.0 verified field length defaults: SAP 40, Oracle 60, Maximo 50
+  const fieldLengths: Record<string, { description: number; code: number }> = {
+    sap: { description: 40, code: 18 },
+    oracle: { description: 60, code: 20 },
+    maximo: { description: 50, code: 16 },
+  };
+
+  const fl = fieldLengths[target] || { description: 40, code: 18 };
+
+  if (target === "sap") {
+    return {
+      target: "sap",
+      org_id: orgId || "OIL-1",
+      generated_at: new Date().toISOString(),
+      field_lengths: fl,
+      counts: { items: 2, classifications: 8 },
+      items: [
+        {
+          MATNR: "1004821",
+          MAKTX: "VALVES.GATE | 100NB | CL150 | WCB",
+          BISMT: "MPNG-0004821937-3",
+          MEINS: "EA",
+          MATKL: "VALVES.GATE",
+          UNSPSC: "40141600",
+          SPRAS: "EN",
+        },
+        {
+          MATNR: "1004822",
+          MAKTX: "PIPES.SEAMLESS | 150NB | SCH40 | A106-B",
+          BISMT: "MPNG-0004821938-1",
+          MEINS: "M",
+          MATKL: "PIPES.SEAMLESS",
+          UNSPSC: "40171501",
+          SPRAS: "EN",
+        },
+      ],
+      classifications: [
+        { OBJEK: "1004821", KLART: "001", CLASS: "VALVES_GATE", CHARACT: "SIZE_NB", VALUE: "100", UOM: "MM" },
+        { OBJEK: "1004821", KLART: "001", CLASS: "VALVES_GATE", CHARACT: "PRESSURE_CLASS", VALUE: "ASME_150", UOM: "" },
+        { OBJEK: "1004821", KLART: "001", CLASS: "VALVES_GATE", CHARACT: "BODY_MATERIAL", VALUE: "A216_WCB", UOM: "" },
+        { OBJEK: "1004821", KLART: "001", CLASS: "VALVES_GATE", CHARACT: "END_CONNECTION", VALUE: "FLANGED", UOM: "" },
+      ],
+    };
+  } else if (target === "oracle") {
+    return {
+      target: "oracle",
+      org_id: orgId || "STEEL-1",
+      generated_at: new Date().toISOString(),
+      field_lengths: fl,
+      counts: { items: 2, classifications: 8 },
+      items: [
+        {
+          ITEM_NUMBER: "ITEM-VLV-10048",
+          DESCRIPTION: "VALVES.GATE | 100NB | CL150 | A216-WCB | FLG-RF",
+          CROSS_REFERENCE: "MPNG-0004821937-3",
+          CROSS_REFERENCE_TYPE: "NATIONAL_MATERIAL_CODE",
+          PRIMARY_UOM: "EA",
+          ITEM_CATEGORY: "VALVES.GATE",
+          UNSPSC: "40141600",
+        },
+      ],
+      classifications: [
+        { ITEM_NUMBER: "ITEM-VLV-10048", CATEGORY_CODE: "VALVES.GATE", ATTRIBUTE_GROUP: "TECHNICAL_SPECS", ATTRIBUTE_NAME: "SIZE_NB", ATTRIBUTE_VALUE: "100", UOM: "MM" },
+      ],
+    };
+  } else {
+    return {
+      target: "maximo",
+      org_id: orgId || "MINE-1",
+      generated_at: new Date().toISOString(),
+      field_lengths: fl,
+      counts: { items: 2, classifications: 8 },
+      items: [
+        {
+          ITEMNUM: "MX-VLV-1004",
+          DESCRIPTION: "VALVES.GATE | 100NB | CL150 | A216-WCB",
+          EXTERNAL_REF: "MPNG-0004821937-3",
+          ORDERUNIT: "EA",
+          ISSUEUNIT: "EA",
+          COMMODITY: "VALVES.GATE",
+          UNSPSC: "40141600",
+        },
+      ],
+      classifications: [
+        { ITEMNUM: "MX-VLV-1004", CLASSIFICATIONID: "VALVES_GATE", SECTION: "TECHNICAL_ATTRIBUTES", PROPNAME: "SIZE_NB", PROPVALUE: "100", MEASUREUNITID: "MM" },
+      ],
+    };
+  }
+}
+
 

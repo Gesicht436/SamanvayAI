@@ -20,4 +20,7 @@ Every claim must be checked against a primary source before inclusion in seed fi
 | `VERIFY-009` | Refractory grade reference chemistry limits | ISO 10081 / ASTM C27 | `db/seed/` | `PENDING` | - | - | Numbers entered by verifier, not hardcoded |
 | `VERIFY-010` | EN 10204 Type 3.1 inspection certificate scope | EN 10204:2004 | `api/services/mtc.py` | `PENDING` | - | - | Confirm chemistry and mechanical test reporting rules |
 | `VERIFY-011` | ASME B16.5 / B16.34 and ISO 7268 (PN) standard pressure classes | ASME B16.5 / ISO 7268 | `api/extractors/parsers/pressure_class.py` | `PENDING` | - | - | ASME classes 150-2500 and PN 2.5-400 ratings |
+| `VERIFY-012` | SAP ECC/S4 MARA/MAKT field lengths (MAKTX 40, MATNR 18, BISMT 18) | SAP Dictionary MARA/MAKT | `api/services/erp.py` | `PENDING` | - | - | Default field length limits for SAP cross-reference export |
+| `VERIFY-013` | Oracle Cloud ERP item description max length 60, ITEM_NUMBER 20 | Oracle SCM Item Master Spec | `api/services/erp.py` | `PENDING` | - | - | Default field length limits for Oracle Cloud ERP export |
+| `VERIFY-014` | IBM Maximo ITEM.DESCRIPTION max length 50, ITEMNUM 16 | IBM Maximo Asset Schema | `api/services/erp.py` | `PENDING` | - | - | Default field length limits for IBM Maximo export |
 

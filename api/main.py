@@ -14,6 +14,7 @@ from api.routers import (
     compare_router,
     dashboard_router,
     docs_router,
+    erp_router,
     extract_router,
     health_router,
     ingest_router,
@@ -77,5 +78,6 @@ app.include_router(oem_router)
 app.include_router(locator_router)
 app.include_router(transfers_router)
 app.include_router(pools_router)
+app.include_router(erp_router)
 
 

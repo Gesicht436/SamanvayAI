@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { getDashboardSummary } from "@/lib/api";
+import { getDashboardSummary, exportErpCatalog, ErpExportPayload } from "@/lib/api";
 import { DashboardSummary } from "@/types";
 import {
   BarChart3,
@@ -16,12 +16,22 @@ import {
   IndianRupee,
   Activity,
   ArrowUpRight,
+  Download,
+  Database,
+  FileSpreadsheet,
+  FileJson,
+  FileText,
 } from "lucide-react";
 
 export default function DashboardPage() {
   const { selectedOrg } = useAuth();
   const [data, setData] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // ERP Interoperability State (Section 12.0)
+  const [erpTarget, setErpTarget] = useState<"sap" | "oracle" | "maximo">("sap");
+  const [erpData, setErpData] = useState<ErpExportPayload | null>(null);
+  const [erpLoading, setErpLoading] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -32,6 +42,16 @@ export default function DashboardPage() {
     }
     load();
   }, [selectedOrg]);
+
+  useEffect(() => {
+    async function loadErp() {
+      setErpLoading(true);
+      const res = await exportErpCatalog(selectedOrg?.code || "OIL-1", erpTarget);
+      setErpData(res);
+      setErpLoading(false);
+    }
+    loadErp();
+  }, [selectedOrg, erpTarget]);
 
   if (loading || !data) {
     return (
@@ -336,6 +356,155 @@ export default function DashboardPage() {
                 </tr>
               )}
             </tfoot>
+          </table>
+        </div>
+      </div>
+
+      {/* Host ERP Interoperability & Catalogue Feeds (Section 12.0) */}
+      <div className="rounded-xl bg-slate-900 border border-slate-800 p-6 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-800/80 pb-4">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-mono font-medium bg-blue-500/10 text-blue-400 border border-blue-500/30 mb-1.5">
+              <Database className="w-3.5 h-3.5" />
+              ERP Cross-Reference & Classification Export (Section 12.0)
+            </div>
+            <h2 className="text-lg font-bold text-slate-100 tracking-tight">
+              Host ERP Interoperability Feeds
+            </h2>
+            <p className="text-xs text-slate-400 mt-1 max-w-3xl">
+              Produces non-destructive cross-reference and classification feeds. The 17-character opaque code (e.g. MPNG-0004821937-3) maps to old-material-number / cross-reference fields, descriptors truncate cleanly to verified field lengths, and technical attributes export as classification rows.
+            </p>
+          </div>
+
+          {/* Target System Switcher */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono text-slate-400">Target ERP:</span>
+            <div className="inline-flex rounded-lg bg-slate-950 p-1 border border-slate-800">
+              {(["sap", "oracle", "maximo"] as const).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setErpTarget(t)}
+                  className={`px-3 py-1 text-xs font-mono rounded-md font-semibold transition-all ${
+                    erpTarget === t
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  {t.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Metadata & Actions Banner */}
+        <div className="flex flex-wrap items-center justify-between gap-4 bg-slate-950/60 p-3.5 rounded-lg border border-slate-800/60 text-xs font-mono">
+          <div className="flex flex-wrap items-center gap-4 text-slate-300">
+            <div>
+              <span className="text-slate-500">Target Standard:</span>{" "}
+              <strong className="text-blue-400">{erpTarget.toUpperCase()}</strong>
+            </div>
+            <div>
+              <span className="text-slate-500">Max Description Length:</span>{" "}
+              <strong className="text-slate-200">
+                {erpData?.field_lengths.description || (erpTarget === "sap" ? 40 : erpTarget === "oracle" ? 60 : 50)} chars
+              </strong>
+            </div>
+            <div>
+              <span className="text-slate-500">Code Field Length:</span>{" "}
+              <strong className="text-slate-200">{erpData?.field_lengths.code || 18} chars</strong>
+            </div>
+            <div>
+              <span className="text-slate-500">Items Exported:</span>{" "}
+              <strong className="text-emerald-400">{erpData?.counts.items || 0}</strong>
+            </div>
+            <div>
+              <span className="text-slate-500">Characteristics:</span>{" "}
+              <strong className="text-emerald-400">{erpData?.counts.classifications || 0}</strong>
+            </div>
+          </div>
+
+          {/* Direct Download Triggers */}
+          <div className="flex items-center gap-2">
+            <a
+              href={`http://localhost:8000/erp/export?target=${erpTarget}&format=json`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors"
+            >
+              <FileJson className="w-3.5 h-3.5 text-amber-400" />
+              <span>JSON</span>
+            </a>
+            <a
+              href={`http://localhost:8000/erp/export?target=${erpTarget}&format=csv&feed=items`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors"
+            >
+              <FileText className="w-3.5 h-3.5 text-blue-400" />
+              <span>CSV (Items)</span>
+            </a>
+            <a
+              href={`http://localhost:8000/erp/export?target=${erpTarget}&format=xlsx`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition-colors shadow-sm"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>Excel (.xlsx)</span>
+            </a>
+          </div>
+        </div>
+
+        {/* Live Export Preview Table */}
+        <div className="overflow-x-auto rounded-lg border border-slate-800">
+          <table className="w-full text-left font-mono text-xs">
+            <thead>
+              <tr className="bg-slate-950 text-slate-400 border-b border-slate-800 uppercase tracking-wider text-[11px]">
+                <th className="py-2.5 px-3">
+                  {erpTarget === "sap" ? "MATNR (Item Code)" : erpTarget === "oracle" ? "ITEM_NUMBER" : "ITEMNUM"}
+                </th>
+                <th className="py-2.5 px-3">
+                  {erpTarget === "sap" ? "MAKTX (Short Text ≤ 40)" : erpTarget === "oracle" ? "DESCRIPTION (≤ 60)" : "DESCRIPTION (≤ 50)"}
+                </th>
+                <th className="py-2.5 px-3">
+                  {erpTarget === "sap" ? "BISMT (National MPNG Code)" : erpTarget === "oracle" ? "CROSS_REFERENCE" : "EXTERNAL_REF"}
+                </th>
+                <th className="py-2.5 px-3">
+                  {erpTarget === "sap" ? "MEINS (UoM)" : erpTarget === "oracle" ? "PRIMARY_UOM" : "ORDERUNIT"}
+                </th>
+                <th className="py-2.5 px-3">
+                  {erpTarget === "sap" ? "MATKL (Group)" : erpTarget === "oracle" ? "CATEGORY" : "COMMODITY"}
+                </th>
+                <th className="py-2.5 px-3">UNSPSC</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800/60 bg-slate-900/40">
+              {erpData?.items.map((it, idx) => (
+                <tr key={idx} className="hover:bg-slate-800/40 transition-colors">
+                  <td className="py-2.5 px-3 font-bold text-slate-200">
+                    {it.MATNR || it.ITEM_NUMBER || it.ITEMNUM}
+                  </td>
+                  <td className="py-2.5 px-3 font-sans text-slate-100 font-medium">
+                    {it.MAKTX || it.DESCRIPTION}
+                  </td>
+                  <td className="py-2.5 px-3">
+                    <span className="px-2 py-0.5 rounded font-bold text-blue-300 bg-blue-950/40 border border-blue-800/50">
+                      {it.BISMT || it.CROSS_REFERENCE || it.EXTERNAL_REF}
+                    </span>
+                  </td>
+                  <td className="py-2.5 px-3 text-slate-300">
+                    {it.MEINS || it.PRIMARY_UOM || it.ORDERUNIT}
+                  </td>
+                  <td className="py-2.5 px-3 text-slate-400">
+                    {it.MATKL || it.ITEM_CATEGORY || it.COMMODITY}
+                  </td>
+                  <td className="py-2.5 px-3 text-emerald-400">
+                    {it.UNSPSC || "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
           </table>
         </div>
       </div>
