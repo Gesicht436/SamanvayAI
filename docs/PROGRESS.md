@@ -646,6 +646,68 @@ Suggested tag: `git tag phase-10`
 **Gate Status: ACCEPTED**
 Suggested tag: `git tag phase-11`
 
+---
+
+## Phase 12: Procurement Optimization, Stream A/B & Spare Locator (Module 11 Part 1)
+
+### What Was Built
+1. **Database Schema & Migrations (`db/migrations/versions/0004_procurement_and_transfers.py`):**
+   - Created `forward_indents`, `tender_pools`, `tender_pool_lines`, and `transfer_orders` tables with Row-Level Security (RLS).
+   - Foreign key relations to `organizations`, `golden_masters`, `stock_lots`, and `users`.
+   - Constraints: `chk_maker_ne_checker` on transfers, `from_org != to_org`, and status check enums.
+   - RLS policies ensuring tenant and participant isolation.
+2. **Inter-CPSE Spare Locator Service & Router (`api/services/locator.py`, `api/routers/locator.py`):**
+   - Haversine great-circle distance algorithm using spherical trigonometry with Earth radius $R = 6371\text{ km}$.
+   - Road transit estimate using $1.25\times$ great-circle distance.
+   - Plant location resolution across CPSE organizations (`Mathura`, `Guwahati`, `Korba`, `Ramagundam`, `Bhilai`, `Rourkela`, `Dhanbad`, `Ranchi`).
+   - Safety Invariant $S6$ and $S12$ enforcement: only GREEN, non-expired lots with statutory compliance appear.
+   - Section 9.3 & 13.2 Privacy Disclosure Masking: external CPSE items disclose only golden code, descriptor, city, and stock quantity bucket (`LOW (<10)`, `MEDIUM (10-50)`, `HIGH (>50)`). Exact quantities and owner identities remain masked.
+3. **Stream A Surplus Stock Transfer Requisitions (`api/services/transfer.py`, `api/routers/transfers.py`):**
+   - Inter-CPSE surplus redeployment requisitions for Tier 1 identical items.
+   - Invariant $S6$ safety gating: expired lots or unknown expiry on required classes fail closed (422 `STREAM_A_INELIGIBLE`).
+   - Invariant $S12$ statutory attribute verification.
+   - Section 13.0 economic value model: $\text{net\_benefit} = \text{avoided\_purchase\_cost} - \text{transfer\_cost}$.
+   - Maker-Checker dual governance ($Maker \ne Checker$): requisition creators cannot approve their own transfer orders.
+   - Stock deduction on approval from `stock_lots.qty_remaining`.
+   - Transactional cryptographic audit logging in the exact same database transaction.
+4. **Stream B Forward Demand Pooling & Tender Packs (`api/services/pool.py`, `api/routers/pools.py`):**
+   - Plant forward indents management for active Golden Masters.
+   - Multi-buyer volume pooling discount curves:
+     - `BULK_MT`: 5% at 50 MT, 8% at 200 MT, 12% at 500 MT, 15% at 1000+ MT.
+     - `BULK_M`: 4% at 1000 M, 7% at 5000 M, 10% at 15000+ M.
+     - `ENGINEERED`: 3% at 10 units, 6% at 50 units, 10% at 100+ units.
+   - Structured Tender Pack generator producing vendor-neutral parametric specifications, consignee distribution tables, BIS/QCO/PESO/MTC statutory checklists, Make-in-India declarations, and exportable CSV BoQ summaries.
+5. **Frontend Web Screens (`web/`):**
+   - `/locator`: Interactive Spare Locator with distance radius filters, city coordinates, masked holdings, and "Request Stream A Transfer" modal with financial preview.
+   - `/procurement`: Procurement Hub with Stream A surplus transfer tracking, Maker-Checker gate review, Stream B indent aggregation, and Tender Pack preview with JSON and CSV downloads.
+   - Integrated navigation in Header.
+6. **Comprehensive Testing Suite:**
+   - 8 new backend unit/integration tests in `tests/test_locator.py`, `tests/test_transfers.py`, and `tests/test_pools.py`.
+   - Full Python test suite: **200 passed** across 32 test suites in 10.37s.
+   - Clean ruff linting (0 errors).
+   - Frontend unit tests: **22 passed** (Vitest).
+   - Frontend E2E tests: **10 passed** (Playwright).
+   - Production Next.js static build: **11/11 pages prerendered** in 699ms.
+
+### Acceptance Gate Evaluation (Module 11 Part 1)
+
+| Check | Requirement | Result | Output / Evidence |
+|---|---|---|---|
+| 1. Code Quality & Linting | `uv run ruff check .` | **PASS** | `All checks passed!` |
+| 2. DB Migration & RLS | Migration `0004` applied with tenant and party isolation | **PASS** | Migration applied; RLS verified on 4 tables |
+| 3. Invariant S6 & S12 Gating | Expired lots blocked from Stream A transfers | **PASS** | `test_invariant_s6_blocks_expired_lot_transfer` PASSED |
+| 4. Maker-Checker Invariant | Proposer cannot approve their own transfer order | **PASS** | `test_maker_checker_invariant_blocks_self_approval` PASSED |
+| 5. Haversine & Privacy Masking | Distance matrix + external CPSE masking | **PASS** | `tests/test_locator.py` (3 tests PASSED) |
+| 6. Demand Pooling & Tender Packs | Discount curves & parametric BoQ generation | **PASS** | `tests/test_pools.py` (2 tests PASSED) |
+| 7. Frontend Unit Tests | `npm test` (Vitest) in `web/` | **PASS** | **22 passed across 7 test suites** |
+| 8. Frontend E2E Tests | `npx playwright test` in `web/` | **PASS** | **10 passed in 3.3s** |
+| 9. Frontend Production Build | `npm run build` in `web/` | **PASS** | All 11 application routes prerendered |
+| 10. Full Python Test Suite | `uv run pytest tests/` | **PASS** | **200 passed in 10.37s** |
+
+**Gate Status: ACCEPTED**
+Suggested tag: `git tag phase-12-part1`
+
+
 
 
 

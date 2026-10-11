@@ -99,4 +99,23 @@ test.describe("Samanvay AI Frontend Screens E2E", () => {
     ).toBeVisible();
     await expect(page.getByText(/Calculated CE_IIW:/)).toBeVisible();
   });
+
+  test("Spare Locator screen renders distance matrix and masked holdings", async ({ page }) => {
+    await page.goto("/locator");
+    await expect(
+      page.getByRole("heading", { name: /Geographic Spare Inventory & Surplus Locator/ })
+    ).toBeVisible();
+    await expect(page.getByText(/Section 9.3 Masked Identity/)).toBeVisible();
+    await expect(page.getByRole("button", { name: "All India" })).toBeVisible();
+  });
+
+  test("Procurement Hub screen renders Stream A transfers and Stream B pools", async ({ page }) => {
+    await page.goto("/procurement");
+    await expect(
+      page.getByRole("heading", { name: /Inter-CPSE Surplus Transfer & Joint Demand Pooling Hub/ })
+    ).toBeVisible();
+    await expect(page.getByText(/Stream A: Surplus Redeployment Transfers/)).toBeVisible();
+    await expect(page.getByText(/Stream B: Forward Demand Pooling & Tender Packs/)).toBeVisible();
+  });
 });
+

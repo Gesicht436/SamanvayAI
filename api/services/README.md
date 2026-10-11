@@ -244,10 +244,37 @@ uv run python -c "from api.services.comparator import compare_items; from api.se
 ### 2.19 Transactional Audit Helper (`audit.py`)
 - Appends cryptographic SHA-256 hash-chain records to `audit_log` within the exact same database transaction as business state mutations.
 
+### 2.20 Inter-CPSE Spare Locator Service (`locator.py`)
+- Computes spherical great-circle distance between CPSE plant stores using the Haversine formula ($R = 6371\text{ km}$).
+- Estimates road transit distance using $1.25 \times \text{great-circle distance}$.
+- Filters lots to GREEN risk status and verified statutory compliance, obeying Invariants $S6$ and $S12$.
+- Enforces Section 9.3 privacy disclosure masking: external CPSE rows reveal only golden code, descriptor, plant city, and stock quantity bucket (`LOW (<10)`, `MEDIUM (10-50)`, `HIGH (>50)`). Exact quantity and owner identity remain unmasked until a transfer request is approved.
+
+### 2.21 Stream A Surplus Transfer Requisition Service (`transfer.py`)
+- Manages inter-CPSE surplus stock transfer requisitions for Tier 1 identical items.
+- Enforces Safety Invariant $S6$: expired lots or lots with unknown expiry on expiry-required classes cannot be transferred.
+- Enforces Safety Invariant $S12$: missing statutory attributes block transfer eligibility.
+- Implements the Section 13.0 economic value model:
+  $$\text{net\_benefit} = \text{avoided\_purchase\_cost} - \text{transfer\_cost}$$
+  where avoided cost equals quantity times current replacement cost, and transfer cost includes freight and inspection.
+- Enforces Maker-Checker dual governance ($Maker \ne Checker$): requisition proposers cannot approve their own transfer orders.
+- Writes cryptographic audit records to `audit_log` within the exact same database transaction.
+
+### 2.22 Stream B Forward Demand Pooling and Tender Pack Service (`pool.py`)
+- Manages forward demand indents across CPSE plants for active Golden Masters.
+- Pools open indents into joint procurement Tender Pools and calculates multi-buyer discount curves:
+  - `BULK_MT`: 5% at 50 MT, 8% at 200 MT, 12% at 500 MT, 15% at 1000+ MT.
+  - `BULK_M`: 4% at 1000 M, 7% at 5000 M, 10% at 15000+ M.
+  - `ENGINEERED`: 3% at 10 units, 6% at 50 units, 10% at 100+ units.
+- Generates structured Tender Packs per Section 13.0 with parametric specifications, consignee allocation distribution tables, BIS/QCO and Make-in-India declarations, and exportable CSV BoQ summaries.
+
 ---
 
 ## 3. File Index
 
+- [locator.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/locator.py): Haversine distance calculator, plant mapping, and privacy disclosure masking.
+- [transfer.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/transfer.py): Stream A surplus transfer requisitions, value model, and Maker-Checker gate progression.
+- [pool.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/pool.py): Stream B demand pooling, discount scenarios, and structured Tender Pack generation.
 - [observability.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/observability.py): Prometheus metrics registry with strict privacy label guards.
 - [health.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/health.py): Multi-factor catalog health scorecard and non-blended metrics.
 - [oem.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/oem.py): OEM catalogue onboarding, part normalization, supersessions, and Maker-Checker approval.
@@ -269,6 +296,7 @@ uv run python -c "from api.services.comparator import compare_items; from api.se
 - [mtc.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/mtc.py): MTC certificate parser, chemistry bounds, CE/PREN, and reference verification.
 - [life.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/life.py): Life monitor, multi-basis remaining life, risk evaluation, and FEFO ladder.
 - [__init__.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/__init__.py): Module export interface.
+
 
 - [Root Architecture README](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/README.md): High-level system design.
 - [Extractor Framework README](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/extractors/README.md): Attribute extraction and Spec Registry.

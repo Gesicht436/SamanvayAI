@@ -237,3 +237,137 @@ export interface MtcEvaluationData {
     verdict: "PASS" | "FAIL";
   }[];
 }
+
+export interface SpareLocatorItem {
+  lot_id: string;
+  golden_id: string;
+  golden_code: string;
+  descriptor: string;
+  canonical_uom: string;
+  is_own_inventory: boolean;
+  owner_org_id: string;
+  plant_code?: string | null;
+  city: string;
+  exact_qty?: number | null;
+  quantity_bucket: string;
+  batch_no?: string | null;
+  expiry_date?: string | null;
+  air_distance_km: number;
+  road_distance_km: number;
+  risk_status: string;
+  stream_a_eligible: boolean;
+  can_request_transfer: boolean;
+}
+
+export interface SpareLocatorResponse {
+  requester_org_id: string;
+  requester_city: string;
+  requester_lat: number;
+  requester_lon: number;
+  total_results: number;
+  results: SpareLocatorItem[];
+}
+
+export interface TransferOrderItem {
+  id: string;
+  from_org: string;
+  to_org: string;
+  from_plant?: string | null;
+  to_plant?: string | null;
+  lot_id: string;
+  golden_id: string;
+  golden_code: string;
+  descriptor: string;
+  qty: number;
+  basis: string;
+  unit_price: number;
+  avoided_purchase_cost: number;
+  transfer_cost: number;
+  net_benefit: number;
+  mtc_uploaded: boolean;
+  pmi_done: boolean;
+  shelf_life_ok: boolean;
+  state: "DRAFT" | "REQUESTED" | "TECHNICAL_REVIEW" | "COMMERCIAL_REVIEW" | "APPROVED" | "REJECTED" | "DISPATCHED" | "COMPLETED";
+  rejection_reason?: string | null;
+  created_by?: string | null;
+  reviewed_by?: string | null;
+  created_at?: string | null;
+}
+
+export interface ForwardIndentItem {
+  id: string;
+  org_id: string;
+  org_name?: string;
+  golden_id: string;
+  golden_code: string;
+  descriptor: string;
+  qty: number;
+  uom: string;
+  budget_unit_cost: number;
+  need_by: string;
+  delivery_site?: string | null;
+  plant?: string | null;
+  status: "OPEN" | "POOLED" | "ORDERED" | "CANCELLED";
+  created_at?: string | null;
+}
+
+export interface TenderPoolItem {
+  id: string;
+  lead_org: string;
+  lead_org_name?: string;
+  golden_id: string;
+  golden_code: string;
+  descriptor: string;
+  status: "DRAFT" | "POOLED" | "TENDERED" | "AWARDED" | "CANCELLED";
+  mou_ref?: string | null;
+  total_qty: number;
+  canonical_uom?: string | null;
+  estimated_baseline_cost: number;
+  estimated_pooled_cost: number;
+  estimated_savings: number;
+  created_at?: string | null;
+}
+
+export interface TenderPackResponse {
+  pool_id: string;
+  tender_pack: {
+    tender_id: string;
+    title: string;
+    lead_buyer_org: string;
+    lead_buyer_name: string;
+    mou_reference?: string;
+    golden_master: {
+      code: string;
+      descriptor: string;
+      subcategory: string;
+      canonical_uom: string;
+      parametric_specifications: Record<string, unknown>;
+    };
+    procurement_summary: {
+      total_pooled_qty: number;
+      canonical_uom: string;
+      estimated_baseline_inr: number;
+      estimated_pooled_inr: number;
+      estimated_savings_inr: number;
+      discount_achieved_pct: number;
+    };
+    consignee_distribution: {
+      org_id: string;
+      org_name: string;
+      plant: string;
+      delivery_site: string;
+      allocated_qty: number;
+      uom: string;
+      need_by: string;
+    }[];
+    technical_compliance_checklist: {
+      standard: string;
+      clause: string;
+      status: string;
+      verified: boolean;
+    }[];
+    commercial_conditions: Record<string, string>;
+  };
+  csv_export: string;
+}
+

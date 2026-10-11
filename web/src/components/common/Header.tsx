@@ -17,6 +17,8 @@ import {
   Factory,
   Boxes,
   FileCheck,
+  Compass,
+  Truck,
 } from "lucide-react";
 
 export function Header() {
@@ -28,11 +30,14 @@ export function Header() {
     { href: "/standardizer", label: "Standardizer", icon: Search },
     { href: "/diff", label: "Diff", icon: GitCompare },
     { href: "/queue", label: "Queue", icon: ListTodo },
+    { href: "/locator", label: "Locator", icon: Compass },
+    { href: "/procurement", label: "Procurement", icon: Truck },
     { href: "/oem", label: "OEM Wizard", icon: Factory },
     { href: "/lots", label: "Lots & Life", icon: Boxes },
     { href: "/docs", label: "Intake & MTC", icon: FileCheck },
     { href: "/eval", label: "Eval Gate", icon: ShieldCheck },
   ];
+
 
   return (
     <header className="border-b border-slate-800 bg-slate-950/95 sticky top-0 z-40 backdrop-blur">

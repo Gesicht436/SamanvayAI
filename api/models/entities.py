@@ -429,3 +429,73 @@ class OemProposal(Base):
     reviewed_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=text("now()"))
 
+
+class ForwardIndent(Base):
+    __tablename__ = "forward_indents"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    org_id = Column(Text, ForeignKey("organizations.id"), nullable=False)
+    golden_id = Column(UUID(as_uuid=True), ForeignKey("golden_masters.id"), nullable=False)
+    qty = Column(Numeric(14, 3), nullable=False)
+    uom = Column(Text, nullable=False)
+    budget_unit_cost = Column(Numeric(14, 2), nullable=True)
+    need_by = Column(Date, nullable=False)
+    delivery_site = Column(Text, nullable=True)
+    plant = Column(Text, nullable=True)
+    status = Column(Text, server_default="OPEN", nullable=False)  # OPEN, POOLED, ORDERED, CANCELLED
+    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=text("now()"))
+
+
+class TenderPool(Base):
+    __tablename__ = "tender_pools"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    lead_org = Column(Text, ForeignKey("organizations.id"), nullable=False)
+    golden_id = Column(UUID(as_uuid=True), ForeignKey("golden_masters.id"), nullable=False)
+    status = Column(Text, server_default="DRAFT", nullable=False)  # DRAFT, POOLED, TENDERED, AWARDED, CANCELLED
+    mou_ref = Column(Text, nullable=True)
+    total_qty = Column(Numeric(14, 3), server_default="0", nullable=False)
+    canonical_uom = Column(Text, nullable=True)
+    estimated_baseline_cost = Column(Numeric(14, 2), server_default="0", nullable=False)
+    estimated_pooled_cost = Column(Numeric(14, 2), server_default="0", nullable=False)
+    estimated_savings = Column(Numeric(14, 2), server_default="0", nullable=False)
+    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=text("now()"))
+    updated_at = Column(DateTime(timezone=True), server_default=text("now()"))
+
+
+class TenderPoolLine(Base):
+    __tablename__ = "tender_pool_lines"
+
+    pool_id = Column(UUID(as_uuid=True), ForeignKey("tender_pools.id", ondelete="CASCADE"), primary_key=True)
+    indent_id = Column(UUID(as_uuid=True), ForeignKey("forward_indents.id", ondelete="CASCADE"), primary_key=True)
+
+
+class TransferOrder(Base):
+    __tablename__ = "transfer_orders"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    from_org = Column(Text, ForeignKey("organizations.id"), nullable=False)
+    to_org = Column(Text, ForeignKey("organizations.id"), nullable=False)
+    from_plant = Column(Text, nullable=True)
+    to_plant = Column(Text, nullable=True)
+    lot_id = Column(UUID(as_uuid=True), ForeignKey("stock_lots.id"), nullable=False)
+    golden_id = Column(UUID(as_uuid=True), ForeignKey("golden_masters.id"), nullable=False)
+    qty = Column(Numeric(14, 3), nullable=False)
+    basis = Column(Text, server_default="BOOK_VALUE", nullable=False)  # BOOK_VALUE, LAST_PURCHASE_PRICE, AGREED
+    unit_price = Column(Numeric(14, 2), nullable=True)
+    avoided_purchase_cost = Column(Numeric(14, 2), nullable=True)
+    transfer_cost = Column(Numeric(14, 2), nullable=True)
+    net_benefit = Column(Numeric(14, 2), nullable=True)
+    mtc_uploaded = Column(Boolean, server_default="false", nullable=False)
+    pmi_done = Column(Boolean, server_default="false", nullable=False)
+    shelf_life_ok = Column(Boolean, server_default="true", nullable=False)
+    state = Column(Text, server_default="REQUESTED", nullable=False)
+    rejection_reason = Column(Text, nullable=True)
+    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    reviewed_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=text("now()"))
+    updated_at = Column(DateTime(timezone=True), server_default=text("now()"))
+
+

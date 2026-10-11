@@ -11,7 +11,13 @@ import {
   OemProposalItem,
   StockLotItem,
   MtcEvaluationData,
+  SpareLocatorItem,
+  TransferOrderItem,
+  ForwardIndentItem,
+  TenderPoolItem,
+  TenderPackResponse,
 } from "@/types";
+
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -811,4 +817,425 @@ export const DEMO_MTC_EVALUATION: MtcEvaluationData = {
     { property: "Si", kind: "CHEM", found: 0.25, min_required: 0.10, max_allowed: 0.35, unit: "wt%", verdict: "PASS" },
   ],
 };
+
+// ==========================================
+// MODULE 11: SPARE LOCATOR & PROCUREMENT APIS
+// ==========================================
+
+export async function searchSpareLocator(params: {
+  query?: string;
+  golden_id?: string;
+  plant?: string;
+  max_distance_km?: number;
+}): Promise<SpareLocatorItem[]> {
+  try {
+    const searchParams = new URLSearchParams();
+    if (params.query) searchParams.set("query_text", params.query);
+    if (params.golden_id) searchParams.set("golden_id", params.golden_id);
+    if (params.plant) searchParams.set("requester_plant_code", params.plant);
+    if (params.max_distance_km) searchParams.set("max_distance_km", params.max_distance_km.toString());
+
+    const res = await fetch(`${API_BASE_URL}/locator?${searchParams.toString()}`);
+    if (res.ok) {
+      const data = await res.json();
+      return data.results || [];
+    }
+  } catch {
+    // offline fallback
+  }
+
+  // Realistic mock data demonstrating distance and privacy masking per Section 9.3 & 13.2
+  return [
+    {
+      lot_id: "lot-demo-oil-01",
+      golden_id: "gm-valves-001",
+      golden_code: "MPNG-0004821937-3",
+      descriptor: "GATE VALVE 100 NB CL150 WCB FLG RF API 600",
+      canonical_uom: "EA",
+      is_own_inventory: true,
+      owner_org_id: "OIL-1",
+      plant_code: "PLANT-MATHURA",
+      city: "Mathura",
+      exact_qty: 18.0,
+      quantity_bucket: "MEDIUM (10-50)",
+      batch_no: "BATCH-MTH-2025-01",
+      expiry_date: "2029-06-30",
+      air_distance_km: 0.0,
+      road_distance_km: 0.0,
+      risk_status: "GREEN",
+      stream_a_eligible: true,
+      can_request_transfer: false,
+    },
+    {
+      lot_id: "lot-demo-power-02",
+      golden_id: "gm-valves-001",
+      golden_code: "MPNG-0004821937-3",
+      descriptor: "GATE VALVE 100 NB CL150 WCB FLG RF API 600",
+      canonical_uom: "EA",
+      is_own_inventory: false,
+      owner_org_id: "PARTNER_CPSE",
+      plant_code: null,
+      city: "Korba",
+      exact_qty: null,
+      quantity_bucket: "HIGH (>50)",
+      batch_no: null,
+      expiry_date: null,
+      air_distance_km: 742.5,
+      road_distance_km: 928.1,
+      risk_status: "GREEN",
+      stream_a_eligible: true,
+      can_request_transfer: true,
+    },
+    {
+      lot_id: "lot-demo-steel-03",
+      golden_id: "gm-valves-001",
+      golden_code: "MPNG-0004821937-3",
+      descriptor: "GATE VALVE 100 NB CL150 WCB FLG RF API 600",
+      canonical_uom: "EA",
+      is_own_inventory: false,
+      owner_org_id: "PARTNER_CPSE",
+      plant_code: null,
+      city: "Bhilai",
+      exact_qty: null,
+      quantity_bucket: "MEDIUM (10-50)",
+      batch_no: null,
+      expiry_date: null,
+      air_distance_km: 815.3,
+      road_distance_km: 1019.1,
+      risk_status: "GREEN",
+      stream_a_eligible: true,
+      can_request_transfer: true,
+    },
+  ];
+}
+
+export async function requestStreamATransfer(payload: {
+  lot_id: string;
+  requested_qty: number;
+  to_plant?: string;
+  basis?: string;
+  agreed_price?: number;
+  recipient_market_price?: number;
+}): Promise<{ success: boolean; message: string; transfer_id?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/transfers`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return { success: true, message: "Stream A transfer requisition created.", transfer_id: data.transfer_id };
+    }
+    const err = await res.json();
+    return { success: false, message: err.detail || "Transfer request failed." };
+  } catch {
+    return {
+      success: true,
+      message: "Transfer requisition requested successfully (Demo Replay Mode).",
+      transfer_id: "TRF-DEMO-" + Math.floor(Math.random() * 9000 + 1000),
+    };
+  }
+}
+
+export async function listTransfers(direction: string = "ALL"): Promise<{
+  incoming: TransferOrderItem[];
+  outgoing: TransferOrderItem[];
+}> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/transfers?direction=${direction}`);
+    if (res.ok) {
+      const data = await res.json();
+      return {
+        incoming: data.incoming_transfers || [],
+        outgoing: data.outgoing_transfers || [],
+      };
+    }
+  } catch {
+    // fallback
+  }
+
+  return {
+    incoming: [
+      {
+        id: "TRF-2026-0081",
+        from_org: "OIL-1",
+        to_org: "POWER-1",
+        from_plant: "PLANT-MATHURA",
+        to_plant: "PLANT-KORBA",
+        lot_id: "lot-oil-101",
+        golden_id: "gm-valves-001",
+        golden_code: "MPNG-0004821937-3",
+        descriptor: "GATE VALVE 100 NB CL150 WCB FLG RF API 600",
+        qty: 10.0,
+        basis: "BOOK_VALUE",
+        unit_price: 1800.0,
+        avoided_purchase_cost: 38000.0,
+        transfer_cost: 24500.0,
+        net_benefit: 13500.0,
+        mtc_uploaded: true,
+        pmi_done: true,
+        shelf_life_ok: true,
+        state: "TECHNICAL_REVIEW",
+        created_at: "2026-10-11T12:00:00Z",
+      },
+    ],
+    outgoing: [
+      {
+        id: "TRF-2026-0045",
+        from_org: "STEEL-1",
+        to_org: "OIL-1",
+        from_plant: "PLANT-BHILAI",
+        to_plant: "PLANT-MATHURA",
+        lot_id: "lot-steel-204",
+        golden_id: "gm-flanges-002",
+        golden_code: "MPNG-0005912384-8",
+        descriptor: "FLANGE WNRF 150 NB CL300 ASTM A105",
+        qty: 15.0,
+        basis: "BOOK_VALUE",
+        unit_price: 2400.0,
+        avoided_purchase_cost: 54000.0,
+        transfer_cost: 38500.0,
+        net_benefit: 15500.0,
+        mtc_uploaded: true,
+        pmi_done: false,
+        shelf_life_ok: true,
+        state: "REQUESTED",
+        created_at: "2026-10-10T16:30:00Z",
+      },
+    ],
+  };
+}
+
+export async function advanceTransferGate(
+  transferId: string,
+  payload: { action: string; rationale: string; mtc_uploaded?: boolean; pmi_done?: boolean },
+  user: { id: string; role: string; domains: string[] }
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/transfers/${transferId}/gate`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      return { success: true, message: `Transfer state updated to ${payload.action}` };
+    }
+    const err = await res.json();
+    return { success: false, message: err.detail || "Review failed" };
+  } catch {
+    return { success: true, message: `Gate advanced to ${payload.action} (Demo Mode)` };
+  }
+}
+
+export async function getForwardIndents(): Promise<ForwardIndentItem[]> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/indents?cross_org=true`);
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch {
+    // fallback
+  }
+
+  return [
+    {
+      id: "IND-OIL-901",
+      org_id: "OIL-1",
+      org_name: "Bharat Hydrocarbon & Refining Corporation",
+      golden_id: "gm-pipes-003",
+      golden_code: "MPNG-0008123984-2",
+      descriptor: "SEAMLESS PIPE 200 NB SCH 40 ASTM A106 GR B",
+      qty: 2500.0,
+      uom: "M",
+      budget_unit_cost: 1800.0,
+      need_by: "2026-12-31",
+      plant: "PLANT-MATHURA",
+      status: "OPEN",
+    },
+    {
+      id: "IND-PWR-402",
+      org_id: "POWER-1",
+      org_name: "National Power Generation Corporation",
+      golden_id: "gm-pipes-003",
+      golden_code: "MPNG-0008123984-2",
+      descriptor: "SEAMLESS PIPE 200 NB SCH 40 ASTM A106 GR B",
+      qty: 4500.0,
+      uom: "M",
+      budget_unit_cost: 1850.0,
+      need_by: "2027-01-31",
+      plant: "PLANT-KORBA",
+      status: "OPEN",
+    },
+    {
+      id: "IND-STL-115",
+      org_id: "STEEL-1",
+      org_name: "Steel Enterprise of India",
+      golden_id: "gm-pipes-003",
+      golden_code: "MPNG-0008123984-2",
+      descriptor: "SEAMLESS PIPE 200 NB SCH 40 ASTM A106 GR B",
+      qty: 3000.0,
+      uom: "M",
+      budget_unit_cost: 1820.0,
+      need_by: "2027-02-15",
+      plant: "PLANT-BHILAI",
+      status: "OPEN",
+    },
+  ];
+}
+
+export async function createTenderPool(payload: {
+  indent_ids: string[];
+  mou_ref?: string;
+}): Promise<{ success: boolean; message: string; pool_id?: string }> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/pools`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return { success: true, message: "Joint Tender Pool created.", pool_id: data.pool_id };
+    }
+    const err = await res.json();
+    return { success: false, message: err.detail || "Pooling failed." };
+  } catch {
+    return {
+      success: true,
+      message: "Joint Tender Pool created successfully (Demo Mode).",
+      pool_id: "POOL-DEMO-" + Math.floor(Math.random() * 9000 + 1000),
+    };
+  }
+}
+
+export async function getTenderPools(): Promise<TenderPoolItem[]> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/pools`);
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch {
+    // fallback
+  }
+
+  return [
+    {
+      id: "POOL-2026-PIPE-01",
+      lead_org: "OIL-1",
+      lead_org_name: "Bharat Hydrocarbon & Refining Corporation",
+      golden_id: "gm-pipes-003",
+      golden_code: "MPNG-0008123984-2",
+      descriptor: "SEAMLESS PIPE 200 NB SCH 40 ASTM A106 GR B",
+      status: "POOLED",
+      mou_ref: "MOU-INTER-CPSE-PIPE-2026",
+      total_qty: 10000.0,
+      canonical_uom: "M",
+      estimated_baseline_cost: 18200000.0,
+      estimated_pooled_cost: 16926000.0,
+      estimated_savings: 1274000.0,
+      created_at: "2026-10-11T14:00:00Z",
+    },
+  ];
+}
+
+export async function getTenderPack(poolId: string): Promise<TenderPackResponse> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/pools/${poolId}/tender-pack`);
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch {
+    // fallback
+  }
+
+  return {
+    pool_id: poolId,
+    tender_pack: {
+      tender_id: "TENDER-JOINT-2026-01",
+      title: "Joint CPSE Procurement for SEAMLESS PIPE 200 NB SCH 40 ASTM A106 GR B",
+      lead_buyer_org: "OIL-1",
+      lead_buyer_name: "Bharat Hydrocarbon & Refining Corporation",
+      mou_reference: "MOU-INTER-CPSE-PIPE-2026",
+      golden_master: {
+        code: "MPNG-0008123984-2",
+        descriptor: "SEAMLESS PIPE 200 NB SCH 40 ASTM A106 GR B",
+        subcategory: "PIPES.PIPE",
+        canonical_uom: "M",
+        parametric_specifications: {
+          size_nb: 200,
+          schedule: "SCH_40",
+          material_grade: "A106_GR_B",
+          manufacturing_method: "SEAMLESS",
+          length_meters: 6.0,
+        },
+      },
+      procurement_summary: {
+        total_pooled_qty: 10000.0,
+        canonical_uom: "M",
+        estimated_baseline_inr: 18200000.0,
+        estimated_pooled_inr: 16926000.0,
+        estimated_savings_inr: 1274000.0,
+        discount_achieved_pct: 7.0,
+      },
+      consignee_distribution: [
+        {
+          org_id: "OIL-1",
+          org_name: "Bharat Hydrocarbon & Refining Corporation",
+          plant: "PLANT-MATHURA",
+          delivery_site: "Mathura Refinery Main Stores",
+          allocated_qty: 2500.0,
+          uom: "M",
+          need_by: "2026-12-31",
+        },
+        {
+          org_id: "POWER-1",
+          org_name: "National Power Generation Corporation",
+          plant: "PLANT-KORBA",
+          delivery_site: "Korba Super Thermal Power Station Stores",
+          allocated_qty: 4500.0,
+          uom: "M",
+          need_by: "2027-01-31",
+        },
+        {
+          org_id: "STEEL-1",
+          org_name: "Steel Enterprise of India",
+          plant: "PLANT-BHILAI",
+          delivery_site: "Bhilai Steel Plant Central Stores",
+          allocated_qty: 3000.0,
+          uom: "M",
+          need_by: "2027-02-15",
+        },
+      ],
+      technical_compliance_checklist: [
+        {
+          standard: "BIS / QCO Mandatory Certification",
+          clause: "IS 1239 Part 1 / ASTM A106 Gr B",
+          status: "MANDATORY",
+          verified: true,
+        },
+        {
+          standard: "Make-in-India Preference",
+          clause: "DPIIT Order 2017 (Class-I Local Supplier >= 50%)",
+          status: "MANDATORY",
+          verified: true,
+        },
+        {
+          standard: "Material Test Certificate (MTC)",
+          clause: "EN 10204 3.1 with chemical carbon equivalent <= 0.40 wt%",
+          status: "REQUIRED",
+          verified: true,
+        },
+      ],
+      commercial_conditions: {
+        evaluation: "Consolidated Joint Commercial Evaluation (Single L1 Award)",
+        delivery: "FOR Respective Consignee Plant Stores",
+        billing: "Individual CPSE PO Issuance & Direct Invoice Settlement",
+      },
+    },
+    csv_export:
+      'CONSIGNEE_ORG,PLANT,DELIVERY_SITE,ALLOCATED_QTY,UOM,NEED_BY\n"Bharat Hydrocarbon & Refining Corporation","PLANT-MATHURA","Mathura Refinery Main Stores",2500.0,"M","2026-12-31"\n"National Power Generation Corporation","PLANT-KORBA","Korba Super Thermal Power Station Stores",4500.0,"M","2027-01-31"\n"Steel Enterprise of India","PLANT-BHILAI","Bhilai Steel Plant Central Stores",3000.0,"M","2027-02-15"',
+  };
+}
+
 

@@ -17,11 +17,14 @@ from api.routers import (
     extract_router,
     health_router,
     ingest_router,
+    locator_router,
     lots_router,
     match_router,
     metrics_router,
     oem_router,
+    pools_router,
     tasks_router,
+    transfers_router,
 )
 
 
@@ -71,4 +74,8 @@ app.include_router(tasks_router)
 app.include_router(docs_router)
 app.include_router(lots_router)
 app.include_router(oem_router)
+app.include_router(locator_router)
+app.include_router(transfers_router)
+app.include_router(pools_router)
+
 

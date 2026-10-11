@@ -7,6 +7,7 @@ from api.models.entities import (
     DocLine,
     Document,
     FeedbackExample,
+    ForwardIndent,
     GoldenAlias,
     GoldenMaster,
     GradeReference,
@@ -25,6 +26,9 @@ from api.models.entities import (
     StewardTask,
     StockLot,
     SubcategorySpec,
+    TenderPool,
+    TenderPoolLine,
+    TransferOrder,
     UsageEvent,
     User,
 )
@@ -36,6 +40,7 @@ __all__ = [
     "DocLine",
     "Document",
     "FeedbackExample",
+    "ForwardIndent",
     "GoldenAlias",
     "GoldenMaster",
     "GradeReference",
@@ -54,7 +59,11 @@ __all__ = [
     "StewardTask",
     "StockLot",
     "SubcategorySpec",
+    "TenderPool",
+    "TenderPoolLine",
+    "TransferOrder",
     "UsageEvent",
     "User",
 ]
+
 
