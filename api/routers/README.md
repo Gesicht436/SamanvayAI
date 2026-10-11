@@ -30,6 +30,11 @@ The `api/routers/` directory exposes the REST endpoints of Samanvay:
 | `POST` | `/compare` | Public | Compares requirement attributes with candidate attributes with verdicts. |
 | `POST` | `/tier` | Public | Evaluates safety invariants S1-S15 and assigns harmonization tier (1, 2, 3). |
 | `POST` | `/match` | Authenticated | End-to-end harmonization matching raw query to golden masters with calibrated scoring. |
+| `POST` | `/tasks` | Authenticated (Maker) | Creates a new stewardship task proposal (LINK, CREATE_MASTER, MERGE, SPLIT, etc.). |
+| `GET` | `/tasks` | Authenticated | Lists stewardship queue tasks with state and kind filtering. |
+| `GET` | `/tasks/{task_id}` | Authenticated | Retrieves a single stewardship task by ID. |
+| `POST` | `/tasks/{task_id}/approve` | Authenticated (Checker) | Approves task with Maker != Checker and domain tag validation. |
+| `POST` | `/tasks/{task_id}/reject` | Authenticated (Checker) | Rejects task and captures negative feedback example. |
 
 ---
 
@@ -89,7 +94,23 @@ curl -X POST http://localhost:8000/match `
   -d '{"text": "VALVE GATE 2 INCH 150# WCB FLANGED RF HANDWHEEL", "limit": 5}'
 ```
 
-### 3.8 Verify Audit Chain
+### 3.8 Test Stewardship Task Creation (Maker)
+```powershell
+curl -X POST http://localhost:8000/tasks `
+  -H "Content-Type: application/json" `
+  -H "Authorization: Bearer <MAKER_TOKEN>" `
+  -d '{"kind": "CREATE_MASTER", "payload": {"subcategory": "VALVES.GATE", "attributes": {"size_nb": 50, "pressure_class": "ASME_150"}}}'
+```
+
+### 3.9 Test Stewardship Task Approval (Checker)
+```powershell
+curl -X POST http://localhost:8000/tasks/1/approve `
+  -H "Content-Type: application/json" `
+  -H "Authorization: Bearer <CHECKER_TOKEN>" `
+  -d '{"rationale": "Verified specification and approved golden master"}'
+```
+
+### 3.10 Verify Audit Chain
 ```powershell
 curl http://localhost:8000/audit/verify `
   -H "Authorization: Bearer <TOKEN>"

@@ -131,12 +131,21 @@ flowchart LR
 - Identifies near-matches differing only by missing attributes and flags them for steward review (`needs_review`).
 - Generates comprehensive Intra-Organisation Deduplication Reports in 80% ASD-STE100.
 
+### 2.12 Stewardship Governance Engine (`stewardship.py`)
+- Enforces Section 4.7 Maker-Checker operational governance ($Maker \ne Checker$).
+- Supports 6 core stewardship proposal kinds: `LINK`, `CREATE_MASTER`, `MERGE`, `SPLIT`, `CORRECT_ATTR`, and `DOC_REVIEW`.
+- Enforces Domain-Tag access controls: For `safety_critical` subcategories, the Checker must hold the domain tag of the subcategory's segment (`users.domains`); an unauthorized Checker cannot approve.
+- Executes approved lifecycle mutations: links raw items, creates golden masters, merges/splits duplicate catalog entries.
+- Captures human feedback: Every decision records a `FeedbackExample` row (`label=True` on approval, `label=False` on rejection) for downstream model calibration and dictionary suggestion.
+- Transactional audit log: Every proposal, approval, and rejection records an immutable audit event in `audit_log` within the exact same database transaction.
+
 ---
 
 ## 3. File Index
 
 - [comparator.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/comparator.py): Deterministic attribute comparator and directional substitution lattices.
 - [tiering.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/tiering.py): Safety tiering engine and single authoritative point of truth for Tier 1.
+- [stewardship.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/stewardship.py): Maker-Checker task governance, domain-tag access controls, feedback capture, and audit logging.
 - [classify.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/classify.py): Subcategory classifier across 21 families with uncertainty flags.
 - [candidates.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/candidates.py): 4-stage candidate retrieval pipeline and blocking keys.
 - [scoring.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/scoring.py): 9-feature pairwise scorer with Platt calibration.

@@ -6,10 +6,10 @@ This log tracks execution progress across phases and agent sessions. It records 
 
 ## Current Status
 
-- **Completed Phase:** Phase 7 (Candidate Generation, Scoring & Cold-Start Deduplication) / **Module 6**
-- **Next Phase:** Phase 8 (Stewardship Governance & Release Evaluation) / **Module 7**
+- **Completed Phase:** Phase 8 (Stewardship Governance & Release Evaluation) / **Module 7**
+- **Next Phase:** Phase 9 (Core Frontend Web Application) / **Module 8**
 - **Date Completed:** 2026-10-11
-- **Status:** Phase 7 Accepted
+- **Status:** Phase 8 Accepted
 
 
 
@@ -408,6 +408,68 @@ Suggested tag: `git tag phase-6`
 
 **Gate Status: ACCEPTED**
 Suggested tag: `git tag phase-7`
+
+---
+
+## Phase 8: Stewardship Governance & Release Evaluation Harness (Module 7)
+
+### What Was Built
+1. **Stewardship Governance Service (`api/services/stewardship.py`):**
+   - Implements Section 4.7 & 9.4 Maker-Checker governance ($Maker \ne Checker$).
+   - 6 supported stewardship proposal kinds: `LINK`, `CREATE_MASTER`, `MERGE`, `SPLIT`, `CORRECT_ATTR`, and `DOC_REVIEW`.
+   - Domain-Tag enforcement: Checkers approving safety-critical subcategories (`safety_critical == True`) must possess at least one domain tag of the subcategory's segment (`users.domains`); missing domain tag returns HTTP 403 `DOMAIN_TAG_REQUIRED`.
+   - Proposer $\ne$ Approver constraint: Proposer attempting to approve their own task returns HTTP 403 `MAKER_CHECKER_VIOLATION`.
+   - Executes lifecycle actions upon approval: updates raw item status to `LINKED`, creates golden masters, merges/splits duplicate catalog entries.
+   - Human feedback capture: Every decision records a `FeedbackExample` row (`label=True` on approval, `label=False` on rejection) for downstream model calibration and dictionary suggestion.
+   - Transactional audit log recording: Every task proposal, approval, and rejection emits an immutable audit event to `audit_log` in the same database transaction.
+2. **Stewardship API Router (`api/routers/tasks.py`):**
+   - Authenticated endpoints:
+     - `POST /tasks`: Maker creates a task proposal.
+     - `GET /tasks`: Lists stewardship queue tasks with state and kind filtering.
+     - `GET /tasks/{task_id}`: Retrieves single task details.
+     - `POST /tasks/{task_id}/approve`: Checker approves task.
+     - `POST /tasks/{task_id}/reject`: Checker rejects task.
+3. **Exact Binomial Confidence Interval Engine (`scripts/clopper_pearson.py`):**
+   - Pure standard-library implementation of exact Clopper-Pearson binomial confidence intervals.
+   - Closed-form zero-failure upper bound calculator: $1 - a^{1/n}$.
+   - Sample size calculation utility: computes required trials $n$ to guarantee target bound at 95% confidence.
+4. **Hard Release Gate Auditor (`scripts/gate_check.py`):**
+   - Automated auditor reading `metrics.json` and enforcing all 5 hard gates:
+     1. Hard-negative false merges: exactly 0 observed.
+     2. Missing-attribute routing: 100% routed to Tier 2 or lower.
+     3. Low-confidence OCR in Tier 1: 0 found.
+     4. MTC conforms against unverified reference: 0 found.
+     5. Auto-tier precision (dev): $\ge 0.995$ target.
+5. **Comprehensive Evaluation Harness & Baseline Comparison (`scripts/eval_harness.py`, `Makefile`):**
+   - Side-by-side evaluation of 3 baselines across all 21 material families (170 adversarial hard negatives differing in 1 critical attribute):
+     - **Baseline 1 (Token Cosine Similarity):** 115 false merges / 170 (67.6% error rate).
+     - **Baseline 2 (Character Trigram Similarity):** 95 false merges / 170 (55.9% error rate).
+     - **Baseline 3 (Samanvay Safety Path):** **0 false merges / 170 (0.0% error rate; 95% Clopper-Pearson bound: 2.15%)**.
+   - Missing attribute routing: **76/76 routed to Tier 2 (100.0%)** (95% interval: [95.26%, 100.00%]).
+   - Auto-tier precision on dev set: **100.00% (600/600)** (95% interval: [99.39%, 100.00%]).
+   - **Sector Parity:** Evaluated across 5 sectors (COMMON, POWER, STEEL, MINING, HEAVY_ENG); maximum parity discrepancy is **0.00%**.
+   - **Organisation Parity:** Evaluated across 4 CPSE organisations (OIL-1, POWER-1, STEEL-1, MINE-1); maximum parity discrepancy is **0.00%**.
+   - Wired into `make eval-gate`.
+
+### Acceptance Gate Evaluation (Phase 8)
+
+| Check | Requirement | Result | Output / Evidence |
+|---|---|---|---|
+| 1. Code Quality & Linting | `uv run ruff check .` and `uv run ruff format --check .` | **PASS** | `All checks passed! 130 files already formatted.` |
+| 2. Maker-Checker Invariant | Proposer approving own task returns HTTP 403 | **PASS** | `test_maker_checker_violation_proposer_cannot_approve` PASSED |
+| 3. Domain Tag Access Control | Unauthorized checker approving safety-critical item returns HTTP 403 | **PASS** | `test_domain_tag_enforcement_on_safety_critical` PASSED |
+| 4. Task Lifecycle & Feedback | Approval/rejection executes action, logs feedback, writes audit log | **PASS** | `test_checker_approves_task_records_feedback_and_audit` PASSED<br>`test_checker_rejects_task_records_negative_feedback` PASSED |
+| 5. Hard-Negative False Merges Gate | Exactly 0 false merges observed on adversarial test pairs | **PASS** | **0/170 observed (0.0%)**; 95% interval [0.00%, 2.15%] |
+| 6. Missing-Attribute Routing Gate | 100% of missing-attribute test cases route to Tier 2 | **PASS** | **76/76 routed (100.0%)**; 95% interval [95.26%, 100.00%] |
+| 7. Auto-Tier Precision Gate | Dev set auto-tier precision $\ge 99.5\%$ | **PASS** | **100.00% (600/600)**; 95% interval [99.39%, 100.00%] |
+| 8. Three Baselines Comparison | Cosine vs Trigram vs Samanvay reported side-by-side | **PASS** | Cosine: 67.6% err; Trigram: 55.9% err; **Samanvay: 0.0% err** |
+| 9. Parity Reporting | Sector and organisation parity reported | **PASS** | Sector Discrepancy: **0.00%**; Org Discrepancy: **0.00%** |
+| 10. Tier 1 Single Source of Truth | `scan_tier1.py` reports 0 unauthorized Tier 1 assignments | **PASS** | `0 location(s) outside ['tiering.py']` |
+| 11. Verification Register | All code markers match registered claims | **PASS** | `verify_claims.py`: 11 registered claims, 5 markers |
+| 12. Full Test Suite | All tests pass via `uv run pytest` | **PASS** | **158 passed in 9.21s** |
+
+**Gate Status: ACCEPTED**
+Suggested tag: `git tag phase-8`
 
 
 

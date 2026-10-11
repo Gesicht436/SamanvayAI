@@ -29,6 +29,8 @@ All tests run with `uv run pytest`.
 | [test_lifecycle.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_lifecycle.py) | `api/services/` | Golden master creation with Verhoeff MPNG- codes, status transitions, golden master merging, splitting, attribute correction, and transactional audit logging. |
 | [test_cold_start.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_cold_start.py) | `api/services/` | Cold-start catalog deduplication, block clustering by attribute signature, provenance tracking, near-match linking, and markdown reporting. |
 | [test_match_api.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_match_api.py) | `api/routers/` | End-to-end `POST /match` endpoint authentication, request validation, candidate scoring, tier assignment, reason codes, and empty database fallback. |
+| [test_stewardship.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_stewardship.py) | `api/routers/`, `api/services/` | Stewardship Maker-Checker task proposals, self-approval prevention (403), safety-critical domain tags (403), action execution, feedback capture, and audit logs. |
+| [test_eval_gate.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_eval_gate.py) | `scripts/` | Mathematical verification of exact Clopper-Pearson confidence bounds, gate_check hard release gates, 3-baseline comparison, and sector/org parity. |
 
 ---
 
@@ -39,6 +41,9 @@ Run tests using `uv`:
 ```powershell
 # Run all tests in the repository
 uv run pytest tests/ -v
+
+# Run Module 7 stewardship governance and evaluation gate tests
+uv run pytest tests/test_stewardship.py tests/test_eval_gate.py -v
 
 # Run Module 6 candidate retrieval, scoring, lifecycle, and match tests
 uv run pytest tests/test_classify.py tests/test_candidates_scoring.py tests/test_lifecycle.py tests/test_cold_start.py tests/test_match_api.py -v
