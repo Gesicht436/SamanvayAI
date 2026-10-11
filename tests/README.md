@@ -16,6 +16,9 @@ All tests run with `uv run pytest`.
 | [test_normalize.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_normalize.py) | `api/services/` | Unicode script detection, Indic transliteration, quote mapping, fastener `STD` gating, and collision token preservation. |
 | [test_uom.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_uom.py) | `api/services/` | Controlled UoM vocabulary, scalar conversions, rebar $d^2/162$, IS 808 section lookups, and `MissingConversionAttribute` guards. |
 | [test_ingest.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_ingest.py) | `api/services/` | CSV and XLSX parsing, verbatim raw payloads, row error reporting, SHA-256 file hash idempotency, and transactional audit logging. |
+| [test_extractors.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_extractors.py) | `api/extractors/` | `ExtractedValue` contract, token-boundary TOML/YAML lexicons, size NB parsing (fractions, inch, mm, DN), pressure class (ASME vs PN), conflict detection, and character evidence spans. |
+| [test_pack_registry.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_pack_registry.py) | `packs/`, `api/extractors/` | Sector pack loading (12 specs), identity modes (PARAMETRIC, DRAWING), statutory flags, pack unmounting resilience, and `/extract` API endpoints. |
+
 
 ---
 

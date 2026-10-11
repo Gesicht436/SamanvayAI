@@ -23,6 +23,11 @@ The `api/routers/` directory exposes the REST endpoints of Samanvay:
 | `POST` | `/normalize` | Public | Normalizes raw description, transliterates Indic, expands abbrevs. |
 | `POST` | `/uom/convert` | Public | Standardizes unit of measure and converts to canonical base. |
 | `POST` | `/ingest/upload` | Authenticated | Ingests CSV or XLSX master data file with idempotency and audit trail. |
+| `POST` | `/extract` | Public | Extracts typed attributes, confidence, evidence spans, and warning flags. |
+| `GET` | `/extract/specs` | Public | Lists all registered subcategory specifications across loaded packs. |
+| `GET` | `/extract/specs/{subcat}` | Public | Returns detailed specification attributes and identity mode. |
+| `POST` | `/extract/sync` | Authenticated (Maker) | Synchronizes in-memory specifications into PostgreSQL database tables. |
+
 
 ---
 

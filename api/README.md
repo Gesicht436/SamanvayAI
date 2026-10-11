@@ -15,10 +15,11 @@ The backend is built with:
 ```
 api/
 ├── core/       # Pure Python standard-library utilities (Verhoeff, HashChain, Trigram)
+├── extractors/ # Extractor framework, TOML/YAML lexicons, parsers, and Spec Registry
 ├── security/   # HS256 JWT authentication, Maker-Checker rules, domain tags
 ├── services/   # Script detector, text normalizer, canonical UoM, and tabular ingest
 ├── models/     # SQLAlchemy 2.0 ORM database models
-├── routers/    # HTTP route controllers (/health, /auth, /audit, /normalize, /uom, /ingest)
+├── routers/    # HTTP route controllers (/health, /auth, /audit, /normalize, /uom, /ingest, /extract)
 ├── config.py   # Pydantic Settings loaded from .env
 ├── database.py # Sync and async database session management with RLS
 └── main.py     # FastAPI application lifecycle and middleware
@@ -31,6 +32,7 @@ api/
 | Subdirectory / File | Role |
 |---|---|
 | [core/](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/core/README.md) | Standard-library mathematical and cryptographic functions. |
+| [extractors/](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/extractors/README.md) | Attribute extractors, lexicons, and Spec Registry. |
 | [security/](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/security/README.md) | JWT authentication, role guards, and Maker-Checker enforcement. |
 | [services/](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/README.md) | Core domain services (script detector, text normalizer, UoM engine, ingest parser). |
 | [models/](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/models/README.md) | PostgreSQL table declarations. |

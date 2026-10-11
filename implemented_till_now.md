@@ -11,10 +11,10 @@ This document tracks the live implementation progress of **Samanvay**, records a
 | **Repository Root** | `C:\Users\mayank\Developement\Projects\SamanvayAI` |
 | **Specification Source** | [specsheet.md](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/specsheet.md) |
 | **Master Implementation Plan** | [implementation_plan.md](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/implementation_plan.md) |
-| **Active Target Module** | **Module 2: Extractor Framework & Spec Registry** |
-| **Completed Modules** | **Module 0: Foundation Core, Security & Data Persistence**<br>**Module 1: Ingest, Text Normalization & UoM Engine** |
-| **Current Build Phase** | Phase 3 (Extractor Core) |
-| **Overall Project Status** | Module 0 and Module 1 built to completion and accepted; 53 tests passing; Ready to start Module 2 |
+| **Active Target Module** | **Module 3: Safety Comparator, Tiering Engine & Safety Invariants Suite** |
+| **Completed Modules** | **Module 0: Foundation Core, Security & Data Persistence**<br>**Module 1: Ingest, Text Normalization & UoM Engine**<br>**Module 2: Extractor Framework & Spec Registry** |
+| **Current Build Phase** | Phase 3 (Extractor Core Complete -> Ready for Safety Comparator Phase 4) |
+| **Overall Project Status** | Modules 0, 1, and 2 built to completion and accepted; 65 tests passing; Ready to start Module 3 |
 
 ---
 
@@ -26,9 +26,9 @@ This table shows the build status for every module. A module changes from `PENDI
 |---|---|---|---|---|---|
 | **Module 0** | Foundation Core, Security & Data Persistence | `[P0]` | **DONE** | **PASSED (100%)** | Repo scaffold, Docker Postgres 18 with pgvector, Alembic migration `0001_initial_schema`, RLS policies, append-only SHA-256 audit triggers, Verhoeff `MPNG-` 17-char code, HashChain, Trigram, Jaro-Winkler, HS256 JWT auth, Maker-Checker rules, 4-org seed data, CLI hash chain verifier (`hashchain_verify.py`), verify claims auditor (`verify_claims.py`), 25 tests passing. |
 | **Module 1** | Ingest, Text Normalization & UoM Engine | `[P0]` | **DONE** | **PASSED (100%)** | Dictionaries (`abbreviations.json`, `indic/*.json`, `section_properties.csv`), Script detector (`script_detector.py`), Text normalizer (`normalize.py` with NFKC, quote mapping, fastener STD rules, collision guards), UoM engine (`uom.py` with IS 808 lookup, rebar formula, MissingConversionAttribute guard), Ingest service (`ingest.py` for CSV/XLSX with idempotency on file hash and transactional audit log), Routers (`/normalize`, `/uom/convert`, `/ingest/upload`), 53 tests passing. |
-| **Module 2** | Extractor Framework & Spec Registry | `[P0]` | **READY TO START** | Not evaluated | - |
+| **Module 2** | Extractor Framework & Spec Registry | `[P0]` | **DONE** | **PASSED (100%)** | `ExtractedValue` dataclass and `none_with()` helper (`api/extractors/base.py`), TOML & YAML `LexiconExtractor` engine (`api/extractors/lexicon.py`), physical parsers (`size_nb.py`, `pressure_class.py`), central `SpecRegistry` (`api/extractors/registry.py`) with identity modes (`PARAMETRIC`, `OEM_PN`, `DRAWING`) and PostgreSQL sync, 5 starter sector packs (`packs/common`, `packs/power`, `packs/steel`, `packs/mining`, `packs/heavy_eng`), unmounting resilience verified, FastAPI `/extract` endpoints, 65 tests passing. |
+| **Module 3** | Safety Comparator, Tiering & Invariant Suite | `[P0]` | **READY TO START** | Not evaluated | - |
 
-| **Module 3** | Safety Comparator, Tiering & Invariant Suite | `[P0]` | `PENDING` | Not evaluated | - |
 | **Module 4** | Deep Flagship Families (6 Deep Sectors) | `[P0]` | `PENDING` | Not evaluated | - |
 | **Module 5** | Standard Domain Families (15 Families, 5 Packs) | `[P0]` / `[P1]` | `PENDING` | Not evaluated | - |
 | **Module 6** | Candidate Retrieval, Scoring & Cold Start | `[P0]` | `PENDING` | Not evaluated | - |

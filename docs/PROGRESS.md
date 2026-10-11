@@ -6,10 +6,11 @@ This log tracks execution progress across phases and agent sessions. It records 
 
 ## Current Status
 
-- **Completed Phase:** Phase 2 (Normalize and UoM) / **Module 1**
-- **Next Phase:** Phase 3 (Extractor Core) / **Module 2**
+- **Completed Phase:** Phase 3 (Extractor Core & Spec Registry) / **Module 2**
+- **Next Phase:** Phase 4 (Safety Comparator & Tiering Engine) / **Module 3**
 - **Date Completed:** 2026-10-11
-- **Status:** Phase 2 Accepted
+- **Status:** Phase 3 Accepted
+
 
 
 ---
@@ -128,4 +129,63 @@ Suggested tag: `git tag phase-1`
 
 **Gate Status: ACCEPTED**
 Suggested tag: `git tag phase-2`
+
+---
+
+## Phase 3: Extractor Framework & Spec Registry (Module 2)
+
+### What Was Built
+1. **Extractor Foundation & Contract (`api/extractors/base.py`):**
+   - `ExtractedValue` dataclass: `value`, `confidence`, `source`, `evidence_span` (and `evidence` alias), `flags`.
+   - `none_with(flag, evidence_span)` constructor ensuring unambiguous fail-closed behavior.
+   - `BaseExtractor` abstract interface defining `extract(text, category)`.
+2. **Lexicon Extractor Engine (`api/extractors/lexicon.py`):**
+   - Dual TOML (via stdlib `tomllib`) and YAML (via `pyyaml`) file loader.
+   - Token boundary matching with `(?<![A-Z0-9])` and `(?![A-Z0-9])`.
+   - Longest-synonym-first matching precedence.
+   - Detection of multiple distinct canonical matches returning `EXTRACTION_CONFLICT`.
+   - Category-gated searching.
+   - Character evidence spans referencing the raw input text.
+3. **Physical Attribute Parsers (`api/extractors/parsers/`):**
+   - `size_nb.py`: Piping Nominal Bore extractor covering full `NB_BY_INCH` fractional mapping up to 48" (1200 mm), direct DN/NB syntax, schedule notation stripping, reducer primary/secondary sizes, and metric fastener pattern rejection (`# VERIFY: VERIFY-003`).
+   - `pressure_class.py`: Pressure class extractor supporting ASME ratings (150 to 2500, forged 800, fittings 2000-9000) and PN ratings (2.5 to 400), prefix/suffix syntax, slash conflict rejection, bare PSI rejection, and non-standard rating detection (`# VERIFY: VERIFY-011`).
+4. **Specification Registry & Dispatch Pipeline (`api/extractors/registry.py`):**
+   - Pydantic schema validation for subcategory specifications (`SubcategorySpecDef`, `AttributeSpecDef`).
+   - Identity modes: `PARAMETRIC`, `OEM_PN`, and `DRAWING`.
+   - Attribute roles: `HARD`, `REQUIRED`, `SOFT`, `DIRECTIONAL`.
+   - Category-gated attribute extraction dispatch prioritizing Python parsers, then lexicons.
+   - Asynchronous PostgreSQL database synchronization (`sync_to_db`) upserting into `subcategory_specs` and `attribute_specs`.
+   - Flexible pack directory scanning supporting root directories (`packs/`) or isolated pack paths (`packs/common`).
+5. **Sector Domain Packs (`packs/`):**
+   - `packs/common`: `valves_gate.yaml`, `pipes.yaml`, `flanges.yaml`, `fasteners.yaml` + TOML lexicons (`body_material.toml`, `end_connection.toml`, `facing.toml`).
+   - `packs/power`: `transformers.yaml`, `breakers.yaml`, `boiler_tubes.yaml` (statutory IBR certification).
+   - `packs/steel`: `refractory.yaml` (shelf-life tracking), `mill_rolls.yaml` (`DRAWING` identity mode).
+   - `packs/mining`: `otr_tyres.yaml` (mandatory expiry tracking).
+   - `packs/heavy_eng`: `pumps_centrifugal.yaml`, `made_to_drawing.yaml` (`DRAWING` identity mode).
+   - 80% ASD-STE100 `README.md` in every sector pack directory.
+6. **FastAPI Endpoints (`api/routers/extract.py`):**
+   - `POST /extract`: Description attribute extraction with confidence and evidence spans.
+   - `GET /extract/specs`: Summary catalog of all registered subcategory specifications.
+   - `GET /extract/specs/{subcategory}`: Detailed specification lookup.
+   - `POST /extract/sync`: Protected Maker endpoint to persist specs to PostgreSQL.
+7. **Comprehensive Testing Suite:**
+   - 12 new tests in `tests/test_extractors.py` and `tests/test_pack_registry.py`.
+   - 65 total passing tests across the entire test suite.
+   - Principle 1.3.7 pack unmounting resilience verified.
+
+### Acceptance Gate Evaluation (Phase 3)
+
+| Check | Requirement | Result | Output / Evidence |
+|---|---|---|---|
+| 1. Code Quality & Linting | `uv run ruff check .` | **PASS** | `All checks passed!` |
+| 2. Spec Registry Loading | All sector pack specifications load without errors | **PASS** | 12 specifications loaded across 5 sector packs |
+| 3. Size Parser Golden Cases | `1-1/2"`, `DN150`, `SCH 40 6"`, `STUD M24X150MM` returning no size | **PASS** | `test_size_nb_extractor_table` PASSED |
+| 4. Raw Evidence Spans | Every extracted value contains accurate raw character spans | **PASS** | Spans verified on raw text for size, class, and lexicons |
+| 5. Pack Resilience | Unmounting or isolating any pack leaves remaining packs functional | **PASS** | `test_pack_unmounting_resilience` PASSED |
+| 6. Verification Markers | `# VERIFY:` code markers registered in verification ledger | **PASS** | `make verify-claims` PASSED (VERIFY-003, VERIFY-011) |
+| 7. Full Test Suite | All tests pass via `uv run pytest` | **PASS** | `65 passed in 1.48s` |
+
+**Gate Status: ACCEPTED**
+Suggested tag: `git tag phase-3`
+
 
