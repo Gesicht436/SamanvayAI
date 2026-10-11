@@ -1,0 +1,72 @@
+{
+  "category_gated": {
+    "VALVES": {
+      "GT": "GATE",
+      "GTE": "GATE",
+      "GLB": "GLOBE",
+      "CHK": "CHECK",
+      "NRV": "NON RETURN VALVE",
+      "BF": "BUTTERFLY",
+      "RF": "RAISED FACE",
+      "FF": "FLAT FACE",
+      "RTJ": "RING TYPE JOINT",
+      "WCB": "WCB",
+      "WC6": "WC6",
+      "CF8M": "CF8M",
+      "LCB": "LCB"
+    },
+    "FLANGES": {
+      "WN": "WELD NECK",
+      "SO": "SLIP ON",
+      "BL": "BLIND",
+      "LJ": "LAP JOINT",
+      "SW": "SOCKET WELD",
+      "RF": "RAISED FACE",
+      "FF": "FLAT FACE",
+      "RTJ": "RING TYPE JOINT",
+      "STD": "STANDARD"
+    },
+    "PIPES": {
+      "STD": "STANDARD",
+      "SMLS": "SEAMLESS",
+      "ERW": "ERW",
+      "BE": "BEVELLED END",
+      "PE": "PLAIN END"
+    },
+    "MOTORS": {
+      "FR": "FRAME",
+      "FRM": "FRAME"
+    },
+    "CABLES": {
+      "FR": "FLAME RETARDANT",
+      "FRLS": "FLAME RETARDANT LOW SMOKE",
+      "XLPE": "XLPE",
+      "SWA": "STEEL WIRE ARMOURED",
+      "GSW": "GALVANIZED STEEL WIRE"
+    },
+    "STEEL": {
+      "HR": "HOT ROLLED",
+      "CR": "COLD ROLLED"
+    },
+    "FASTENERS": {
+      "STD": "STUD"
+    }
+  },
+  "general": {
+    "SS": "STAINLESS STEEL",
+    "CS": "CARBON STEEL",
+    "MS": "MILD STEEL",
+    "GI": "GALVANIZED IRON",
+    "CI": "CAST IRON",
+    "DI": "DUCTILE IRON",
+    "VLV": "VALVE",
+    "FLG": "FLANGE",
+    "P/N": "PN",
+    "NO": "NUMBER",
+    "QTY": "QUANTITY",
+    "WT": "WEIGHT",
+    "OD": "OUTER DIAMETER",
+    "ID": "INNER DIAMETER",
+    "THK": "THICKNESS"
+  }
+}
