@@ -29,6 +29,7 @@ This file records exact package and tool versions resolved at installation time 
 | `python-multipart` | 0.0.32 | Multipart/form-data parser for file uploads |
 | `pyyaml` | 6.0.3 | YAML parser for sector pack specifications and lexicons |
 | `pymupdf` | 1.28.2 | PDF text layer and raster rendering engine |
+| `uvicorn` | 0.54.0 | ASGI web server implementation |
 
 
 ---
