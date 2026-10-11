@@ -1,0 +1,16 @@
+subcategory: POWER.BREAKER
+segment: [POWER]
+identity_mode: PARAMETRIC
+safety_critical: true
+depth: standard
+pooling_class: ENGINEERED
+attributes:
+  - {name: breaker_type, role: HARD}
+  - {name: voltage_kv, role: HARD}
+  - {name: current_a, role: HARD}
+  - {name: breaking_ka, role: HARD}
+  - {name: duration_s, role: HARD}
+  - {name: poles, role: HARD}
+  - {name: mounting, role: HARD}
+  - {name: design_standard, role: HARD}
+  - {name: operating_mechanism, role: REQUIRED}

@@ -1,0 +1,12 @@
+subcategory: STEEL.MILL_ROLL
+segment: [STEEL]
+identity_mode: DRAWING
+safety_critical: false
+depth: standard
+pooling_class: ENGINEERED
+attributes:
+  - {name: drawing_number, role: HARD}
+  - {name: drawing_revision, role: HARD}
+  - {name: drawing_owner, role: HARD}
+  - {name: barrel_diameter, role: REQUIRED}
+  - {name: roll_type, role: REQUIRED}

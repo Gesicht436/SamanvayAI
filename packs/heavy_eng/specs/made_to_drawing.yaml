@@ -1,0 +1,10 @@
+subcategory: HEAVY.DRAWING_PART
+segment: [HEAVY_ENG]
+identity_mode: DRAWING
+safety_critical: false
+depth: standard
+pooling_class: ENGINEERED
+attributes:
+  - {name: drawing_number, role: HARD}
+  - {name: drawing_revision, role: HARD}
+  - {name: drawing_owner, role: HARD}

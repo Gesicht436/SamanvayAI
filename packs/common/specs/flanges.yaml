@@ -1,0 +1,17 @@
+subcategory: FLANGES.FLANGE
+segment: [COMMON]
+identity_mode: PARAMETRIC
+safety_critical: true
+depth: standard
+pooling_class: ENGINEERED
+primary_dimension:
+  attr: size_nb
+  unit: NB_MM
+attributes:
+  - {name: flange_type, role: HARD}
+  - {name: size_nb, role: HARD}
+  - {name: pressure_class, role: HARD}
+  - {name: facing, role: HARD}
+  - {name: material_grade, role: HARD}
+  - {name: bore_schedule, role: HARD, when: "flange_type == WELD_NECK"}
+  - {name: rtj_groove, role: REQUIRED}

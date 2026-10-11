@@ -1,0 +1,18 @@
+subcategory: POWER.BOILER_TUBE
+segment: [POWER]
+identity_mode: PARAMETRIC
+safety_critical: true
+depth: standard
+pooling_class: BULK_M
+primary_dimension:
+  attr: od_mm
+  unit: MM
+attributes:
+  - {name: od_mm, role: HARD}
+  - {name: wall_mm, role: HARD}
+  - {name: wall_basis, role: HARD}
+  - {name: material_spec, role: HARD}
+  - {name: grade, role: HARD}
+  - {name: manufacturing_route, role: HARD}
+  - {name: spec_body, role: REQUIRED}
+  - {name: ibr_cert, role: REQUIRED, statutory: true}

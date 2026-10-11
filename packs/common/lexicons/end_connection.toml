@@ -1,0 +1,14 @@
+attribute = "end_connection"
+categories = ["VALVES"]
+
+[values.FLANGED]
+synonyms = ["FLANGED", "FLG", "FLANGE", "FLGD", "FLANGE END"]
+
+[values.BUTT_WELD]
+synonyms = ["BUTT WELD", "BW", "BUTTWELD", "B.W."]
+
+[values.SOCKET_WELD]
+synonyms = ["SOCKET WELD", "SW", "SOCKETWELD", "S.W."]
+
+[values.THREADED]
+synonyms = ["THREADED", "SCRD", "SCREWED", "NPT", "BSP", "BSPT"]

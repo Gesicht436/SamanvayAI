@@ -1,0 +1,13 @@
+subcategory: STEEL.REFRACTORY
+segment: [STEEL]
+identity_mode: PARAMETRIC
+safety_critical: false
+depth: deep
+pooling_class: BULK_MT
+expiry_required: true
+attributes:
+  - {name: form, role: HARD}
+  - {name: material_class, role: HARD}
+  - {name: key_chemistry, role: HARD}
+  - {name: shape_code, role: HARD}
+  - {name: shelf_life_days, role: REQUIRED}

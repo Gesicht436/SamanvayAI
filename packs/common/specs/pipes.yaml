@@ -1,0 +1,17 @@
+subcategory: PIPES.PIPE
+segment: [COMMON]
+identity_mode: PARAMETRIC
+safety_critical: true
+depth: standard
+pooling_class: BULK_M
+primary_dimension:
+  attr: size_nb
+  unit: NB_MM
+attributes:
+  - {name: size_nb, role: HARD}
+  - {name: schedule, role: HARD}
+  - {name: material_grade, role: HARD}
+  - {name: manufacturing_method, role: HARD}
+  - {name: end_type, role: HARD}
+  - {name: length_type, role: REQUIRED}
+  - {name: coating, role: REQUIRED}

@@ -1,0 +1,27 @@
+subcategory: POWER.TRANSFORMER
+segment: [POWER]
+identity_mode: PARAMETRIC
+safety_critical: true
+depth: deep
+pooling_class: ENGINEERED
+primary_dimension:
+  attr: rating_kva
+  unit: KVA
+attributes:
+  - {name: rating_kva, role: HARD}
+  - {name: phases, role: HARD}
+  - {name: hv_kv, role: HARD}
+  - {name: lv_kv, role: HARD}
+  - {name: frequency_hz, role: HARD}
+  - {name: vector_group, role: HARD}
+  - {name: cooling, role: HARD}
+  - {name: insulation_medium, role: HARD}
+  - {name: tap_changer, role: HARD}
+  - {name: design_standard, role: HARD}
+  - {name: rating_kva_max, role: REQUIRED}
+  - {name: tap_range, role: REQUIRED}
+  - {name: impedance_pct, role: REQUIRED}
+  - {name: bil_kv, role: REQUIRED}
+  - {name: winding_material, role: REQUIRED}
+  - {name: installation, role: REQUIRED}
+  - {name: manufacturer, role: SOFT}

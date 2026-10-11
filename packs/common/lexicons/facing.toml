@@ -1,0 +1,11 @@
+attribute = "facing"
+categories = ["VALVES", "FLANGES"]
+
+[values.RF]
+synonyms = ["RF", "RAISED FACE", "RAISED-FACE"]
+
+[values.FF]
+synonyms = ["FF", "FLAT FACE", "FLAT-FACE"]
+
+[values.RTJ]
+synonyms = ["RTJ", "RING TYPE JOINT", "RING JOINT"]

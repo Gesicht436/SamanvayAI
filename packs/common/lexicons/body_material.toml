@@ -1,0 +1,14 @@
+attribute = "body_material"
+categories = ["VALVES", "FLANGES"]
+
+[values.A216_WCB]
+synonyms = ["WCB", "A216 WCB", "ASTM A216 GR WCB", "CAST CARBON STEEL WCB"]
+
+[values.A351_CF8M]
+synonyms = ["CF8M", "A351 CF8M", "SS316 CAST", "ASTM A351 CF8M"]
+
+[values.A217_WC6]
+synonyms = ["WC6", "A217 WC6", "ALLOY STEEL WC6"]
+
+[values.A352_LCB]
+synonyms = ["LCB", "A352 LCB", "LOW TEMP CARBON STEEL LCB"]

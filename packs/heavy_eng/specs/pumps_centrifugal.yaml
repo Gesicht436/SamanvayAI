@@ -1,0 +1,14 @@
+subcategory: HEAVY.PUMP_CENTRIFUGAL
+segment: [HEAVY_ENG]
+identity_mode: PARAMETRIC
+safety_critical: true
+depth: deep
+pooling_class: ENGINEERED
+attributes:
+  - {name: api_type, role: HARD}
+  - {name: flow_m3h, role: HARD}
+  - {name: head_m, role: HARD}
+  - {name: speed_rpm, role: HARD}
+  - {name: casing_material, role: HARD}
+  - {name: seal_arrangement, role: REQUIRED}
+  - {name: manufacturer, role: SOFT}

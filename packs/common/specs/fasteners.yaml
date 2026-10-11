@@ -1,0 +1,16 @@
+subcategory: FASTENERS.BOLT
+segment: [COMMON]
+identity_mode: PARAMETRIC
+safety_critical: false
+depth: standard
+pooling_class: BULK_M
+primary_dimension:
+  attr: thread_size
+  unit: METRIC_MM
+attributes:
+  - {name: fastener_type, role: HARD}
+  - {name: thread_size, role: HARD}
+  - {name: length, role: HARD}
+  - {name: bolt_grade, role: HARD}
+  - {name: nut_grade, role: HARD}
+  - {name: coating, role: REQUIRED}

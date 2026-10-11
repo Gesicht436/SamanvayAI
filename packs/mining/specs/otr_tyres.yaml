@@ -1,0 +1,13 @@
+subcategory: MINING.OTR_TYRE
+segment: [MINING]
+identity_mode: PARAMETRIC
+safety_critical: false
+depth: deep
+pooling_class: ENGINEERED
+expiry_required: true
+attributes:
+  - {name: section_width, role: HARD}
+  - {name: construction, role: HARD}
+  - {name: rim_diameter, role: HARD}
+  - {name: tread_code, role: HARD}
+  - {name: ply_rating, role: REQUIRED}
