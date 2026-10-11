@@ -1,0 +1,229 @@
+{
+  "version": 3,
+  "skills": {
+    "better-auth-security-best-practices": {
+      "source": "better-auth/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/better-auth/skills.git",
+      "skillPath": "security/SKILL.md",
+      "skillFolderHash": "7cd035c1dd03aafc236ea43492d31ca3306b7ab6",
+      "installedAt": "2026-10-11T03:19:38.786Z",
+      "updatedAt": "2026-10-11T03:19:38.786Z"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/skills.git",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "skillFolderHash": "76a98a285cb0434f3d39e1a873823556330e398b",
+      "installedAt": "2026-10-11T03:19:45.118Z",
+      "updatedAt": "2026-10-11T03:19:45.118Z"
+    },
+    "email-and-password-best-practices": {
+      "source": "better-auth/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/better-auth/skills.git",
+      "skillPath": "better-auth/emailAndPassword/SKILL.md",
+      "skillFolderHash": "cda40d2f5c4a8d3faff3017a5dfcb23f93497c29",
+      "installedAt": "2026-10-11T03:20:10.649Z",
+      "updatedAt": "2026-10-11T03:20:10.649Z"
+    },
+    "organization-best-practices": {
+      "source": "better-auth/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/better-auth/skills.git",
+      "skillPath": "better-auth/organization/SKILL.md",
+      "skillFolderHash": "4256d5266e6f51a4e4c718f5c2308a81eb4a0032",
+      "installedAt": "2026-10-11T03:20:33.887Z",
+      "updatedAt": "2026-10-11T03:20:33.887Z"
+    },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/agent-skills.git",
+      "skillPath": "skills/react-best-practices/SKILL.md",
+      "skillFolderHash": "343db72180d05814949fef7d46be96b5c6ee86b3",
+      "installedAt": "2026-10-11T03:22:10.934Z",
+      "updatedAt": "2026-10-11T03:22:10.934Z"
+    },
+    "tailwind-design-system": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/wshobson/agents.git",
+      "skillPath": "plugins/frontend-mobile-development/skills/tailwind-design-system/SKILL.md",
+      "skillFolderHash": "9bafb7de1588c90d88f224950b098731973a8254",
+      "installedAt": "2026-10-11T03:22:53.425Z",
+      "updatedAt": "2026-10-11T03:22:53.425Z"
+    },
+    "vercel-composition-patterns": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/agent-skills.git",
+      "skillPath": "skills/composition-patterns/SKILL.md",
+      "skillFolderHash": "bf90d0a4b83ea054653350f9c67f6de235d3a368",
+      "installedAt": "2026-10-11T03:23:20.376Z",
+      "updatedAt": "2026-10-11T03:23:20.376Z"
+    },
+    "modern-python": {
+      "source": "trailofbits/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/trailofbits/skills.git",
+      "skillPath": "plugins/modern-python/skills/modern-python/SKILL.md",
+      "skillFolderHash": "e84fa2b3a076b4333e4cc6187510f2b180eed427",
+      "installedAt": "2026-10-11T03:24:59.367Z",
+      "updatedAt": "2026-10-11T03:24:59.367Z"
+    },
+    "systematic-debugging": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/obra/superpowers.git",
+      "skillPath": "skills/systematic-debugging/SKILL.md",
+      "skillFolderHash": "108961c080a6837ad8a188a553e593cc5e6df62d",
+      "installedAt": "2026-10-11T03:25:57.591Z",
+      "updatedAt": "2026-10-11T03:25:57.591Z"
+    },
+    "subagent-driven-development": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/obra/superpowers.git",
+      "skillPath": "skills/subagent-driven-development/SKILL.md",
+      "skillFolderHash": "a9ec528b252e536a404fd0522e32cec31094d669",
+      "installedAt": "2026-10-11T03:26:05.708Z",
+      "updatedAt": "2026-10-11T03:26:05.708Z"
+    },
+    "variant-analysis": {
+      "source": "trailofbits/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/trailofbits/skills.git",
+      "skillPath": "plugins/variant-analysis/skills/variant-analysis/SKILL.md",
+      "skillFolderHash": "583d7addbf5e04108cc5fece9c99a4d9c6db5ce9",
+      "installedAt": "2026-10-11T03:27:10.255Z",
+      "updatedAt": "2026-10-11T03:27:10.255Z"
+    },
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/anthropics/skills.git",
+      "skillPath": "skills/frontend-design/SKILL.md",
+      "skillFolderHash": "d79e2a5bb4df4a386c2adcdd9ab8709bba28c3f6",
+      "pluginName": "example-skills",
+      "installedAt": "2026-10-11T03:27:33.129Z",
+      "updatedAt": "2026-10-11T03:27:33.129Z"
+    },
+    "web-design-guidelines": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/agent-skills.git",
+      "skillPath": "skills/web-design-guidelines/SKILL.md",
+      "skillFolderHash": "3116f3e62dbd02b44a598b1aa690d2a8938e8f89",
+      "installedAt": "2026-10-11T03:32:32.530Z",
+      "updatedAt": "2026-10-11T03:32:32.530Z"
+    },
+    "cloudflare": {
+      "source": "cloudflare/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/cloudflare/skills.git",
+      "skillPath": "skills/cloudflare/SKILL.md",
+      "skillFolderHash": "1a76daddc33b559e0a94f6fa2c16c7a582e86aa6",
+      "installedAt": "2026-10-11T03:34:19.904Z",
+      "updatedAt": "2026-10-11T03:34:19.904Z"
+    },
+    "aws-agentic-ai": {
+      "source": "zxkane/aws-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/zxkane/aws-skills.git",
+      "skillPath": "plugins/aws-agentic-ai/skills/aws-agentic-ai/SKILL.md",
+      "skillFolderHash": "c69945468dc9a948ef4a29fa3c0ba2d5537b55ea",
+      "pluginName": "aws-agentic-ai",
+      "installedAt": "2026-10-11T03:35:08.412Z",
+      "updatedAt": "2026-10-11T03:35:08.412Z"
+    },
+    "aws-mcp-setup": {
+      "source": "zxkane/aws-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/zxkane/aws-skills.git",
+      "skillPath": "plugins/aws-common/skills/aws-mcp-setup/SKILL.md",
+      "skillFolderHash": "6025164e75c62254a3a99b40f78d3dd61bbb1e77",
+      "pluginName": "aws-common",
+      "installedAt": "2026-10-11T03:35:08.426Z",
+      "updatedAt": "2026-10-11T03:35:08.426Z"
+    },
+    "aws-cost-operations": {
+      "source": "zxkane/aws-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/zxkane/aws-skills.git",
+      "skillPath": "plugins/aws-cost-ops/skills/aws-cost-operations/SKILL.md",
+      "skillFolderHash": "b600f0d28c238987e7cb73f68522081d0df7895c",
+      "pluginName": "aws-cost-ops",
+      "installedAt": "2026-10-11T03:35:08.438Z",
+      "updatedAt": "2026-10-11T03:35:08.438Z"
+    },
+    "aws-cdk-development": {
+      "source": "zxkane/aws-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/zxkane/aws-skills.git",
+      "skillPath": "plugins/aws-iac/skills/aws-cdk-development/SKILL.md",
+      "skillFolderHash": "7a37a62e4a41c81e0458c8ae2c102ab74e8fe4b2",
+      "pluginName": "aws-iac",
+      "installedAt": "2026-10-11T03:35:08.452Z",
+      "updatedAt": "2026-10-11T03:35:08.452Z"
+    },
+    "aws-sst-development": {
+      "source": "zxkane/aws-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/zxkane/aws-skills.git",
+      "skillPath": "plugins/aws-iac/skills/aws-sst-development/SKILL.md",
+      "skillFolderHash": "9f898650241f6b677cbf2b837a1e2ae6daf6ccdc",
+      "pluginName": "aws-iac",
+      "installedAt": "2026-10-11T03:35:08.469Z",
+      "updatedAt": "2026-10-11T03:35:08.469Z"
+    },
+    "aws-serverless-eda": {
+      "source": "zxkane/aws-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/zxkane/aws-skills.git",
+      "skillPath": "plugins/serverless-eda/skills/aws-serverless-eda/SKILL.md",
+      "skillFolderHash": "743451efd3e678560b1b10f81df5267beb9b803c",
+      "pluginName": "serverless-eda",
+      "installedAt": "2026-10-11T03:35:08.481Z",
+      "updatedAt": "2026-10-11T03:35:08.481Z"
+    },
+    "deploy-to-vercel": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/agent-skills.git",
+      "skillPath": "skills/deploy-to-vercel/SKILL.md",
+      "skillFolderHash": "1378aa506439f26c809dbcfc61515cbd70f93d69",
+      "installedAt": "2026-10-11T03:35:33.146Z",
+      "updatedAt": "2026-10-11T03:35:33.146Z"
+    },
+    "postgres": {
+      "source": "sanjay3290/postgres-skill",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/sanjay3290/postgres-skill.git",
+      "skillPath": "skills/postgres/SKILL.md",
+      "skillFolderHash": "fcb1b57c45d48e5b54d63f158510539ca41e3fa0",
+      "pluginName": "ai-skills",
+      "installedAt": "2026-10-11T03:36:09.600Z",
+      "updatedAt": "2026-10-11T03:36:09.600Z"
+    }
+  },
+  "dismissed": {
+    "findSkillsPrompt": true
+  },
+  "lastSelectedAgents": [
+    "amp",
+    "cline",
+    "codex",
+    "cursor",
+    "droid",
+    "gemini-cli",
+    "github-copilot",
+    "kilo",
+    "kimi-code-cli",
+    "opencode",
+    "pi",
+    "warp",
+    "zed"
+  ]
+}
