@@ -526,6 +526,62 @@ Suggested tag: `git tag phase-7`
 **Gate Status: ACCEPTED**
 Suggested tag: `git tag phase-9`
 
+---
+
+## Phase 10: Document Intake, MTC Engine & Life Monitor (Module 9)
+
+### What Was Built
+1. **Database Schema & Migrations (`db/migrations/versions/0002_mtc_lots_life.py`):**
+   - Tables added: `procurement_lines`, `stock_lots`, `usage_events`, `life_policies`, `life_alerts`, `cert_records`, `grade_reference`, `mtc_results`.
+   - Row-Level Security (RLS) enabled on all tenant-partitioned tables.
+   - SQLAlchemy ORM models mapped in `api/models/entities.py` and exported via `api/models/__init__.py`.
+2. **OCR & Document Intake Pipeline (`api/services/ocr.py`, `api/services/docs.py`, `api/routers/docs.py`):**
+   - Channels supported: `UPLOAD`, `CAMERA`, and `PASTE` (`PASTED_TEXT` flag).
+   - `PyMuPDFProvider` (`pymupdf==1.28.2`) and `FakeOCRProvider` implementing `OCRProvider` protocol.
+   - Invariant $S5$: low OCR confidence (<0.85) on HARD attributes sets attribute value to `None` with `LOW_OCR_CONFIDENCE` flag.
+   - Invariant $S10$: duplicate detection on `file_hash` and normalized `invoice_key` (`<gstin>|<invoice_no>|<date>`), warning or blocking silent merges.
+   - Pre-procurement duplicate check endpoint (`POST /docs/precheck`) testing line items against existing golden masters without creating entities, appending an audit record.
+3. **MTC Certificate Engine (`api/services/mtc.py`, `POST /docs/{id}/mtc`):**
+   - 17 chemistry elements parsed with decimal comma handling and percentage out-of-bounds checks.
+   - Strict derived calculations:
+     - $CE_{IIW} = C + \frac{Mn}{6} + \frac{Cr + Mo + V}{5} + \frac{Ni + Cu}{15}$ (worked test check 0.390).
+     - $PREN = Cr + 3.3 \cdot Mo + 16 \cdot N$.
+     - Missing constituents are never replaced with zero; returns `CE_INCOMPLETE` or `PREN_INCOMPLETE`.
+   - Invariant $S15$: unverified reference row yields `UNVERIFIED_REFERENCE`, never `CONFORMS`.
+   - Stock lot updated with `mtc_verified = true` only when evaluation yields `CONFORMS` and heat or batch number matches.
+4. **Life Monitor (`api/services/life.py`, `api/routers/lots.py`):**
+   - Pure functions with injectable `Clock` (`RealClock`, `SimulatedClock`). Domain functions never call `datetime.now()` directly.
+   - Multi-basis remaining life: `SHELF_LIFE_DAYS`, `USAGE_COUNT`, `USAGE_HOURS`. Earliest-ending basis wins ("6 months or 100 parts, whichever first").
+   - Invariant $S6$: expired lot or unknown shelf-life on expiry-tracked lot is never `GREEN`, never Stream A eligible (`EXPIRED_OR_UNKNOWN`).
+   - Invariant $S7$: usage-based lot without usage events is never `GREEN` (`NO_USAGE_EVENTS`).
+   - Invariant $S8$: recorded usage and advancing time monotonically degrade remaining life.
+   - Ordered First-Expired First-Out (FEFO) disposition ladder (`ISSUE_OLDEST_FIRST`, `REDEPLOY_NEAR_EXPIRY`, `VENDOR_RETEST_OR_RETURN`, `DISPOSAL_EXPORT`).
+5. **Testing & Verification Suite:**
+   - 21 new tests in `tests/test_docs_ocr.py`, `tests/test_mtc_conformance.py`, and `tests/test_life_monitor.py`.
+   - Total test suite: 179 passing tests across backend.
+   - Release evaluation gate passed: 0 false merges, 100% missing-attribute routing, Clopper-Pearson bound $\le 2.15\%$.
+
+### Acceptance Gate Evaluation (Phase 10)
+
+| Check | Requirement | Result | Output / Evidence |
+|---|---|---|---|
+| 1. Code Quality & Linting | `uv run ruff check .` and `uv run ruff format --check .` | **PASS** | `All checks passed! 140 files already formatted.` |
+| 2. OCR Low-Confidence Gating | Low OCR confidence on HARD attribute sets value to None with flag | **PASS** | `test_invariant_s5_low_ocr_confidence_sets_none` PASSED |
+| 3. Document Duplicate Gating | Duplicate document yields warning and routes to review; blocks silent merge | **PASS** | `test_invariant_s10_duplicate_document_blocks_silent_merge` PASSED |
+| 4. MTC Chemistry & Formulas | $CE_{IIW}$ worked check 0.390, missing constituents return incomplete | **PASS** | `test_compute_ce_iiw_worked_check` PASSED<br>`test_compute_ce_iiw_missing_constituent_is_incomplete` PASSED |
+| 5. Unverified Reference Gating | Invariant S15: Unverified reference row returns `UNVERIFIED_REFERENCE`, never `CONFORMS` | **PASS** | `test_invariant_s15_unverified_reference_never_conforms` PASSED |
+| 6. Life Monitor Clock Injection | Pure life functions use injected Clock; no unmocked datetime.now | **PASS** | `test_clock_injection_pure_functions` PASSED |
+| 7. Shelf-Life Invariant S6 | Expired or unknown expiry is never GREEN, never Stream A | **PASS** | `test_invariant_s6_expired_lot_never_green` PASSED<br>`test_invariant_s6_unknown_expiry_on_required_never_green` PASSED |
+| 8. Usage Tracking Invariant S7 | Usage-based lot without events is never GREEN | **PASS** | `test_invariant_s7_usage_lot_without_events_never_green` PASSED |
+| 9. Degradation Monotonicity Invariant S8 | Adding usage and advancing time monotonically degrades life | **PASS** | `test_invariant_s8_usage_and_time_monotonicity` PASSED |
+| 10. Multi-Basis Earliest-Wins | Earliest-ending basis determines risk status | **PASS** | `test_multi_basis_earliest_ending_wins` PASSED |
+| 11. Full Test Suite | All tests pass via `uv run pytest tests/` | **PASS** | **179 passed in 9.52s** |
+| 12. Evaluation Release Gate | All 5 hard release gates pass via `python scripts/eval_harness.py` | **PASS** | **ALL GATES PASSED** (0 false merges, 100% missing-attribute routing) |
+
+**Gate Status: ACCEPTED**
+Suggested tag: `git tag phase-10`
+
+
 
 
 

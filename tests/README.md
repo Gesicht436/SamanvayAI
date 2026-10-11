@@ -31,6 +31,9 @@ All tests run with `uv run pytest`.
 | [test_match_api.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_match_api.py) | `api/routers/` | End-to-end `POST /match` endpoint authentication, request validation, candidate scoring, tier assignment, reason codes, and empty database fallback. |
 | [test_stewardship.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_stewardship.py) | `api/routers/`, `api/services/` | Stewardship Maker-Checker task proposals, self-approval prevention (403), safety-critical domain tags (403), action execution, feedback capture, and audit logs. |
 | [test_eval_gate.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_eval_gate.py) | `scripts/` | Mathematical verification of exact Clopper-Pearson confidence bounds, gate_check hard release gates, 3-baseline comparison, and sector/org parity. |
+| [test_docs_ocr.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_docs_ocr.py) | `api/services/docs.py`, `api/services/ocr.py` | Fake and PyMuPDF OCR pipelines, Invariant S5 (low-confidence OCR gating on HARD attributes), Invariant S10 (duplicate detection on hash and invoice_key), and precheck. |
+| [test_mtc_conformance.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_mtc_conformance.py) | `api/services/mtc.py` | 17 chemistry elements, decimal comma handling, worked check CE_IIW = 0.390, Invariant S15 (unverified reference never yields CONFORMS), and heat/batch matching with stock lots. |
+| [test_life_monitor.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_life_monitor.py) | `api/services/life.py`, `api/routers/lots.py` | Pure Clock injection, multi-basis remaining life (earliest wins), Invariant S6 (expired/unknown expiry), S7 (usage without events), S8 (monotonicity), and ordered FEFO disposition ladder. |
 
 ---
 

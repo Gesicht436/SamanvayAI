@@ -35,6 +35,16 @@ The `api/routers/` directory exposes the REST endpoints of Samanvay:
 | `GET` | `/tasks/{task_id}` | Authenticated | Retrieves a single stewardship task by ID. |
 | `POST` | `/tasks/{task_id}/approve` | Authenticated (Checker) | Approves task with Maker != Checker and domain tag validation. |
 | `POST` | `/tasks/{task_id}/reject` | Authenticated (Checker) | Rejects task and captures negative feedback example. |
+| `POST` | `/docs` | Authenticated | Ingests document via file upload or camera capture with duplicate check (S10). |
+| `POST` | `/docs/paste` | Authenticated | Ingests raw text skipping OCR with `PASTED_TEXT` line flags. |
+| `GET` | `/docs/{id}` | Authenticated | Retrieves document metadata, file hash, and invoice key. |
+| `GET` | `/docs/{id}/lines` | Authenticated | Returns extracted lines with bounding boxes and OCR confidence. |
+| `POST` | `/docs/precheck` | Authenticated | Pre-procurement duplicate check against golden masters without persisting items. |
+| `POST` | `/docs/{id}/mtc` | Authenticated | Evaluates chemistry, derived CE/PREN, and reference conformance (S15). |
+| `GET` | `/lots` | Authenticated | Lists stock lots with risk status, remaining days, and Stream A eligibility. |
+| `GET` | `/lots/{id}` | Authenticated | Returns full lot details, remaining life across bases, and disposition ladder. |
+| `POST` | `/lots/{id}/usage` | Authenticated | Records physical usage event, reducing quantity and remaining life (S8). |
+| `GET` | `/lots/{id}/disposition` | Authenticated | Returns ordered 4-step FEFO disposition ladder. |
 
 ---
 

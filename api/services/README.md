@@ -195,8 +195,35 @@ uv run python -c "from api.services.comparator import compare_items; from api.se
 
 ### 4.7 Test Cold-Start Benchmark CLI
 ```powershell
-uv run python scripts/cold_start_dedup.py --count 1000
-```
+### 2.12 OCR Provider Protocol and Gating (`ocr.py`)
+- Defines `OCRProvider` protocol with implementations:
+  - `FakeOCRProvider`: Deterministic sidecar JSON and synthetic line replay for CI.
+  - `PyMuPDFProvider`: High-speed digital text layer and layout geometry extraction.
+- **Safety Invariant $S5$:** Low-confidence OCR on HARD attributes becomes `None` with flag `LOW_OCR_CONFIDENCE`.
+
+### 2.13 Document Intake Pipeline (`docs.py`)
+- Multi-channel capture: `UPLOAD`, `CAMERA`, and `PASTE` (with `PASTED_TEXT` flag).
+- **Safety Invariant $S10$:** Duplicate documents warn or block via SHA-256 file hash and normalized `invoice_key` (`<gstin>|<invoice_no>|<date>`). They never merge silently.
+- Pre-procurement check (`precheck_document`): Checks existing golden masters to prevent duplicate procurement without persisting records, writing a cryptographic audit record.
+
+### 2.14 MTC Certificate Engine (`mtc.py`)
+- Extracts up to 17 chemistry elements (`C, Mn, Si, P, S, Cr, Ni, Mo, Cu, V, Nb, N, Al, W, Co, Ti, B`) with decimal comma normalization.
+- Checks value bounds: values outside 0–100% or total sum > 100% become `None` with `CHEM_OUT_OF_RANGE`.
+- Extracts mechanical properties (yield, tensile, elongation, hardness, Charpy energy).
+- Computes derived formulas:
+  - $CE_{IIW} = C + \frac{Mn}{6} + \frac{Cr + Mo + V}{5} + \frac{Ni + Cu}{15}$
+  - $PREN = Cr + 3.3 \cdot Mo + 16 \cdot N$
+- **Strict Rule:** Derived formulas compute ONLY when all constituents are present. Missing elements are never treated as zero; yields `CE_INCOMPLETE` or `PREN_INCOMPLETE`.
+- **Safety Invariant $S15$:** MTC never yields `CONFORMS` against an unverified reference row (`UNVERIFIED_REFERENCE`). Lots are marked MTC-verified only with `CONFORMS` and a heat or batch number match.
+
+### 2.15 Life Monitor Service (`life.py`)
+- Pure functions using injectable `Clock` (`RealClock`, `SimulatedClock`). Domain functions never call `datetime.now()` directly.
+- Multi-basis remaining life: `SHELF_LIFE_DAYS`, `USAGE_COUNT`, `USAGE_HOURS`. Earliest-ending basis wins ("6 months or 100 parts, whichever first").
+- Risk states: `GREEN`, `AMBER`, `RED`, `EXPIRED`, `UNKNOWN`.
+- **Safety Invariant $S6$:** Expired lot or unknown expiry on `expiry_required` subcategories is never `GREEN`, never Stream A eligible.
+- **Safety Invariant $S7$:** Usage-based lot without usage events is never `GREEN` (`INSUFFICIENT_DATA` or `UNKNOWN`).
+- **Safety Invariant $S8$:** Adding usage never increases remaining life; risk never improves as simulated time advances.
+- Generates ordered First-Expired-First-Out (FEFO) disposition ladder (issue oldest first, redeploy near-expiry, vendor retest/return, disposal export).
 
 ---
 
