@@ -27,6 +27,7 @@ This file records exact package and tool versions resolved at installation time 
 | `pyjwt` | 2.15.1 | JWT token encoding and verification |
 | `openpyxl` | 3.1.5 | Microsoft Excel XLSX spreadsheet parser |
 | `python-multipart` | 0.0.32 | Multipart/form-data parser for file uploads |
+| `pyyaml` | 6.0.3 | YAML parser for sector pack specifications and lexicons |
 
 
 ---

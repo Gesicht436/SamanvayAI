@@ -28,3 +28,13 @@ This document records architectural and technical design decisions made when the
 - **Context:** Industrial and CPSE material harmonization involves complex engineering nuances (metallurgy, pressure classes, explosion-proof standards, statutory rules). Complex language creates ambiguity across team handovers.
 - **Decision:** Mandate that all folder-level `README.md` files follow 80% ASD-STE100 (Simplified Technical English) with clear sections: Purpose, Theory, File Index, Manual Testing Guide, and Connected Documentation.
 - **Consequence:** Drastically reduces cognitive load and allows any developer or AI agent to understand, test, and extend code immediately.
+
+---
+
+## ADR 004: Dual TOML and YAML Support for Pack Specs and Lexicons
+- **Date:** 2026-10-11
+- **Status:** Accepted
+- **Context:** The specification uses YAML in `specs/*.yaml` and `packs/<pack>/specs/`, while the stdlib-first skill emphasizes standard-library TOML (`tomllib`). Sector packs and custom dictionaries may be contributed in either format.
+- **Decision:** The Spec and Lexicon Registry supports both `.toml` (via stdlib `tomllib`) and `.yaml`/`.yml` (via `pyyaml`). All specs validate against a common Pydantic schema enforcing `identity_mode` (`PARAMETRIC`, `OEM_PN`, `DRAWING`), attribute roles (`HARD`, `REQUIRED`, `SOFT`, `DIRECTIONAL`), and primary dimensions.
+- **Consequence:** Developers and domain engineers can author definitions in clean YAML or zero-dependency TOML interchangeably.
+
