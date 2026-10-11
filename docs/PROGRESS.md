@@ -6,10 +6,10 @@ This log tracks execution progress across phases and agent sessions. It records 
 
 ## Current Status
 
-- **Completed Phase:** Phase 4 (Safety Comparator & Tiering Engine) / **Module 3**
-- **Next Phase:** Phase 5 (Deep Flagship Families) / **Module 4**
+- **Completed Phase:** Phase 5 (Deep Flagship Families) / **Module 4**
+- **Next Phase:** Phase 6 (Candidate Generation & Vector Engine) / **Module 5**
 - **Date Completed:** 2026-10-11
-- **Status:** Phase 4 Accepted
+- **Status:** Phase 5 Accepted
 
 
 
@@ -251,6 +251,50 @@ Suggested tag: `git tag phase-3`
 
 **Gate Status: ACCEPTED**
 Suggested tag: `git tag phase-4`
+
+---
+
+## Phase 5: Deep Flagship Families (Module 4)
+
+### What Was Built
+1. **6 Deep Flagship Family Specifications & Lexicons:**
+   - Common: `VALVES.GATE` (trim codes 1-16, bonnet styles, operators, NACE, fire-safe) and `MOTORS.EX` (Ex Group I coal vs Group II surface, temp classes T1-T6, mounting B3/B5, TEFC).
+   - Power: `POWER.TRANSFORMER` (kVA/MVA, dual cooling, primary/secondary voltages, Dyn11 canonical vector groups, tap changers, winding metallurgy).
+   - Steel: `STEEL.REFRACTORY` (shapes, taper dimensions, Al2O3/MgO/C key chemistry, shelf life days, bond systems).
+   - Mining: `MINING.OTR_TYRE` (section width, radial vs bias, rim diameter in inches, E3/E4/L5 tread codes, star and ply ratings).
+   - Heavy Eng: `HEAVY.PUMP_CENTRIFUGAL` (flow conversions, head in metres, speed RPM, OEM nozzle codes 4X3-10, API 610 classifications, seal plans).
+2. **Deterministic Physical Parsers (`api/extractors/parsers/`):**
+   - Standard-library rule-based parsers implemented for all physical attributes: `motors.py`, `transformers.py`, `refractory.py`, `otr_tyres.py`, `pumps.py`.
+   - IEC motor power snap via standard kW series. Group I coal mine underground exemption per Invariant $S11$.
+   - Safety checks: flag `PRESSURE_NOT_HEAD` when pressure units are provided for pump head.
+   - Flexible token matching in `LexiconExtractor` for hyphenated and spaced compound terms (`_synonym_regex`).
+3. **Fixture Data & Adversarial Hard Negatives:**
+   - 45 test fixtures in CSV for each of the 6 deep families (270 fixtures total).
+   - 16 adversarial hard-negative test pairs for each family (96 pairs total), testing critical safety differences (voltage swaps, Ex group confusion, dimensional taper, tread codes, nozzle sizing).
+   - Standards reference seeds with `verified = false` logged in `packs/*/standards/seed.csv`.
+4. **Evaluation and Release Gate (`tests/test_deep_families_eval.py`):**
+   - Rigorous evaluation suite running all 270 fixtures and 96 adversarial pairs.
+   - Refusal gate: 0 hard-negative false merges reach Tier 1 (100% refusal rate).
+   - Missing-attribute gate: 100% of missing-attribute test cases land in Tier 2.
+   - Extraction accuracy gate: every family achieves $\ge 90\%$ accuracy (overall 98.0%, exceeding 95% threshold).
+
+### Acceptance Gate Evaluation (Phase 5)
+
+| Check | Requirement | Result | Output / Evidence |
+|---|---|---|---|
+| 1. Code Quality & Linting | `uv run ruff check .` and `uv run ruff format --check .` | **PASS** | `All checks passed! 94 files left unchanged` |
+| 2. Deep Family Fixtures Count | $\ge 40$ fixtures per family across 6 families | **PASS** | `test_deep_families_fixtures_count` PASSED (45 per family) |
+| 3. Hard-Negative Pairs Count | $\ge 15$ adversarial pairs per family across 6 families | **PASS** | `test_deep_families_hard_negatives_count` PASSED (16 per family) |
+| 4. Extraction Accuracy Gate | $\ge 90\%$ per family, $\ge 95\%$ overall | **PASS** | `VALVES.GATE`: 92.6%<br>`MOTORS.EX`: 100.0%<br>`POWER.TRANSFORMER`: 94.8%<br>`STEEL.REFRACTORY`: 100.0%<br>`MINING.OTR_TYRE`: 100.0%<br>`HEAVY.PUMP_CENTRIFUGAL`: 100.0%<br>**Overall: 98.0% (1976/2017)** |
+| 5. Hard-Negative Refusal Gate | ZERO false merges reach Tier 1 (fail closed) | **PASS** | `test_zero_hard_negatives_reach_tier1` PASSED (0 leaks) |
+| 6. Missing-Attribute Routing Gate | Missing attribute pairs land 100% in Tier 2 | **PASS** | `test_missing_attribute_cases_land_in_tier2` PASSED |
+| 7. Tier 1 Single Source of Truth | `scan_tier1.py` reports 0 unauthorized Tier 1 assignments | **PASS** | `0 location(s) outside ['tiering.py']` |
+| 8. Verification Register | All code markers match registered claims | **PASS** | `verify_claims.py`: 11 registered claims, 5 markers |
+| 9. Full Test Suite | All tests pass via `uv run pytest` | **PASS** | `110 passed in 4.37s` |
+
+**Gate Status: ACCEPTED**
+Suggested tag: `git tag phase-5`
+
 
 
 

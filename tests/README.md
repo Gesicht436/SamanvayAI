@@ -20,6 +20,8 @@ All tests run with `uv run pytest`.
 | [test_pack_registry.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_pack_registry.py) | `packs/`, `api/extractors/` | Sector pack loading (12 specs), identity modes (PARAMETRIC, DRAWING), statutory flags, pack unmounting resilience, and `/extract` API endpoints. |
 | [test_safety_invariants.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_safety_invariants.py) | `api/services/` | Hypothesis property tests for Safety Invariants S1-S15 (>=300 examples each), golden verdict matrix test, and deliberate mutation check. |
 | [test_comparator_tiering_api.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_comparator_tiering_api.py) | `api/routers/` | Integration tests for `/compare` and `/tier` REST endpoints (exact match, missing/mismatch, directional upgrade, tier routing). |
+| [test_deep_parsers.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_deep_parsers.py) | `api/extractors/parsers/` | Unit tests for physical parsers: motors (snap, Ex), transformers (kVA, kV, vector groups), refractory, OTR tyres, and pumps. |
+| [test_deep_families_eval.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_deep_families_eval.py) | `packs/`, `api/extractors/` | Evaluation release gate: 45 fixtures/family, 16 hard-negative pairs/family, zero false merges in Tier 1, and >=90% extraction accuracy. |
 
 ---
 
