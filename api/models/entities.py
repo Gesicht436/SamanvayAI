@@ -252,3 +252,127 @@ class Job(Base):
     run_after = Column(DateTime(timezone=True), server_default=text("now()"))
     last_error = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=text("now()"))
+
+
+class ProcurementLine(Base):
+    __tablename__ = "procurement_lines"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    org_id = Column(Text, ForeignKey("organizations.id"), nullable=False)
+    golden_id = Column(UUID(as_uuid=True), ForeignKey("golden_masters.id"), nullable=True)
+    doc_line_id = Column(UUID(as_uuid=True), ForeignKey("doc_lines.id"), nullable=True)
+    qty = Column(Numeric(14, 3), nullable=True)
+    uom = Column(Text, nullable=True)
+    unit_price_inr = Column(Numeric(14, 2), nullable=True)
+    vendor = Column(Text, nullable=True)
+    po_no = Column(Text, nullable=True)
+    grn_no = Column(Text, nullable=True)
+    received_on = Column(Date, nullable=True)
+
+
+class StockLot(Base):
+    __tablename__ = "stock_lots"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    org_id = Column(Text, ForeignKey("organizations.id"), nullable=False)
+    golden_id = Column(UUID(as_uuid=True), ForeignKey("golden_masters.id"), nullable=True)
+    procurement_line_id = Column(UUID(as_uuid=True), ForeignKey("procurement_lines.id"), nullable=True)
+    plant = Column(Text, nullable=True)
+    qty_remaining = Column(Numeric(14, 3), nullable=True)
+    batch_no = Column(Text, nullable=True)
+    mfg_date = Column(Date, nullable=True)
+    expiry_date = Column(Date, nullable=True)
+    start_date = Column(Date, nullable=True)
+
+
+class UsageEvent(Base):
+    __tablename__ = "usage_events"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    lot_id = Column(UUID(as_uuid=True), ForeignKey("stock_lots.id"), nullable=False)
+    ts = Column(DateTime(timezone=True), nullable=False)
+    amount = Column(Numeric(14, 3), nullable=False)
+    unit = Column(Text, nullable=False)
+
+
+class LifePolicy(Base):
+    __tablename__ = "life_policies"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    scope_type = Column(Text, nullable=False)  # GOLDEN, CLASS
+    scope_value = Column(Text, nullable=False)
+    org_id = Column(Text, ForeignKey("organizations.id"), nullable=True)
+    basis = Column(Text, nullable=False)  # SHELF_LIFE_DAYS, USAGE_COUNT, USAGE_HOURS
+    limit_value = Column(Numeric, nullable=False)
+    unit = Column(Text, nullable=True)
+    source = Column(Text, nullable=True)
+
+
+class LifeAlert(Base):
+    __tablename__ = "life_alerts"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    lot_id = Column(UUID(as_uuid=True), ForeignKey("stock_lots.id"), nullable=False)
+    kind = Column(Text, nullable=True)
+    risk = Column(Text, nullable=True)
+    projected_date = Column(Date, nullable=True)
+    recipient_role = Column(Text, nullable=True)
+    dedupe_key = Column(Text, unique=True, nullable=True)
+    state = Column(Text, server_default="OPEN", nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=text("now()"))
+    acked_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class CertRecord(Base):
+    __tablename__ = "cert_records"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    org_id = Column(Text, ForeignKey("organizations.id"), nullable=False)
+    lot_id = Column(UUID(as_uuid=True), ForeignKey("stock_lots.id"), nullable=True)
+    golden_id = Column(UUID(as_uuid=True), ForeignKey("golden_masters.id"), nullable=True)
+    cert_type = Column(Text, nullable=False)
+    cert_no = Column(Text, nullable=True)
+    issuer = Column(Text, nullable=True)
+    valid_to = Column(Date, nullable=True)
+    file_hash = Column(Text, nullable=True)
+    verified = Column(Boolean, server_default="false", nullable=False)
+
+
+class GradeReference(Base):
+    __tablename__ = "grade_reference"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    grade = Column(Text, nullable=False)
+    product_form = Column(Text, nullable=False)
+    property = Column(Text, nullable=False)
+    kind = Column(Text, nullable=False)  # CHEM, MECH
+    min_value = Column(Numeric, nullable=True)
+    max_value = Column(Numeric, nullable=True)
+    unit = Column(Text, nullable=True)
+    condition = Column(Text, nullable=True)
+    source = Column(Text, nullable=True)
+    verified = Column(Boolean, server_default="false", nullable=False)
+
+    __table_args__ = (UniqueConstraint("grade", "product_form", "property", name="uq_grade_reference_property"),)
+
+
+class MtcResult(Base):
+    __tablename__ = "mtc_results"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    org_id = Column(Text, ForeignKey("organizations.id"), nullable=False)
+    document_id = Column(UUID(as_uuid=True), ForeignKey("documents.id"), nullable=True)
+    cert_id = Column(UUID(as_uuid=True), ForeignKey("cert_records.id"), nullable=True)
+    lot_id = Column(UUID(as_uuid=True), ForeignKey("stock_lots.id"), nullable=True)
+    heat_no = Column(Text, nullable=True)
+    grade_claimed = Column(Text, nullable=True)
+    chemistry = Column(JSONB, server_default="{}", nullable=False)
+    mechanical = Column(JSONB, server_default="{}", nullable=False)
+    ce_iiw = Column(Numeric(5, 3), nullable=True)
+    pren = Column(Numeric(5, 1), nullable=True)
+    heat_treatment = Column(Text, nullable=True)
+    ndt = Column(JSONB, server_default="[]", nullable=False)
+    flags = Column(ARRAY(Text), server_default="{}", nullable=False)
+    conformance = Column(Text, nullable=True)  # CONFORMS, FAILS, INCOMPLETE, UNVERIFIED_REFERENCE, REQUIRES_REVIEW
+    reference_verified = Column(Boolean, server_default="false", nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=text("now()"))
