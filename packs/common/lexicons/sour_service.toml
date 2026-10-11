@@ -1,0 +1,8 @@
+attribute = "sour_service"
+categories = ["VALVES", "VALVES.GATE", "PIPING"]
+
+[values.NACE_MR0175]
+synonyms = ["NACE MR0175", "NACE MR-0175", "NACE MR 0175", "NACE MR0103", "MR0175", "SOUR SERVICE", "NACE", "ISO 15156"]
+
+[values.NO]
+synonyms = ["NON SOUR", "NOT SOUR SERVICE"]

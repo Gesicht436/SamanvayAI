@@ -1,0 +1,11 @@
+attribute = "shape_code"
+categories = ["STEEL.REFRACTORY"]
+
+[values.STRAIGHT]
+synonyms = ["STRAIGHT", "STD STRAIGHT", "STANDARD STRAIGHT", "RECTANGULAR"]
+
+[values.ARCH]
+synonyms = ["END ARCH", "SIDE ARCH", "ARCH", "ARCH BRICK"]
+
+[values.WEDGE]
+synonyms = ["WEDGE", "END WEDGE", "SIDE WEDGE", "KEY BRICK"]

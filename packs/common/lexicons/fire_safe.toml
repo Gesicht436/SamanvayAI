@@ -1,0 +1,11 @@
+attribute = "fire_safe"
+categories = ["VALVES", "VALVES.GATE"]
+
+[values.API_607]
+synonyms = ["FIRE SAFE TO API 607", "FIRE SAFE API 607", "API 607", "API-607", "FIRE SAFE", "FIRE-SAFE"]
+
+[values.API_6FA]
+synonyms = ["API 6FA", "API-6FA", "FIRE SAFE TO API 6FA"]
+
+[values.NO]
+synonyms = ["NON FIRE SAFE", "NOT FIRE SAFE"]

@@ -10,4 +10,12 @@ attributes:
   - {name: material_class, role: HARD}
   - {name: key_chemistry, role: HARD}
   - {name: shape_code, role: HARD}
+  - {name: dimensions_mm, role: HARD}
+  - {name: cement_class, role: HARD}
+  - {name: bond, role: REQUIRED}
+  - {name: max_service_c, role: REQUIRED}
+  - {name: bulk_density, role: REQUIRED}
   - {name: shelf_life_days, role: REQUIRED}
+  - {name: brand_grade, role: SOFT}
+life:
+  - {basis: SHELF_LIFE_DAYS, value: null, source: "datasheet (mandatory)"}

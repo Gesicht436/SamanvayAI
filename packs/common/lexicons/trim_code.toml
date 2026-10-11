@@ -1,0 +1,23 @@
+attribute = "trim_code"
+categories = ["VALVES", "VALVES.GATE"]
+
+[values.TRIM_1]
+synonyms = ["TRIM 1", "TRIM-1", "TRIM1", "13CR/13CR", "F6/F6"]
+
+[values.TRIM_5]
+synonyms = ["TRIM 5", "TRIM-5", "TRIM5", "STELLITE/STELLITE", "HF/HF", "FULL STELLITE"]
+
+[values.TRIM_8]
+synonyms = ["TRIM 8", "TRIM-8", "TRIM8", "F6/STELLITE", "13CR/STELLITE", "HALF STELLITE", "13CR AND HF"]
+
+[values.TRIM_9]
+synonyms = ["TRIM 9", "TRIM-9", "TRIM9", "MONEL/MONEL"]
+
+[values.TRIM_10]
+synonyms = ["TRIM 10", "TRIM-10", "TRIM10", "316/316", "SS316/SS316", "CF8M/CF8M"]
+
+[values.TRIM_12]
+synonyms = ["TRIM 12", "TRIM-12", "TRIM12", "316/STELLITE", "SS316/HF"]
+
+[values.TRIM_16]
+synonyms = ["TRIM 16", "TRIM-16", "TRIM16"]

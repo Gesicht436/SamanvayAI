@@ -1,0 +1,23 @@
+attribute = "form"
+categories = ["STEEL.REFRACTORY"]
+
+[values.BRICK]
+synonyms = ["BRICK", "BRICKS", "SHAPED BRICK", "REFRACTORY BRICK"]
+
+[values.CASTABLE]
+synonyms = ["CASTABLE", "CASTABLES", "DENSE CASTABLE", "INSULATING CASTABLE"]
+
+[values.RAMMING_MASS]
+synonyms = ["RAMMING MASS", "RAMMING MIX", "DRY RAMMING MASS"]
+
+[values.GUNNING_MIX]
+synonyms = ["GUNNING MIX", "GUNNING MASS"]
+
+[values.MORTAR]
+synonyms = ["MORTAR", "REFRACTORY MORTAR"]
+
+[values.FIBRE]
+synonyms = ["CERAMIC FIBRE", "FIBRE", "BLANKET", "CERAMIC BLANKET"]
+
+[values.PRECAST_SHAPE]
+synonyms = ["PRECAST SHAPE", "PRECAST BLOCK", "WELL BLOCK", "PURGING PLUG"]

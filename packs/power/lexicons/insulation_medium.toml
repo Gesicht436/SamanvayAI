@@ -1,0 +1,17 @@
+attribute = "insulation_medium"
+categories = ["POWER.TRANSFORMER"]
+
+[values.MINERAL_OIL]
+synonyms = ["MINERAL OIL", "MINERAL INSULATING OIL", "TRANSFORMER OIL", "OIL FILLED"]
+
+[values.SYNTHETIC_ESTER]
+synonyms = ["SYNTHETIC ESTER", "MIDEL 7131"]
+
+[values.NATURAL_ESTER]
+synonyms = ["NATURAL ESTER", "FR3", "VEGETABLE OIL"]
+
+[values.SILICONE]
+synonyms = ["SILICONE FLUID", "SILICONE OIL"]
+
+[values.DRY_CAST_RESIN]
+synonyms = ["DRY TYPE", "CAST RESIN", "DRY CAST RESIN", "CRT", "VPI"]

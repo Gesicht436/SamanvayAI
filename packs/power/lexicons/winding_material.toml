@@ -1,0 +1,8 @@
+attribute = "winding_material"
+categories = ["POWER.TRANSFORMER"]
+
+[values.COPPER]
+synonyms = ["COPPER", "CU", "ELECTROLYTIC COPPER"]
+
+[values.ALUMINIUM]
+synonyms = ["ALUMINIUM", "AL", "EC GRADE ALUMINIUM"]

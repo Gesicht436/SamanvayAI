@@ -1,0 +1,8 @@
+attribute = "installation"
+categories = ["POWER.TRANSFORMER"]
+
+[values.OUTDOOR]
+synonyms = ["OUTDOOR", "OUT-DOOR", "OUTDOOR TYPE"]
+
+[values.INDOOR]
+synonyms = ["INDOOR", "IN-DOOR", "INDOOR TYPE"]

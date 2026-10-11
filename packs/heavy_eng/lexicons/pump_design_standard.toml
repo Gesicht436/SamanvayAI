@@ -1,0 +1,14 @@
+attribute = "design_standard"
+categories = ["HEAVY.PUMP_CENTRIFUGAL"]
+
+[values.API_610]
+synonyms = ["API 610", "API-610", "API610", "ISO 13709"]
+
+[values.ISO_2858]
+synonyms = ["ISO 2858", "ISO-2858", "ISO2858", "IS 5120"]
+
+[values.ISO_5199]
+synonyms = ["ISO 5199", "ISO-5199", "ISO5199"]
+
+[values.ASME_B73_1]
+synonyms = ["ASME B73.1", "ANSI B73.1", "B73.1"]

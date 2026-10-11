@@ -1,0 +1,17 @@
+attribute = "material_class"
+categories = ["HEAVY.PUMP_CENTRIFUGAL"]
+
+[values.S_6]
+synonyms = ["API S-6", "API S6", "S-6", "S6", "CARBON STEEL / 12CR", "CARBON STEEL", "CS"]
+
+[values.C_6]
+synonyms = ["API C-6", "API C6", "C-6", "C6", "12CR / 12CR"]
+
+[values.A_8]
+synonyms = ["API A-8", "API A8", "A-8", "A8", "SS316 / SS316", "316SS"]
+
+[values.I_1]
+synonyms = ["API I-1", "API I1", "I-1", "I1", "CAST IRON", "CI"]
+
+[values.D_1]
+synonyms = ["API D-1", "API D1", "D-1", "D1", "DUPLEX", "2205 DUPLEX"]

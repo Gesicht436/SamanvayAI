@@ -1,0 +1,8 @@
+attribute = "tube_type"
+categories = ["MINING.OTR_TYRE"]
+
+[values.TUBELESS]
+synonyms = ["TUBELESS", "TL", "TUBE-LESS"]
+
+[values.TUBE_TYPE]
+synonyms = ["TUBE TYPE", "TT", "TUBE-TYPE", "WITH TUBE"]

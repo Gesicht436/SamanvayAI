@@ -1,0 +1,26 @@
+attribute = "design_standard"
+categories = ["VALVES", "VALVES.GATE", "PIPING", "POWER.TRANSFORMER", "POWER.BREAKER", "HEAVY.PUMP_CENTRIFUGAL"]
+
+[values.API_600]
+synonyms = ["API 600", "API-600", "API600", "BS 1414", "BS-1414", "ISO 10434"]
+
+[values.API_6D]
+synonyms = ["API 6D", "API-6D", "API6D", "ISO 14313"]
+
+[values.ASME_B16_34]
+synonyms = ["ASME B16.34", "ASME B16-34", "B16.34", "ANSI B16.34"]
+
+[values.API_602]
+synonyms = ["API 602", "API-602", "API602", "BS 5352"]
+
+[values.API_610]
+synonyms = ["API 610", "API-610", "API610", "ISO 13709"]
+
+[values.ISO_2858]
+synonyms = ["ISO 2858", "ISO-2858", "ISO2858"]
+
+[values.IS_2026]
+synonyms = ["IS 2026", "IS-2026", "IS2026", "IEC 60076", "IEC-60076"]
+
+[values.IS_1180]
+synonyms = ["IS 1180", "IS-1180", "IS1180"]

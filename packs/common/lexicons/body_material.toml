@@ -12,3 +12,12 @@ synonyms = ["WC6", "A217 WC6", "ALLOY STEEL WC6"]
 
 [values.A352_LCB]
 synonyms = ["LCB", "A352 LCB", "LOW TEMP CARBON STEEL LCB"]
+
+[values.A105]
+synonyms = ["A105", "ASTM A105", "FORGED STEEL A105", "FORGED CARBON STEEL A105"]
+
+[values.CAST_IRON]
+synonyms = ["CAST IRON", "CI", "IS 210 FG 200", "IS 210 FG 260"]
+
+[values.A351_CF8]
+synonyms = ["CF8", "A351 CF8", "SS304 CAST", "ASTM A351 CF8"]

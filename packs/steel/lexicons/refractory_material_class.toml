@@ -1,0 +1,23 @@
+attribute = "material_class"
+categories = ["STEEL.REFRACTORY"]
+
+[values.MAG_CARBON]
+synonyms = ["MAGNESIA CARBON", "MAG-CARBON", "MAG CARBON", "MGO-C", "MG-C"]
+
+[values.HIGH_ALUMINA]
+synonyms = ["HIGH ALUMINA", "HI ALUMINA", "BAUXITE BASED", "ALUMINA", "AL2O3", "CORUNDUM"]
+
+[values.FIRECLAY]
+synonyms = ["FIRECLAY", "FIRE CLAY", "MEDIUM DUTY", "HIGH DUTY FIRECLAY"]
+
+[values.MAGNESIA]
+synonyms = ["MAGNESIA", "MAGNESITE", "DEAD BURNT MAGNESITE", "DBM", "MGO", "BASIC RAMMING MASS"]
+
+[values.MAG_CHROME]
+synonyms = ["MAGNESIA CHROME", "MAGNESIA-CHROME", "MAG-CHROME", "CHROME MAGNESITE"]
+
+[values.ALUMINA_CARBON]
+synonyms = ["ALUMINA CARBON", "ALUMINA-CARBON", "AL2O3-C"]
+
+[values.SILICA]
+synonyms = ["SILICA", "SILICA BRICK"]

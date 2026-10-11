@@ -8,6 +8,11 @@ expiry_required: true
 attributes:
   - {name: section_width, role: HARD}
   - {name: construction, role: HARD}
-  - {name: rim_diameter, role: HARD}
+  - {name: rim_diameter_in, role: HARD}
   - {name: tread_code, role: HARD}
+  - {name: star_rating, role: REQUIRED}
+  - {name: tube_type, role: REQUIRED}
   - {name: ply_rating, role: REQUIRED}
+  - {name: manufacturer, role: SOFT}
+life:
+  - {basis: SHELF_LIFE_DAYS, value: null, source: "manufacturer storage guidance (mandatory)"}

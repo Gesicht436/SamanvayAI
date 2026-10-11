@@ -1,0 +1,17 @@
+attribute = "enclosure"
+categories = ["MOTORS", "MOTORS.EX", "COMMON.MOTOR"]
+
+[values.TEFC]
+synonyms = ["TEFC", "TOTALLY ENCLOSED FAN COOLED", "IP55 TEFC", "IP65 TEFC"]
+
+[values.TENV]
+synonyms = ["TENV", "TOTALLY ENCLOSED NON VENTILATED"]
+
+[values.ODP]
+synonyms = ["ODP", "OPEN DRIP PROOF"]
+
+[values.CACA]
+synonyms = ["CACA", "TEAAC", "TOTALLY ENCLOSED AIR TO AIR"]
+
+[values.CACW]
+synonyms = ["CACW", "TEWAC"]

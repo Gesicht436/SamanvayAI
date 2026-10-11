@@ -1,0 +1,11 @@
+attribute = "bonnet_type"
+categories = ["VALVES", "VALVES.GATE"]
+
+[values.BOLTED]
+synonyms = ["BOLTED BONNET", "BOLTED", "BB", "B.B."]
+
+[values.PRESSURE_SEAL]
+synonyms = ["PRESSURE SEAL", "PRESSURE SEAL BONNET", "PSB", "P.S.B."]
+
+[values.WELDED]
+synonyms = ["WELDED BONNET", "WB", "W.B."]

@@ -1,0 +1,11 @@
+attribute = "operator"
+categories = ["VALVES", "VALVES.GATE"]
+
+[values.HANDWHEEL]
+synonyms = ["HANDWHEEL", "HAND WHEEL", "HW", "H.W.", "MANUAL"]
+
+[values.GEAR]
+synonyms = ["GEAR OPERATED", "GEAR", "BEVEL GEAR", "WORM GEAR", "GO"]
+
+[values.ACTUATOR]
+synonyms = ["ACTUATED", "ELECTRIC ACTUATOR", "MOTOR OPERATED", "MOV", "PNEUMATIC ACTUATOR"]

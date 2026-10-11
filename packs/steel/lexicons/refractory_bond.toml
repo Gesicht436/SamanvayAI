@@ -1,0 +1,17 @@
+attribute = "bond"
+categories = ["STEEL.REFRACTORY"]
+
+[values.RESIN]
+synonyms = ["RESIN", "RESIN BOND", "RESIN BONDED"]
+
+[values.PITCH]
+synonyms = ["PITCH", "PITCH BOND", "PITCH BONDED", "TAR BONDED"]
+
+[values.CERAMIC]
+synonyms = ["CERAMIC", "CERAMIC BOND", "FIRED"]
+
+[values.CHEMICAL]
+synonyms = ["CHEMICAL", "PHOSPHATE BONDED", "PHOSPHATE BOND", "AIR SETTING", "AIR-SETTING"]
+
+[values.HYDRAULIC]
+synonyms = ["HYDRAULIC", "HYDRAULIC SETTING"]

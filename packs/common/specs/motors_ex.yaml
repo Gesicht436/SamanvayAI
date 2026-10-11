@@ -1,0 +1,26 @@
+subcategory: MOTORS.EX
+segment: [COMMON]
+identity_mode: PARAMETRIC
+safety_critical: true
+depth: deep
+pooling_class: ENGINEERED
+primary_dimension:
+  attr: power_kw
+  unit: KW
+attributes:
+  - {name: power_kw, role: HARD}
+  - {name: poles, role: HARD}
+  - {name: frame, role: HARD}
+  - {name: mounting, role: HARD}
+  - {name: enclosure, role: HARD}
+  - {name: ex_groups, role: HARD}
+  - {name: ex_type, role: HARD}
+  - {name: gas_group, role: HARD}
+  - {name: temp_class, role: HARD}
+  - {name: efficiency_class, role: HARD}
+  - {name: speed_rpm, role: REQUIRED}
+  - {name: voltage_v, role: REQUIRED}
+  - {name: frequency_hz, role: REQUIRED}
+  - {name: epl, role: REQUIRED}
+  - {name: statutory_approval_no, role: REQUIRED, statutory: true}
+  - {name: manufacturer, role: SOFT}

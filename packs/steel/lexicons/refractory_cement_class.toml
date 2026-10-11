@@ -1,0 +1,14 @@
+attribute = "cement_class"
+categories = ["STEEL.REFRACTORY"]
+
+[values.CONVENTIONAL]
+synonyms = ["CONVENTIONAL", "CONVENTIONAL CASTABLE", "CC"]
+
+[values.LOW_CEMENT]
+synonyms = ["LOW CEMENT", "LOW CEMENT CASTABLE", "LCC"]
+
+[values.ULTRA_LOW]
+synonyms = ["ULTRA LOW CEMENT", "ULTRA LOW", "ULCC"]
+
+[values.CEMENT_FREE]
+synonyms = ["CEMENT FREE", "NO CEMENT", "NCC"]

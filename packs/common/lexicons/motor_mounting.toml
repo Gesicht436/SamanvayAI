@@ -1,0 +1,14 @@
+attribute = "mounting"
+categories = ["MOTORS", "MOTORS.EX", "COMMON.MOTOR"]
+
+[values.B3]
+synonyms = ["B3", "IM B3", "IMB3", "FOOT MOUNTED", "FOOT MOUNT", "FOOT"]
+
+[values.B5]
+synonyms = ["B5", "IM B5", "IMB5", "FLANGE MOUNTED", "FLANGE MOUNT", "FLANGE"]
+
+[values.B35]
+synonyms = ["B35", "IM B35", "IMB35", "FOOT AND FLANGE", "FOOT CUM FLANGE", "FOOT/FLANGE"]
+
+[values.V1]
+synonyms = ["V1", "IM V1", "IMV1", "VERTICAL FLANGE"]
