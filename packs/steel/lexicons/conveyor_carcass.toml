@@ -1,0 +1,14 @@
+attribute = "carcass_type"
+categories = ["STEEL.CONVEYOR_BELT"]
+
+[values.EP]
+synonyms = ["EP", "POLYESTER NYLON", "EP FABRIC"]
+
+[values.NN]
+synonyms = ["NN", "NYLON NYLON", "NN FABRIC"]
+
+[values.ST]
+synonyms = ["ST", "STEEL CORD", "STEEL-CORD"]
+
+[values.SOLID_WOVEN_PVC]
+synonyms = ["SOLID WOVEN", "PVC SOLID WOVEN", "PVG"]

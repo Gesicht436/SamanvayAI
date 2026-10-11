@@ -1,0 +1,11 @@
+attribute = "fire_resistance"
+categories = ["STEEL.CONVEYOR_BELT"]
+
+[values.FRAS]
+synonyms = ["FRAS", "FIRE RESISTANT ANTI STATIC", "FIRE RESISTANT ANTISTATIC"]
+
+[values.FR]
+synonyms = ["FR", "FIRE RESISTANT", "FLAME RETARDANT"]
+
+[values.NONE]
+synonyms = ["NON FR", "REGULAR", "STANDARD GRADE", "GENERAL DUTY", "GENERAL PURPOSE"]

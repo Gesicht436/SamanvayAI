@@ -1,0 +1,14 @@
+attribute = "wetted_material"
+categories = ["INSTRUMENTS.TRANSMITTER"]
+
+[values.SS316L]
+synonyms = ["SS316L", "SS 316L", "316L SS", "316L", "SS316", "SS 316", "316 SS", "AISI 316"]
+
+[values.HASTELLOY_C]
+synonyms = ["HASTELLOY C", "HASTELLOY C-276", "HASTELLOY-C", "HAST-C", "HASTELLOY"]
+
+[values.MONEL]
+synonyms = ["MONEL", "MONEL 400"]
+
+[values.TANTALUM]
+synonyms = ["TANTALUM"]

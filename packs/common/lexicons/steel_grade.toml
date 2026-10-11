@@ -1,0 +1,29 @@
+attribute = "steel_grade"
+categories = ["STEEL.STRUCTURAL", "STEEL.REBAR"]
+
+[values.E250_A]
+synonyms = ["IS 2062 E250 A", "IS 2062 E250A", "E250 A", "E250A", "E250 GR A", "FE 410 WA", "IS 2062 E250", "E250"]
+
+[values.E250_B]
+synonyms = ["IS 2062 E250 B", "IS 2062 E250B", "E250 B", "E250B", "E250 GR B", "FE 410 WB", "IS 2062 E250 BR", "IS 2062 E250BR", "E250 BR", "E250BR", "E250 B0"]
+
+[values.E250_C]
+synonyms = ["IS 2062 E250 C", "IS 2062 E250C", "E250 C", "E250C", "FE 410 WC"]
+
+[values.E350]
+synonyms = ["IS 2062 E350", "E350", "E350 BR", "E350 A"]
+
+[values.FE_500D]
+synonyms = ["FE 500D", "FE500D", "FE-500D", "IS 1786 FE 500D"]
+
+[values.FE_550D]
+synonyms = ["FE 550D", "FE550D", "FE-550D", "IS 1786 FE 550D"]
+
+[values.FE_500]
+synonyms = ["FE 500", "FE500", "IS 1786 FE 500"]
+
+[values.FE_550]
+synonyms = ["FE 550", "FE550", "IS 1786 FE 550"]
+
+[values.FE_415]
+synonyms = ["FE 415", "FE415", "IS 1786 FE 415"]

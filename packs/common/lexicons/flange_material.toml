@@ -1,0 +1,14 @@
+attribute = "material_grade"
+categories = ["FLANGES.FLANGE", "FLANGES"]
+
+[values.A105]
+synonyms = ["A105", "ASTM A105", "A105N", "ASTM A105N"]
+
+[values.A350_LF2]
+synonyms = ["A350 LF2", "ASTM A350 LF2", "LF2", "A350-LF2"]
+
+[values.A182_F304]
+synonyms = ["A182 F304", "ASTM A182 F304", "F304", "304 SS", "SS 304"]
+
+[values.A182_F316]
+synonyms = ["A182 F316", "ASTM A182 F316", "F316", "316 SS", "SS 316"]

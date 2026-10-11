@@ -1,0 +1,17 @@
+attribute = "armouring"
+categories = ["CABLES.POWER"]
+
+[values.ARMOURED]
+synonyms = ["ARMOURED", "ARMORED", "ARM"]
+
+[values.UNARMOURED]
+synonyms = ["UNARMOURED", "UNARMORED", "UNARM"]
+
+[values.SWA]
+synonyms = ["SWA", "STEEL WIRE ARMOURED", "STEEL WIRE ARMORED"]
+
+[values.AWA]
+synonyms = ["AWA", "ALUMINIUM WIRE ARMOURED"]
+
+[values.GSFA]
+synonyms = ["GSFA", "GALVANIZED STEEL FLAT STRIP ARMOURED", "FLAT STRIP ARMOURED", "STRIP ARMOURED"]

@@ -1,0 +1,19 @@
+subcategory: INSTRUMENTS.TRANSMITTER
+segment: [COMMON]
+identity_mode: PARAMETRIC
+safety_critical: true
+depth: standard
+pooling_class: ENGINEERED
+primary_dimension:
+  attr: range_max
+  unit: PRESSURE
+attributes:
+  - {name: instrument_type, role: HARD}
+  - {name: range_min, role: HARD}
+  - {name: range_max, role: HARD}
+  - {name: range_unit, role: HARD}
+  - {name: output_signal, role: HARD}
+  - {name: wetted_material, role: HARD}
+  - {name: process_connection, role: HARD}
+  - {name: ex_protection, role: REQUIRED}
+  - {name: accuracy_class, role: REQUIRED}

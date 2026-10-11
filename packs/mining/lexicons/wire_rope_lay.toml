@@ -1,0 +1,14 @@
+attribute = "lay"
+categories = ["MINING.WIRE_ROPE"]
+
+[values.RHOL]
+synonyms = ["RHOL", "RIGHT HAND ORDINARY LAY", "RH REGULAR LAY"]
+
+[values.LHOL]
+synonyms = ["LHOL", "LEFT HAND ORDINARY LAY", "LH REGULAR LAY"]
+
+[values.RHLL]
+synonyms = ["RHLL", "RIGHT HAND LANG LAY"]
+
+[values.LHLL]
+synonyms = ["LHLL", "LEFT HAND LANG LAY"]

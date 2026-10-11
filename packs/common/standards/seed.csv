@@ -7,3 +7,12 @@ standard_id,title,domain,verified
 "IEC 60034-30-1","Efficiency classes of line-operated AC motors (IE code)","MOTORS",false
 "IEC 60079-0","Explosive atmospheres - Equipment - General requirements","MOTORS",false
 "IEC 60079-1","Explosive atmospheres - Equipment protection by flameproof enclosures 'd'","MOTORS",false
+ASME B36.10M,Welded and Seamless Wrought Steel Pipe,PIPES,false
+ASTM A106,Standard Specification for Seamless Carbon Steel Pipe for High-Temperature Service,PIPES,false
+ASME B16.5,Pipe Flanges and Flanged Fittings: NPS 1/2 through NPS 24 Metric/Inch Standard,FLANGES,false
+IS 7098,Crosslinked Polyethylene Insulated Thermoplastic Sheathed Cables,CABLES,false
+IS 2062,Hot Rolled Medium and High Tensile Structural Steel - Specification,STEEL,false
+IS 1786,High Strength Deformed Steel Bars and Wires for Concrete Reinforcement,STEEL,false
+ISO 15,"Rolling bearings - Radial bearings - Boundary dimensions, general plan",BEARINGS,false
+ASTM A193,Standard Specification for Alloy-Steel and Stainless Steel Bolting for High Temperature or High Pressure Service,FASTENERS,false
+IEC 60770,Transmitters for use in industrial-process control systems,INSTRUMENTATION,false

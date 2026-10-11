@@ -1,0 +1,18 @@
+subcategory: MINING.WIRE_ROPE
+segment: [MINING, STEEL, HEAVY_ENG]
+identity_mode: PARAMETRIC
+safety_critical: true
+depth: standard
+pooling_class: BULK_M
+primary_dimension:
+  attr: diameter_mm
+  unit: MM
+attributes:
+  - {name: diameter_mm, role: HARD}
+  - {name: construction, role: HARD}
+  - {name: core, role: HARD}
+  - {name: lay, role: HARD}
+  - {name: tensile_grade_mpa, role: HARD}
+  - {name: surface_finish, role: HARD}
+  - {name: approval_type, role: REQUIRED, statutory: true}
+  - {name: design_standard, role: REQUIRED}

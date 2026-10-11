@@ -1,10 +1,15 @@
-subcategory: HEAVY.DRAWING_PART
+subcategory: HEAVY.MADE_TO_DRAWING
 segment: [HEAVY_ENG]
 identity_mode: DRAWING
 safety_critical: false
 depth: standard
 pooling_class: ENGINEERED
+primary_dimension:
+  attr: drawing_number
+  unit: TEXT
 attributes:
   - {name: drawing_number, role: HARD}
-  - {name: drawing_revision, role: HARD}
   - {name: drawing_owner, role: HARD}
+  - {name: material_grade, role: HARD}
+  - {name: drawing_revision, role: REQUIRED}
+  - {name: item_name, role: REQUIRED}

@@ -1,0 +1,11 @@
+attribute = "insulation"
+categories = ["CABLES.POWER"]
+
+[values.XLPE]
+synonyms = ["XLPE", "CROSSLINKED POLYETHYLENE", "XLPE INSULATED"]
+
+[values.PVC]
+synonyms = ["PVC", "POLYVINYL CHLORIDE", "PVC INSULATED"]
+
+[values.EPR]
+synonyms = ["EPR", "ETHYLENE PROPYLENE RUBBER"]

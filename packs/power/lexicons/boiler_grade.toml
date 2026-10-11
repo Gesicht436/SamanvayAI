@@ -1,0 +1,20 @@
+attribute = "grade"
+categories = ["POWER.BOILER_TUBE"]
+
+[values.T22]
+synonyms = ["T22", "T-22", "SA213 T22", "SA-213 T22", "GRADE T22", "GR T22"]
+
+[values.T11]
+synonyms = ["T11", "T-11", "SA213 T11", "SA-213 T11", "GRADE T11", "GR T11"]
+
+[values.T91]
+synonyms = ["T91", "T-91", "SA213 T91", "GRADE T91", "GR T91"]
+
+[values.T92]
+synonyms = ["T92", "T-92", "SA213 T92", "GRADE T92", "GR T92"]
+
+[values.A1]
+synonyms = ["A1", "GRADE A1", "GR A1", "GR. A1", "SA210 A1", "SA-210 A1", "SA210 GR A1"]
+
+[values.C]
+synonyms = ["SA210 C", "SA-210 C", "GRADE C", "GR C", "GR. C", "SA210 GR C"]

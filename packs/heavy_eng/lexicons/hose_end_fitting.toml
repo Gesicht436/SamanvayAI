@@ -1,0 +1,14 @@
+attribute = "end_fitting_1"
+categories = ["HEAVY.HYDRAULIC_HOSE"]
+
+[values.JIC_37]
+synonyms = ["JIC 37", "JIC 37 DEG", "JIC FEMALE", "JIC MALE", "JIC"]
+
+[values.BSP_FEMALE]
+synonyms = ["BSP FEMALE", "BSPP FEMALE", "BSP F", "BSPF"]
+
+[values.NPT_MALE]
+synonyms = ["NPT MALE", "NPT M", "NPTM"]
+
+[values.ORFS]
+synonyms = ["ORFS", "O-RING FACE SEAL"]

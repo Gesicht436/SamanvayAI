@@ -1,0 +1,11 @@
+attribute = "core"
+categories = ["MINING.WIRE_ROPE"]
+
+[values.IWRC]
+synonyms = ["IWRC", "STEEL CORE", "INDEPENDENT WIRE ROPE CORE", "+IWRC"]
+
+[values.FC]
+synonyms = ["FC", "FIBRE CORE", "FIBER CORE", "+FC"]
+
+[values.WSC]
+synonyms = ["WSC", "WIRE STRAND CORE"]

@@ -1,0 +1,14 @@
+attribute = "roll_type"
+categories = ["STEEL.MILL_ROLL"]
+
+[values.WORK]
+synonyms = ["WORK ROLL", "WR", "TOP WORK ROLL", "BOTTOM WORK ROLL", "ROLL WORK"]
+
+[values.BACKUP]
+synonyms = ["BACKUP ROLL", "BUR", "BUR ROLL", "BACK-UP ROLL", "ROLL BACKUP"]
+
+[values.INTERMEDIATE]
+synonyms = ["INTERMEDIATE ROLL", "IMR"]
+
+[values.PINCH]
+synonyms = ["PINCH ROLL", "PR", "ROLL PINCH"]

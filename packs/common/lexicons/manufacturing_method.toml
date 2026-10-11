@@ -1,0 +1,14 @@
+attribute = "manufacturing_method"
+categories = ["PIPES.PIPE"]
+
+[values.SEAMLESS]
+synonyms = ["SEAMLESS", "SMLS", "SMLS."]
+
+[values.ERW]
+synonyms = ["ERW", "E.R.W.", "ELECTRIC RESISTANCE WELDED"]
+
+[values.SAW]
+synonyms = ["SAW", "LSAW", "HSAW", "SUBMERGED ARC WELDED"]
+
+[values.EFW]
+synonyms = ["EFW", "ELECTRIC FUSION WELDED"]

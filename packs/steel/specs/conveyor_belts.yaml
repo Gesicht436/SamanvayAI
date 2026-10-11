@@ -1,0 +1,18 @@
+subcategory: STEEL.CONVEYOR_BELT
+segment: [STEEL, MINING]
+identity_mode: PARAMETRIC
+safety_critical: true
+depth: standard
+pooling_class: BULK_M
+primary_dimension:
+  attr: belt_width_mm
+  unit: MM
+attributes:
+  - {name: carcass_type, role: HARD}
+  - {name: strength_class, role: HARD}
+  - {name: ply_count, role: HARD, when: "carcass_type != ST"}
+  - {name: belt_width_mm, role: HARD}
+  - {name: fire_resistance, role: HARD}
+  - {name: cover_thickness, role: REQUIRED}
+  - {name: cover_grade, role: REQUIRED}
+  - {name: design_standard, role: REQUIRED}

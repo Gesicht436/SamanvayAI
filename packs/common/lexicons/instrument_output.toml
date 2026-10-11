@@ -1,0 +1,14 @@
+attribute = "output_signal"
+categories = ["INSTRUMENTS.TRANSMITTER"]
+
+[values.HART_4_20MA]
+synonyms = ["4-20MA HART", "4-20 MA HART", "4-20MA WITH HART", "HART", "4-20MA+HART"]
+
+[values.ANALOG_4_20MA]
+synonyms = ["4-20MA", "4-20 MA", "4 - 20 MA"]
+
+[values.FOUNDATION_FIELDBUS]
+synonyms = ["FOUNDATION FIELDBUS", "FF"]
+
+[values.PROFIBUS]
+synonyms = ["PROFIBUS PA", "PROFIBUS"]

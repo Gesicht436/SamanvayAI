@@ -1,0 +1,15 @@
+subcategory: STEEL.STRUCTURAL
+segment: [COMMON]
+identity_mode: PARAMETRIC
+safety_critical: true
+depth: standard
+pooling_class: BULK_MT
+primary_dimension:
+  attr: section_designation
+  unit: TEXT
+attributes:
+  - {name: profile_type, role: HARD}
+  - {name: section_designation, role: HARD}
+  - {name: steel_grade, role: HARD}
+  - {name: length_m, role: REQUIRED}
+  - {name: design_standard, role: REQUIRED}

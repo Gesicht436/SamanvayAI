@@ -1,0 +1,23 @@
+attribute = "standard_class"
+categories = ["HEAVY.HYDRAULIC_HOSE"]
+
+[values.SAE_100R1AT]
+synonyms = ["SAE 100R1AT", "100R1AT", "100R1", "R1AT"]
+
+[values.SAE_100R2AT]
+synonyms = ["SAE 100R2AT", "100R2AT", "100R2", "R2AT"]
+
+[values.SAE_100R12]
+synonyms = ["SAE 100R12", "100R12", "R12"]
+
+[values.EN_853_1SN]
+synonyms = ["EN 853 1SN", "853 1SN", "1SN", "DIN EN 853 1SN"]
+
+[values.EN_853_2SN]
+synonyms = ["EN 853 2SN", "853 2SN", "2SN", "DIN EN 853 2SN"]
+
+[values.EN_856_4SP]
+synonyms = ["EN 856 4SP", "856 4SP", "4SP", "DIN EN 856 4SP"]
+
+[values.EN_856_4SH]
+synonyms = ["EN 856 4SH", "856 4SH", "4SH", "DIN EN 856 4SH"]

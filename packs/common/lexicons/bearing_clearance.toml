@@ -1,0 +1,14 @@
+attribute = "clearance"
+categories = ["BEARINGS.BEARING"]
+
+[values.C3]
+synonyms = ["C3", "CLEARANCE C3", "/C3"]
+
+[values.C4]
+synonyms = ["C4", "CLEARANCE C4", "/C4"]
+
+[values.C2]
+synonyms = ["C2", "CLEARANCE C2", "/C2"]
+
+[values.NORMAL]
+synonyms = ["NORMAL CLEARANCE", "CN"]

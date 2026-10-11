@@ -1,0 +1,8 @@
+attribute = "surface_finish"
+categories = ["MINING.WIRE_ROPE"]
+
+[values.GALVANIZED]
+synonyms = ["GALVANIZED", "GALV", "GALV.", "ZINC COATED"]
+
+[values.BRIGHT]
+synonyms = ["BRIGHT", "UNCOATED", "BLACK"]

@@ -1,0 +1,20 @@
+attribute = "flange_type"
+categories = ["FLANGES.FLANGE"]
+
+[values.WELD_NECK]
+synonyms = ["WELD NECK", "WELDING NECK", "WN", "WNRF", "WN-RF"]
+
+[values.SLIP_ON]
+synonyms = ["SLIP ON", "SLIP-ON", "SO", "SORF", "SO-RF"]
+
+[values.BLIND]
+synonyms = ["BLIND", "BLRF", "BL-RF", "BLIND FLANGE"]
+
+[values.SOCKET_WELD]
+synonyms = ["SOCKET WELD", "SOCKET-WELD", "SW", "SWRF", "SW-RF"]
+
+[values.THREADED]
+synonyms = ["THREADED", "SCREWED", "THRF"]
+
+[values.LAP_JOINT]
+synonyms = ["LAP JOINT", "LJ", "LJRF"]

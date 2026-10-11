@@ -1,0 +1,11 @@
+attribute = "shield_seal"
+categories = ["BEARINGS.BEARING"]
+
+[values.TWO_Z]
+synonyms = ["2Z", "ZZ", "2-Z", "SHIELDED BOTH SIDES"]
+
+[values.TWO_RS]
+synonyms = ["2RS", "2RS1", "2RSR", "DDU", "SEALED BOTH SIDES", "RUBBER SEALED"]
+
+[values.OPEN]
+synonyms = ["OPEN", "UNSEALED"]

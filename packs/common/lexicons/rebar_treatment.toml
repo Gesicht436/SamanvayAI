@@ -1,0 +1,8 @@
+attribute = "treatment"
+categories = ["STEEL.REBAR"]
+
+[values.CRS]
+synonyms = ["TMT CRS", "CRS TMT", "CRS", "CORROSION RESISTANT STEEL", "CORROSION RESISTANT"]
+
+[values.TMT]
+synonyms = ["TMT", "THERMO MECHANICALLY TREATED", "TMT BAR", "TMT REBAR"]

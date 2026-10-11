@@ -2,7 +2,7 @@ attribute = "facing"
 categories = ["VALVES", "FLANGES"]
 
 [values.RF]
-synonyms = ["RF", "RAISED FACE", "RAISED-FACE"]
+synonyms = ["RF", "RAISED FACE", "RAISED-FACE", "WNRF", "SORF", "BLRF", "SWRF", "WN-RF", "SO-RF"]
 
 [values.FF]
 synonyms = ["FF", "FLAT FACE", "FLAT-FACE"]

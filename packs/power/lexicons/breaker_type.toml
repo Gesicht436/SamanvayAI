@@ -1,0 +1,17 @@
+attribute = "breaker_type"
+categories = ["POWER.BREAKER"]
+
+[values.VCB]
+synonyms = ["VCB", "VACUUM CIRCUIT BREAKER", "VACUUM BREAKER"]
+
+[values.SF6]
+synonyms = ["SF6", "SF-6", "SF6 BREAKER", "SULPHUR HEXAFLUORIDE BREAKER"]
+
+[values.ACB]
+synonyms = ["ACB", "AIR CIRCUIT BREAKER"]
+
+[values.MCCB]
+synonyms = ["MCCB", "MOULDED CASE CIRCUIT BREAKER"]
+
+[values.MCB]
+synonyms = ["MCB", "MINIATURE CIRCUIT BREAKER"]

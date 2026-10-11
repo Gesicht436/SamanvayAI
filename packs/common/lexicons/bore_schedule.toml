@@ -1,0 +1,20 @@
+attribute = "bore_schedule"
+categories = ["FLANGES.FLANGE", "FLANGES"]
+
+[values.SCH_40]
+synonyms = ["SCH 40", "SCH40", "SCHEDULE 40", "SCH STD", "STD"]
+
+[values.SCH_80]
+synonyms = ["SCH 80", "SCH80", "SCHEDULE 80", "SCH XS", "XS", "EXTRA STRONG"]
+
+[values.SCH_160]
+synonyms = ["SCH 160", "SCH160", "SCHEDULE 160"]
+
+[values.SCH_XXS]
+synonyms = ["SCH XXS", "SCHXXS", "XXS", "DOUBLE EXTRA STRONG"]
+
+[values.SCH_10]
+synonyms = ["SCH 10", "SCH10", "SCHEDULE 10", "SCH 10S"]
+
+[values.SCH_20]
+synonyms = ["SCH 20", "SCH20", "SCHEDULE 20"]

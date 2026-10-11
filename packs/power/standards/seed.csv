@@ -4,3 +4,5 @@ standard_id,title,domain,verified
 "IEC 60076-1","Power transformers - Part 1: General","POWER",false
 "IEC 62271-100","High-voltage switchgear and controlgear - Alternating-current circuit-breakers","POWER",false
 "IS 13118","High-voltage alternating-current circuit-breakers","POWER",false
+ASME BPVC Section I,Rules for Construction of Power Boilers,POWER,false
+ASTM A213,"Standard Specification for Seamless Ferritic and Austenitic Alloy-Steel Boiler, Superheater, and Heat-Exchanger Tubes",POWER,false

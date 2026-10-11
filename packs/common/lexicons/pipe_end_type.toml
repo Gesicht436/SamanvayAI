@@ -1,0 +1,11 @@
+attribute = "end_type"
+categories = ["PIPES.PIPE"]
+
+[values.BEVELLED]
+synonyms = ["BEVELLED", "BEVELED", "BEVEL END", "BE", "B.E."]
+
+[values.PLAIN]
+synonyms = ["PLAIN", "PLAIN END", "PE", "P.E."]
+
+[values.THREADED]
+synonyms = ["THREADED", "SCREWED", "TE", "T.E."]

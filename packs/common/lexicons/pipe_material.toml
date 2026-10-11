@@ -1,0 +1,23 @@
+attribute = "material_grade"
+categories = ["PIPES.PIPE"]
+
+[values.A106_GR_B]
+synonyms = ["A106 GR B", "A106 GR.B", "ASTM A106 GR B", "A106-B", "A106B"]
+
+[values.A53_GR_B]
+synonyms = ["A53 GR B", "A53 GR.B", "ASTM A53 GR B", "A53-B", "A53B"]
+
+[values.API_5L_X52]
+synonyms = ["API 5L X52", "API 5L GR X52", "X52", "API 5L-X52"]
+
+[values.API_5L_GR_B]
+synonyms = ["API 5L GR B", "API 5L-B", "API 5L B"]
+
+[values.IS_1239]
+synonyms = ["IS 1239", "IS-1239", "IS1239", "IS 1239 PART 1"]
+
+[values.IS_3589]
+synonyms = ["IS 3589", "IS-3589", "IS3589", "FE 410 IS 3589"]
+
+[values.A333_GR_6]
+synonyms = ["A333 GR 6", "A333 GR.6", "ASTM A333 GR 6", "LTCS A333"]

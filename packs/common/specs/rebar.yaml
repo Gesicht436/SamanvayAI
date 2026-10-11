@@ -1,0 +1,15 @@
+subcategory: STEEL.REBAR
+segment: [COMMON]
+identity_mode: PARAMETRIC
+safety_critical: true
+depth: standard
+pooling_class: BULK_MT
+primary_dimension:
+  attr: diameter_mm
+  unit: MM
+attributes:
+  - {name: diameter_mm, role: HARD}
+  - {name: steel_grade, role: HARD}
+  - {name: treatment, role: HARD}
+  - {name: coating, role: REQUIRED}
+  - {name: design_standard, role: REQUIRED}

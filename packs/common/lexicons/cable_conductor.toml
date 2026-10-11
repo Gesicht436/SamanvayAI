@@ -1,0 +1,8 @@
+attribute = "conductor_material"
+categories = ["CABLES.POWER"]
+
+[values.COPPER]
+synonyms = ["COPPER", "CU", "CU CONDUCTOR", "ELECTROLYTIC COPPER"]
+
+[values.ALUMINIUM]
+synonyms = ["ALUMINIUM", "ALUMINUM", "AL", "AL CONDUCTOR"]

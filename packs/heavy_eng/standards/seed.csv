@@ -3,3 +3,6 @@ standard_id,title,domain,verified
 "ISO 13709","Centrifugal pumps for petroleum, petrochemical and natural gas industries","HEAVY_ENG",false
 "API 682","Pumps - Shaft Sealing Systems for Centrifugal and Rotary Pumps","HEAVY_ENG",false
 "ISO 2858","End-suction centrifugal pumps (rating 16 bar) - Designation, nominal duty point and dimensions","HEAVY_ENG",false
+SAE J517,Hydraulic Hose Standard,HEAVY_ENG,false
+EN 853,Rubber hoses and hose assemblies - Wire braid reinforced hydraulic type - Specification,HEAVY_ENG,false
+ISO 128,Technical drawings - General principles of presentation,HEAVY_ENG,false

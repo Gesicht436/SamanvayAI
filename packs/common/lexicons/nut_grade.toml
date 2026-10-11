@@ -1,0 +1,17 @@
+attribute = "nut_grade"
+categories = ["FASTENERS.STUD_BOLT"]
+
+[values.A194_2H]
+synonyms = ["ASTM A194 2H", "A194 2H", "2H", "A194-2H"]
+
+[values.A194_2HM]
+synonyms = ["ASTM A194 2HM", "A194 2HM", "2HM", "A194-2HM"]
+
+[values.A194_8]
+synonyms = ["ASTM A194 GR 8", "A194 8", "GR 8 NUT"]
+
+[values.A194_8M]
+synonyms = ["ASTM A194 GR 8M", "A194 8M", "GR 8M NUT"]
+
+[values.GR_8]
+synonyms = ["CLASS 8", "GRADE 8", "GR 8"]

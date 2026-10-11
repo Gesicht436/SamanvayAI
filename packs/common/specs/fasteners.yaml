@@ -1,7 +1,7 @@
-subcategory: FASTENERS.BOLT
+subcategory: FASTENERS.STUD_BOLT
 segment: [COMMON]
 identity_mode: PARAMETRIC
-safety_critical: false
+safety_critical: true
 depth: standard
 pooling_class: BULK_M
 primary_dimension:
@@ -10,7 +10,8 @@ primary_dimension:
 attributes:
   - {name: fastener_type, role: HARD}
   - {name: thread_size, role: HARD}
-  - {name: length, role: HARD}
+  - {name: length_mm, role: HARD}
   - {name: bolt_grade, role: HARD}
   - {name: nut_grade, role: HARD}
   - {name: coating, role: REQUIRED}
+  - {name: thread_standard, role: REQUIRED}

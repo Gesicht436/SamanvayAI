@@ -1,0 +1,20 @@
+attribute = "bolt_grade"
+categories = ["FASTENERS.STUD_BOLT"]
+
+[values.A193_B7]
+synonyms = ["ASTM A193 B7", "A193 B7", "B7", "A193-B7"]
+
+[values.A193_B7M]
+synonyms = ["ASTM A193 B7M", "A193 B7M", "B7M", "A193-B7M"]
+
+[values.A193_B8]
+synonyms = ["ASTM A193 B8", "A193 B8", "B8", "SS304 BOLT"]
+
+[values.A193_B8M]
+synonyms = ["ASTM A193 B8M", "A193 B8M", "B8M", "SS316 BOLT"]
+
+[values.GR_8_8]
+synonyms = ["CLASS 8.8", "GRADE 8.8", "8.8", "GR 8.8"]
+
+[values.GR_10_9]
+synonyms = ["CLASS 10.9", "GRADE 10.9", "10.9", "GR 10.9"]

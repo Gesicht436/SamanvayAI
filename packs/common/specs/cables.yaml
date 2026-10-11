@@ -1,0 +1,17 @@
+subcategory: CABLES.POWER
+segment: [COMMON]
+identity_mode: PARAMETRIC
+safety_critical: true
+depth: standard
+pooling_class: BULK_M
+primary_dimension:
+  attr: conductor_size_sqmm
+  unit: SQMM
+attributes:
+  - {name: voltage_kv, role: HARD}
+  - {name: core_count, role: HARD}
+  - {name: conductor_size_sqmm, role: HARD}
+  - {name: conductor_material, role: HARD}
+  - {name: insulation, role: HARD}
+  - {name: armouring, role: REQUIRED}
+  - {name: design_standard, role: REQUIRED}
