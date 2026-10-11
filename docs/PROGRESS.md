@@ -468,8 +468,64 @@ Suggested tag: `git tag phase-7`
 | 11. Verification Register | All code markers match registered claims | **PASS** | `verify_claims.py`: 11 registered claims, 5 markers |
 | 12. Full Test Suite | All tests pass via `uv run pytest` | **PASS** | **158 passed in 9.21s** |
 
+---
+
+## Phase 9: Core Frontend Web Application (Module 8)
+
+### What Was Built
+1. **Next.js 16 (App Router) Architecture (`web/`):**
+   - Bootstrapped with React 19, Tailwind CSS v4, TypeScript strict, and Turbopack.
+   - Responsive dark-theme engineering design system with OKLCH-based color tokens.
+2. **Role-Aware Navigation & Organisation Switcher (`src/components/common/Header.tsx`, `src/lib/auth-context.tsx`):**
+   - **No Default Organisation:** Per specification Section 15.0, organisation switcher initializes with no default selection (`Select CPSE Organisation...`), requiring deliberate selection of enterprise context.
+   - Role switcher supporting `VIEWER`, `MAKER`, `CHECKER`, and `ADMIN` with active domain tag indicators.
+   - Visible **Synthetic Data Banner** (`src/components/common/DemoBanner.tsx`) warning that demo environments run synthetic clusters and expose no proprietary CPSE data.
+3. **Standardizer Screen (`src/app/standardizer/page.tsx`):**
+   - Material description input with quick 1-click sample chips (Gate valve, Motor Ex, Transformer, OTR Tyre).
+   - Normalized text and individual token stream visualization.
+   - Detected subcategory badge with confidence score.
+   - Extracted technical attributes grid with evidence span character offsets and interactive hover text highlighting.
+   - Ranked candidate golden masters with Tier badges (Tier 1 green, Tier 2 amber, Tier 3 red), match probability, reason codes, and "Inspect Diff Matrix" triggers.
+4. **Diff Inspector Screen (`src/app/diff/page.tsx`, `src/components/diff/DiffInspector.tsx`):**
+   - Visual side-by-side attribute comparison matrix explaining the decision.
+   - Strict color coding: Green (`EXACT`), Amber (`MISSING` / `UPGRADE`), Red (`MISMATCH`).
+   - Safety Refusal alert banner on HARD attribute mismatch (Tier 3).
+   - Safety Routing alert banner on missing required attribute (Tier 2).
+   - Specification Compliant banner on Tier 1 exact match.
+   - Preset case switcher demonstrating 4 canonical engineering comparison scenarios.
+5. **Stewardship Governance Queue Screen (`src/app/queue/page.tsx`, `src/components/queue/TaskQueue.tsx`):**
+   - Paginated task queue with filtering by status, task kind, and sector.
+   - **Maker-Checker Governance:** Prevents task proposers from approving their own proposals with explicit UI notices.
+   - Domain-tag enforcement on safety-critical items.
+   - Rapid keyboard shortcuts (`J` next, `K` previous, `A` approve, `R` reject).
+   - Approve / Reject modals requiring mandatory engineering rationale and displaying returned transaction audit sequence and SHA-256 hash.
+6. **Evaluation Gate & Parity Screen (`src/app/eval/page.tsx`):**
+   - Side-by-side comparison of 3 baselines (Cosine 67.6% error vs Trigram 55.9% error vs Samanvay 0.0% error with exact 95% Clopper-Pearson bound $\le 2.15\%$).
+   - Checklist for all 5 hard release gates.
+   - Sector parity and CPSE organisation parity tables with 0.00% discrepancy.
+7. **Testing Suite:**
+   - Vitest component and unit test suite: 16 tests passing in 1.67s across 5 test suites (`tests/auth-context.test.tsx`, `tests/standardizer.test.tsx`, `tests/diff-inspector.test.tsx`, `tests/task-queue.test.tsx`, `tests/eval-gate.test.tsx`).
+   - Playwright end-to-end integration test suite: 4 tests passing in 2.5s on Desktop Chromium (`e2e/screens.spec.ts`).
+   - ESLint: 0 errors, 0 warnings.
+   - Full Next.js production build: compiles in 1.3s with all routes statically prerendered.
+
+### Acceptance Gate Evaluation (Phase 9)
+
+| Check | Requirement | Result | Output / Evidence |
+|---|---|---|---|
+| 1. Code Quality & Linting | `npm run lint` in `web/` | **PASS** | `0 errors, 0 warnings` |
+| 2. Production Build | `npm run build` in `web/` | **PASS** | Compiled in 1.3s; all 6 routes prerendered |
+| 3. Unit & Component Tests | `npm test` (Vitest) in `web/` | **PASS** | **16 passed across 5 test suites in 1.67s** |
+| 4. End-to-End Integration Tests | `npx playwright test` in `web/` | **PASS** | **4 passed in 2.5s** on Desktop Chromium |
+| 5. Standardizer Screen Flow | Input, token extraction, evidence spans, candidate ranking | **PASS** | Verified via Playwright and Vitest |
+| 6. Diff Inspector Screen Flow | Color badges (`EXACT`, `MISSING`, `MISMATCH`), safety refusal banners | **PASS** | Verified via Playwright and Vitest |
+| 7. Stewardship Queue Flow | Paginated queue, filters, Maker-Checker validation, rationale modals | **PASS** | Verified via Playwright and Vitest |
+| 8. Organisation Switcher Invariant | Starts with no default selection (`Select CPSE Organisation...`) | **PASS** | `test("Organisation switcher initializes with no default selection")` PASSED |
+| 9. Backend Python Test Suite | `uv run pytest tests/` | **PASS** | **158 passed in 9.58s** |
+
 **Gate Status: ACCEPTED**
-Suggested tag: `git tag phase-8`
+Suggested tag: `git tag phase-9`
+
 
 
 
