@@ -1,16 +1,22 @@
 # Mining Sector Pack
 
 ## 1. Purpose
-The Mining Sector Pack defines specifications for heavy open-cast and underground mining consumables, specifically off-the-road (OTR) haul truck tyres.
+The Mining Sector Pack defines specifications for heavy open-cast and underground mining consumables, specifically off-the-road (OTR) haul truck tyres and steel wire ropes for mine winders and shovels.
 
 ## 2. Theory
-OTR tyres represent high-value capital expenditure in open-cast mines (Coal India, NMDC). Tyres are categorized by section width, rim diameter, construction (radial vs bias), and standardized tread codes (e.g. `E3`, `E4`, `L5`). Age tracking from sidewall manufacturing date codes is mandatory to prevent blowout risks.
+OTR tyres represent high-value capital expenditure in open-cast mines (Coal India, NMDC). Tyres are categorized by section width, rim diameter, construction (radial vs bias), and standardized tread codes (e.g. `E3`, `E4`, `L5`). Age tracking from sidewall manufacturing date codes is mandatory to prevent blowout risks. Steel wire ropes operate under extreme cyclic fatigue and are identified by nominal diameter, wire construction (e.g. `6X36`), core type (fibre vs steel), tensile strength grade, and lay direction.
 
 ## 3. File Index
 - `specs/otr_tyres.yaml`: Deep specification for mining OTR tyres (`MINING.OTR_TYRE`) with mandatory shelf-life and tread/star/ply ratings.
+- `specs/wire_ropes.yaml`: Specification for heavy mining wire ropes (`MINING.WIRE_ROPE`) with diameter, construction, tensile grade, and core.
 - `lexicons/tyre_tube_type.toml`: Lexicon mapping tyre chamber design (`TUBELESS`, `TUBE_TYPE`).
+- `lexicons/wire_rope_core.toml`: Lexicon mapping wire rope core construction (`IWRC`, `FC`, `WSC`).
+- `lexicons/wire_rope_finish.toml`: Lexicon mapping wire surface finish (`GALVANIZED`, `UNGALVANIZED_BRIGHT`).
+- `lexicons/wire_rope_lay.toml`: Lexicon mapping rope lay direction (`RHOL`, `LHOL`, `RHLL`, `LHLL`).
 - `fixtures/otr_tyres.csv`: 45 test fixtures for OTR haul truck and loader tyres.
+- `fixtures/wire_ropes.csv`: 22 test fixtures for mining wire ropes.
 - `eval/pairs_otr_tyres.csv`: 16 adversarial hard-negative test pairs for OTR tyres.
+- `eval/pairs_wire_ropes.csv`: 10 adversarial hard-negative test pairs for wire ropes.
 - `standards/seed.csv`: Standards reference seeds marked with `verified = false`.
 
 ## 4. Manual Testing
@@ -18,7 +24,15 @@ OTR tyres represent high-value capital expenditure in open-cast mines (Coal Indi
    ```bash
    uv run python -c "from api.extractors.registry import default_registry; default_registry.load_packs('packs'); print(default_registry.get_spec('MINING.OTR_TYRE'))"
    ```
-2. Verify OTR tyre attribute extraction:
+2. Verify wire rope specification loading:
+   ```bash
+   uv run python -c "from api.extractors.registry import default_registry; default_registry.load_packs('packs'); print(default_registry.get_spec('MINING.WIRE_ROPE'))"
+   ```
+3. Verify wire rope attribute extraction:
+   ```bash
+   uv run python -c "from api.extractors.registry import default_registry; default_registry.load_packs('packs'); print(default_registry.extract_attributes('WIRE ROPE 32MM 6X36 IWRC 1960 N/MM2 RHOL BRIGHT IS 2266', 'MINING.WIRE_ROPE'))"
+   ```
+4. Verify OTR tyre attribute extraction:
    ```bash
    uv run python -c "from api.extractors.registry import default_registry; default_registry.load_packs('packs'); print(default_registry.extract_attributes('OTR TYRE 27.00R49 E4 ** TUBELESS 48PR', 'MINING.OTR_TYRE'))"
    ```

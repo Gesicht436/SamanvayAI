@@ -6,10 +6,10 @@ This log tracks execution progress across phases and agent sessions. It records 
 
 ## Current Status
 
-- **Completed Phase:** Phase 5 (Deep Flagship Families) / **Module 4**
-- **Next Phase:** Phase 6 (Candidate Generation & Vector Engine) / **Module 5**
+- **Completed Phase:** Phase 6 (Standard Domain Families) / **Module 5**
+- **Next Phase:** Phase 7 (Candidate Generation & Vector Engine) / **Module 6**
 - **Date Completed:** 2026-10-11
-- **Status:** Phase 5 Accepted
+- **Status:** Phase 6 Accepted
 
 
 
@@ -294,6 +294,63 @@ Suggested tag: `git tag phase-4`
 
 **Gate Status: ACCEPTED**
 Suggested tag: `git tag phase-5`
+
+---
+
+## Phase 6: Standard Domain Families (Module 5)
+
+### What Was Built
+1. **15 Standard Family Specifications & Lexicons across 5 Sector Packs:**
+   - Common Pack:
+     - `PIPES.PIPE`: Diameter (NPS/DN), Wall Schedule (`SCH 40/80/XXS`), material metallurgy, manufacturing method (seamless vs welded), pipe end type.
+     - `FLANGES.FLANGE`: Nominal Bore, ASME Class (150-2500), flange type (WNRF, SORF, BLRF), bore schedule, facing (RF, RTJ, FF).
+     - `CABLES.POWER`: Voltage rating (kV), core count (1C, 3C, 3.5C, 4C), conductor cross-section (sq mm), conductor metal (AL/CU), insulation (XLPE/PVC), armour type.
+     - `STEEL.STRUCTURAL`: Section profile (ISMB, ISMC, ISA), standard size notation, steel grade (E250, E350).
+     - `STEEL.REBAR`: Rebar diameter (mm), steel strength grade (Fe 500D, Fe 550D), corrosion treatment (TMT, CRS).
+     - `BEARINGS.BEARING`: Bearing series/part number (6205, 7210), radial internal clearance (C3, C4, CN), seal/shield configuration (2RS, 2Z, OPEN).
+     - `FASTENERS.STUD_BOLT`: Thread metric diameter (M16-M64), fastener length, bolt material grade (B7, B8M, 8.8), companion nut grade (2H, 8).
+     - `INSTRUMENTS.TRANSMITTER`: Instrument type (PRESSURE, DIFF_PRESSURE, TEMPERATURE, LEVEL), output protocol (4-20MA HART, FOUNDATION_FIELDBUS), wetted metallurgy (316L SS, HASTELLOY_C).
+   - Power Pack:
+     - `POWER.BREAKER`: Breaker technology (VCB, SF6, ACB, MCCB), rated voltage (kV), rated normal current (A), rated breaking capacity (kA).
+     - `POWER.BOILER_TUBE`: Outside diameter (mm), wall thickness (mm), alloy grade (SA213-T22, SA213-T91), statutory IBR compliance.
+   - Steel Pack:
+     - `STEEL.CONVEYOR_BELT`: Carcass construction (EP, NN, STEEL_CORD), tensile rating (EP 800/4), belt width (mm), cover grade, fire resistance.
+     - `STEEL.MILL_ROLL`: Roll function (WORK_ROLL, BACKUP_ROLL, EDGER_ROLL), drawing identity mode (`DRAWING`).
+   - Mining Pack:
+     - `MINING.WIRE_ROPE`: Nominal diameter (mm), strand construction (6X36, 6X19), core construction (IWRC, FC), tensile grade (1770, 1960 N/mm2), lay direction.
+   - Heavy Engineering Pack:
+     - `HEAVY.HYDRAULIC_HOSE`: Specification standard class (100R2AT, 2SN, 4SP), dash size (-8) with bidirectional metric bore inference (DN12), working pressure (bar), end fittings.
+     - `HEAVY.MADE_TO_DRAWING`: Drawing identity mode (`DRAWING`) with drawing number, owner, and revision level.
+2. **Deterministic Physical Parsers (`api/extractors/parsers/`):**
+   - 13 dedicated rule-based parsers implemented with pure standard-library dependencies: `cables.py`, `structural.py`, `rebar.py`, `bearings.py`, `fasteners.py`, `instrumentation.py`, `breakers.py`, `boiler_tubes.py`, `conveyor_belts.py`, `mill_rolls.py`, `wire_ropes.py`, `hydraulic_hoses.py`, `made_to_drawing.py`.
+   - Connected directly to central registry dispatch table in `api/extractors/registry.py`.
+3. **Synthetic Fixtures & Adversarial Evaluation Generator (`scripts/generate_standard_fixtures.py`):**
+   - Automated generator creating 22 fixture rows and 10 adversarial hard-negative test pairs for each of the 15 standard families (330 fixtures, 150 pairs).
+   - Unverified standards seeds logged in `packs/*/standards/seed.csv` with `verified = false`.
+4. **Evaluation and Release Gate (`tests/test_standard_families_eval.py`):**
+   - Refusal gate: ZERO hard-negative false merges reach Tier 1 (100% refusal rate).
+   - Missing-attribute gate: 100% of missing-attribute test pairs land in Tier 2.
+   - Extraction accuracy: 99.3% overall across all 15 families (exceeding 95% threshold; all families >= 90%).
+   - Pack unmounting resilience verified across multi-pack environments.
+
+### Acceptance Gate Evaluation (Phase 6)
+
+| Check | Requirement | Result | Output / Evidence |
+|---|---|---|---|
+| 1. Code Quality & Linting | `uv run ruff check .` and `uv run ruff format --check .` | **PASS** | `All checks passed!` |
+| 2. Standard Families Fixtures Count | $\ge 20$ fixtures per family across 15 standard families | **PASS** | `test_standard_families_fixtures_count` PASSED (22 per family, 330 total) |
+| 3. Adversarial Hard-Negative Pairs Count | $\ge 8$ pairs per family across 15 standard families | **PASS** | `test_standard_families_hard_negatives_count` PASSED (10 per family, 150 total) |
+| 4. Extraction Accuracy Gate | $\ge 90\%$ per family, $\ge 95\%$ overall | **PASS** | **Overall: 99.3% (3020/3041)**<br>All 15 families $\ge 90\%$ |
+| 5. Hard-Negative Refusal Gate | ZERO false merges reach Tier 1 (fail closed) | **PASS** | `test_zero_standard_hard_negatives_reach_tier1` PASSED (0 leaks) |
+| 6. Missing-Attribute Routing Gate | Missing attribute pairs land 100% in Tier 2 | **PASS** | `test_standard_missing_attribute_cases_land_in_tier2` PASSED |
+| 7. Pack Unmounting Resilience | Isolated pack loading leaves system fully operational | **PASS** | `test_pack_unmounting_resilience` PASSED |
+| 8. Tier 1 Single Source of Truth | `scan_tier1.py` reports 0 unauthorized Tier 1 assignments | **PASS** | `0 location(s) outside ['tiering.py']` |
+| 9. Verification Register | All code markers match registered claims | **PASS** | `verify_claims.py`: 11 registered claims, 5 markers |
+| 10. Full Test Suite | All tests pass via `uv run pytest` | **PASS** | `128 passed in 4.79s` |
+
+**Gate Status: ACCEPTED**
+Suggested tag: `git tag phase-6`
+
 
 
 

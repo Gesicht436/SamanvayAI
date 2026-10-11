@@ -11,10 +11,10 @@ This document tracks the live implementation progress of **Samanvay**, records a
 | **Repository Root** | `C:\Users\mayank\Developement\Projects\SamanvayAI` |
 | **Specification Source** | [specsheet.md](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/specsheet.md) |
 | **Master Implementation Plan** | [implementation_plan.md](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/implementation_plan.md) |
-| **Active Target Module** | **Module 5: Standard Domain Families (15 Families, 5 Packs)** |
-| **Completed Modules** | **Module 0: Foundation Core, Security & Data Persistence**<br>**Module 1: Ingest, Text Normalization & UoM Engine**<br>**Module 2: Extractor Framework & Spec Registry**<br>**Module 3: Safety Comparator, Tiering Engine & Safety Invariants Suite**<br>**Module 4: Deep Flagship Families (6 Deep Sectors)** |
-| **Current Build Phase** | Phase 5 (Deep Flagship Families Complete -> Ready for Standard Families Phase 6) |
-| **Overall Project Status** | Modules 0, 1, 2, 3, and 4 built to completion and accepted; 110 tests passing; Ready to start Module 5 |
+| **Active Target Module** | **Module 6: Candidate Retrieval, Scoring & Cold Start** |
+| **Completed Modules** | **Module 0: Foundation Core, Security & Data Persistence**<br>**Module 1: Ingest, Text Normalization & UoM Engine**<br>**Module 2: Extractor Framework & Spec Registry**<br>**Module 3: Safety Comparator, Tiering Engine & Safety Invariants Suite**<br>**Module 4: Deep Flagship Families (6 Deep Sectors)**<br>**Module 5: Standard Domain Families (15 Families, 5 Packs)** |
+| **Current Build Phase** | Phase 6 (Standard Domain Families Complete -> Ready for Candidate Generation & Vector Engine Phase 7) |
+| **Overall Project Status** | Modules 0, 1, 2, 3, 4, and 5 built to completion and accepted; 128 tests passing; Ready to start Module 6 |
 
 ---
 
@@ -29,8 +29,8 @@ This table shows the build status for every module. A module changes from `PENDI
 | **Module 2** | Extractor Framework & Spec Registry | `[P0]` | **DONE** | **PASSED (100%)** | `ExtractedValue` dataclass and `none_with()` helper (`api/extractors/base.py`), TOML & YAML `LexiconExtractor` engine (`api/extractors/lexicon.py`), physical parsers (`size_nb.py`, `pressure_class.py`), central `SpecRegistry` (`api/extractors/registry.py`) with identity modes (`PARAMETRIC`, `OEM_PN`, `DRAWING`) and PostgreSQL sync, 5 starter sector packs (`packs/common`, `packs/power`, `packs/steel`, `packs/mining`, `packs/heavy_eng`), unmounting resilience verified, FastAPI `/extract` endpoints, 65 tests passing. |
 | **Module 3** | Safety Comparator, Tiering & Invariant Suite | `[P0]` | **DONE** | **PASSED (100%)** | Deterministic attribute comparator (`api/services/comparator.py`), directional lattices ($IIC \ge IIB \ge IIA$, $T6 \ge \dots \ge T1$, $IE4 > IE3 > IE2 > IE1$, kVA, kA), Ex Group I vs Group II isolation (S11), authoritative safety tiering engine (`api/services/tiering.py`) enforcing S1-S15, static safety auditor (`scripts/scan_tier1.py` with 0 leaks), FastAPI endpoints `POST /compare` and `POST /tier`, Hypothesis property suite for S1-S15 (>=300 examples each), golden verdict matrix test, mutation check, 88 tests passing. |
 | **Module 4** | Deep Flagship Families (6 Deep Sectors) | `[P0]` | **DONE** | **PASSED (100%)** | 6 deep flagship family specs (`VALVES.GATE`, `MOTORS.EX`, `POWER.TRANSFORMER`, `STEEL.REFRACTORY`, `MINING.OTR_TYRE`, `HEAVY.PUMP_CENTRIFUGAL`), 20+ TOML lexicons, 5 deterministic physical parsers (`motors.py`, `transformers.py`, `refractory.py`, `otr_tyres.py`, `pumps.py`), 270 test fixtures (45/family), 96 adversarial hard negatives (16/family), standards seeds with `verified = false`, zero false merges in Tier 1, 98.0% extraction accuracy, 110 tests passing. |
-| **Module 5** | Standard Domain Families (15 Families, 5 Packs) | `[P0]` / `[P1]` | **READY TO START** | Not evaluated | - |
-| **Module 6** | Candidate Retrieval, Scoring & Cold Start | `[P0]` | `PENDING` | Not evaluated | - |
+| **Module 5** | Standard Domain Families (15 Families, 5 Packs) | `[P0]` / `[P1]` | **DONE** | **PASSED (100%)** | 15 standard family specs (`PIPES.PIPE`, `FLANGES.FLANGE`, `CABLES.POWER`, `STEEL.STRUCTURAL`, `STEEL.REBAR`, `BEARINGS.BEARING`, `FASTENERS.STUD_BOLT`, `INSTRUMENTS.TRANSMITTER`, `POWER.BREAKER`, `POWER.BOILER_TUBE`, `STEEL.CONVEYOR_BELT`, `STEEL.MILL_ROLL`, `MINING.WIRE_ROPE`, `HEAVY.HYDRAULIC_HOSE`, `HEAVY.MADE_TO_DRAWING`), 30+ TOML lexicons, 13 deterministic physical parsers, 330 test fixtures (22/family), 150 adversarial hard negatives (10/family), standards seeds marked `verified = false`, zero false merges in Tier 1, 100% missing attributes to Tier 2, 99.3% extraction accuracy, 128 tests passing. |
+| **Module 6** | Candidate Retrieval, Scoring & Cold Start | `[P0]` | **READY TO START** | Not evaluated | - |
 | **Module 7** | Stewardship Governance & Eval Gate | `[P0]` | `PENDING` | Not evaluated | - |
 | **Module 8** | Core Frontend Web Application (Next.js) | `[P0]` | `PENDING` | Not evaluated | - |
 | **Module 9** | Document Intake, MTC Engine & Life Monitor | `[P1]` | `PENDING` | Not evaluated | - |
@@ -93,7 +93,7 @@ Step 7: Update implemented_till_now.md & docs/PROGRESS.md (Record new status & l
 ```
 
 ### Detailed Steps:
-1. **Identify the Active Module:** Read Section 2 of this file. Find the first module whose status is `READY TO START` or `IN PROGRESS` (Currently **Module 2**).
+1. **Identify the Active Module:** Read Section 2 of this file. Find the first module whose status is `READY TO START` or `IN PROGRESS` (Currently **Module 6**).
 2. **Review Module Requirements:** Read the corresponding section in [implementation_plan.md](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/implementation_plan.md).
 3. **Verify Baseline Health:**
    ```powershell
