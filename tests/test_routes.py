@@ -17,6 +17,8 @@ PUBLIC_ALLOW_LIST = {
     "/extract",
     "/extract/specs",
     "/extract/specs/{subcategory}",
+    "/compare",
+    "/tier",
     "/docs",
     "/docs/oauth2-redirect",
     "/openapi.json",

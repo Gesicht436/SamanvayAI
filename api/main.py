@@ -8,7 +8,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.config import get_settings
 from api.extractors.registry import default_registry
 from api.logging_setup import configure_logging, logger
-from api.routers import audit_router, auth_router, extract_router, health_router, ingest_router
+from api.routers import (
+    audit_router,
+    auth_router,
+    compare_router,
+    extract_router,
+    health_router,
+    ingest_router,
+)
 
 
 @asynccontextmanager
@@ -49,3 +56,4 @@ app.include_router(auth_router)
 app.include_router(audit_router)
 app.include_router(ingest_router)
 app.include_router(extract_router)
+app.include_router(compare_router)
