@@ -1,6 +1,5 @@
 """Unit tests for text normalization and Indic transliteration engine."""
 
-
 from api.services.normalize import normalize_text
 from api.services.script_detector import detect_scripts
 

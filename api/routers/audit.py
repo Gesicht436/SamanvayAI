@@ -61,7 +61,10 @@ async def verify_audit_log(
         after_str = json.dumps(r.after) if r.after is not None else ""
         rationale_str = r.rationale or ""
 
-        payload = r.prev_hash + f"{at_str}|{actor_str}|{r.action}|{r.entity}|{r.entity_id}|{before_str}|{after_str}|{rationale_str}"
+        payload = (
+            r.prev_hash
+            + f"{at_str}|{actor_str}|{r.action}|{r.entity}|{r.entity_id}|{before_str}|{after_str}|{rationale_str}"
+        )
         computed_hash = hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
         if computed_hash != r.this_hash:
@@ -79,4 +82,3 @@ async def verify_audit_log(
         anchored_head=None,
         status=status_str,
     )
-

@@ -89,9 +89,7 @@ class NormalizerDictionaries:
                 lang = json_file.stem.lower()
                 with open(json_file, encoding="utf-8") as f:
                     terms = json.load(f)
-                    self.indic_maps[lang] = {
-                        k.strip(): v.strip().upper() for k, v in terms.items()
-                    }
+                    self.indic_maps[lang] = {k.strip(): v.strip().upper() for k, v in terms.items()}
 
 
 _DICTS: NormalizerDictionaries | None = None
@@ -119,12 +117,7 @@ def map_quotes(text: str) -> str:
         .replace("\u02ba", '"')
         .replace("\u02b9\u02b9", '"')
     )
-    text = (
-        text.replace("\u2032", "'")
-        .replace("\u2019", "'")
-        .replace("\u2018", "'")
-        .replace("\u02b9", "'")
-    )
+    text = text.replace("\u2032", "'").replace("\u2019", "'").replace("\u2018", "'").replace("\u02b9", "'")
     return text
 
 
@@ -132,7 +125,7 @@ def contains_indic_chars(token: str) -> bool:
     """Check if token contains any Indic characters."""
     for ch in token:
         cp = ord(ch)
-        for (start, end, _) in {
+        for start, end, _ in {
             "Devanagari": (0x0900, 0x097F, "hi"),
             "Bengali": (0x0980, 0x09FF, "bn"),
             "Gurmukhi": (0x0A00, 0x0A7F, "pa"),

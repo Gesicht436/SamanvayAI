@@ -37,9 +37,7 @@ class UomConvertRequest(BaseModel):
     qty: float = Field(..., description="Original quantity.")
     raw_uom: str = Field(..., description="Original unit of measure.")
     category: str | None = Field(None, description="Material family/category.")
-    attributes: dict[str, Any] | None = Field(
-        default_factory=dict, description="Attributes for physical conversion."
-    )
+    attributes: dict[str, Any] | None = Field(default_factory=dict, description="Attributes for physical conversion.")
 
 
 class UomConvertResponse(BaseModel):

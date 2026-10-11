@@ -188,9 +188,7 @@ class ParsedTabularData:
     errors: list[str] = field(default_factory=list)
 
 
-def build_column_mapping(
-    headers: list[str], profile_mapping: dict[str, str] | None = None
-) -> dict[str, str]:
+def build_column_mapping(headers: list[str], profile_mapping: dict[str, str] | None = None) -> dict[str, str]:
     """Map standard fields to specific column names present in the file."""
     mapping: dict[str, str] = {}
     norm_headers = {_norm_col(h): h for h in headers if h}
@@ -273,10 +271,7 @@ def parse_xlsx_bytes(file_bytes: bytes) -> list[dict[str, Any]]:
     for row_vals in rows_iter:
         if not any(v is not None and str(v).strip() != "" for v in row_vals):
             continue  # Skip entirely empty rows
-        row_dict = {
-            headers[i]: row_vals[i] if i < len(row_vals) else None
-            for i in range(len(headers))
-        }
+        row_dict = {headers[i]: row_vals[i] if i < len(row_vals) else None for i in range(len(headers))}
         data.append(row_dict)
 
     return data
@@ -531,13 +526,15 @@ async def ingest_tabular_document(
         inserted_count += 1
 
     # 5. Write to transactional audit_log (Invariant S6)
-    audit_after = json.dumps({
-        "filename": filename,
-        "file_hash": file_hash,
-        "total_rows": parsed.total_rows,
-        "valid_rows": parsed.valid_rows,
-        "error_rows": parsed.error_rows,
-    })
+    audit_after = json.dumps(
+        {
+            "filename": filename,
+            "file_hash": file_hash,
+            "total_rows": parsed.total_rows,
+            "valid_rows": parsed.valid_rows,
+            "error_rows": parsed.error_rows,
+        }
+    )
 
     await db.execute(
         text(

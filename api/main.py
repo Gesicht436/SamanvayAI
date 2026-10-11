@@ -6,8 +6,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.config import get_settings
+from api.extractors.registry import default_registry
 from api.logging_setup import configure_logging, logger
-from api.routers import audit_router, auth_router, health_router, ingest_router
+from api.routers import audit_router, auth_router, extract_router, health_router, ingest_router
 
 
 @asynccontextmanager
@@ -15,7 +16,13 @@ async def lifespan(app: FastAPI):
     """Application startup and shutdown lifecycle handler."""
     settings = get_settings()
     configure_logging()
-    logger.info("samanvay_api_startup", clock_mode=settings.clock_mode, demo_mode=settings.demo_mode)
+    loaded_specs = default_registry.load_packs("packs")
+    logger.info(
+        "samanvay_api_startup",
+        clock_mode=settings.clock_mode,
+        demo_mode=settings.demo_mode,
+        specs_loaded=loaded_specs,
+    )
     yield
     logger.info("samanvay_api_shutdown")
 
@@ -41,4 +48,4 @@ app.include_router(health_router)
 app.include_router(auth_router)
 app.include_router(audit_router)
 app.include_router(ingest_router)
-
+app.include_router(extract_router)

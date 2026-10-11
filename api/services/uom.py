@@ -145,7 +145,6 @@ DIMENSION_CANONICAL_BASE: dict[str, str] = {
 }
 
 
-
 class MissingConversionAttribute(Exception):
     """Raised when a physical conversion requires attributes that are not provided."""
 
@@ -202,7 +201,6 @@ class SectionPropertiesRegistry:
             if prop_key in key:
                 return val
         return None
-
 
 
 _SECTION_REGISTRY: SectionPropertiesRegistry | None = None

@@ -11,6 +11,10 @@ from __future__ import annotations
 import hashlib
 import json
 import sys
+from pathlib import Path
+
+# Ensure repository root is on sys.path for direct CLI script execution
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from sqlalchemy import text
 
@@ -53,7 +57,10 @@ def verify_database_audit_log() -> int:
         after_str = json.dumps(r.after) if r.after is not None else ""
         rationale_str = r.rationale or ""
 
-        payload = r.prev_hash + f"{at_str}|{actor_str}|{r.action}|{r.entity}|{r.entity_id}|{before_str}|{after_str}|{rationale_str}"
+        payload = (
+            r.prev_hash
+            + f"{at_str}|{actor_str}|{r.action}|{r.entity}|{r.entity_id}|{before_str}|{after_str}|{rationale_str}"
+        )
         computed_hash = hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
         if computed_hash != r.this_hash:
