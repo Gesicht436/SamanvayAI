@@ -34,10 +34,10 @@ format:
 check: lint test
 
 eval:
-	uv run python -m eval.run_eval
+	uv run python scripts/eval_harness.py
 
 eval-gate:
-	uv run python -m eval.gate
+	uv run python scripts/eval_harness.py
 
 demo:
 	uv run python -m scripts.seed_clusters
