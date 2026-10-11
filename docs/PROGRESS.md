@@ -6,10 +6,10 @@ This log tracks execution progress across phases and agent sessions. It records 
 
 ## Current Status
 
-- **Completed Phase:** Phase 3 (Extractor Core & Spec Registry) / **Module 2**
-- **Next Phase:** Phase 4 (Safety Comparator & Tiering Engine) / **Module 3**
+- **Completed Phase:** Phase 4 (Safety Comparator & Tiering Engine) / **Module 3**
+- **Next Phase:** Phase 5 (Deep Flagship Families) / **Module 4**
 - **Date Completed:** 2026-10-11
-- **Status:** Phase 3 Accepted
+- **Status:** Phase 4 Accepted
 
 
 
@@ -187,5 +187,70 @@ Suggested tag: `git tag phase-2`
 
 **Gate Status: ACCEPTED**
 Suggested tag: `git tag phase-3`
+
+---
+
+## Phase 4: Safety Comparator, Tiering Engine & Safety Invariants Suite (Module 3)
+
+### What Was Built
+1. **Deterministic Attribute Comparator (`api/services/comparator.py`):**
+   - Attribute-by-attribute evaluation returning typed `Verdict` (`EXACT`, `MISSING`, `MISMATCH`, `UPGRADE`).
+   - Directional substitution lattices:
+     - IEC 60079 hazardous area gas groups: $IIC \ge IIB \ge IIA$ (within Group II surface equipment only).
+     - IEC 60079 temperature classes: $T6 \ge T5 \ge T4 \ge T3 \ge T2 \ge T1$.
+     - Motor efficiency classes: $IE4 > IE3 > IE2 > IE1 > EFF3$ (IS 12615 / IEC 60034-30-1).
+     - Power transformer capacity: candidate rating kVA $\ge$ requirement rating kVA (substitution only).
+     - Circuit breaker breaking capacity: candidate breaking kA $\ge$ requirement breaking kA.
+     - Pressure class: higher class strictly does not substitute without bolt-circle verification (`MISMATCH`).
+   - Group I (underground mining) vs Group II (surface) strict isolation: never equal, never substitutes (Invariant $S11$). Group I exemption for absent gas group and t-class.
+   - Comprehensive `ItemComparisonResult` report generation with missing-attribute gap alerts.
+2. **Safety Tiering Engine (`api/services/tiering.py`):**
+   - Single point of truth for Tier 1 auto-harmonization authorization per spec Section 5.1.
+   - Full enforcement of Safety Invariants $S1$ to $S15$:
+     - $S1$: No Tier 1 if ANY HARD or REQUIRED attribute is missing or mismatched.
+     - $S2$: No Tier 1 if ANY extraction flag is present (`EXTRACTION_CONFLICT`, etc.).
+     - $S3$: No Tier 1 if retrieval has `PARTIAL_BLOCK` or `CATEGORY_UNCERTAIN`.
+     - $S4$: Changing any one HARD attribute never yields Tier 1.
+     - $S5$: Low OCR confidence routes directly to Tier 2 review.
+     - $S6$: Expired lot or unknown shelf-life is never Stream A inventory eligible.
+     - $S7$: Usage-based lot without usage tracking is never Stream A eligible.
+     - $S8$: Adding usage never increases remaining shelf-life.
+     - $S9$: Scoring model probability may lower a tier, never raise a gated item to Tier 1.
+     - $S10$: Duplicate intake document routes to review; never merges silently.
+     - $S11$: Ex Group I and II never equal, never substitutes.
+     - $S12$: Missing statutory attribute (IBR, Ex) routes to Tier 2 review.
+     - $S13$: In `DRAWING` mode, revision difference is never better than Tier 2 without approved equivalence.
+     - $S14$: In `OEM_PN` and `DRAWING` modes, text similarity alone never yields Tier 1.
+     - $S15$: MTC never yields `CONFORMS` against unverified reference rows.
+   - Strict separation of identity and substitution: directional upgrades route to Tier 2 review for requisition only, never merging master identities.
+3. **Static Safety Auditor (`scripts/scan_tier1.py`):**
+   - Scans codebase for Tier 1 authorizations outside `tiering.py`.
+   - Verified 0 unauthorized Tier 1 leaks across the repository.
+4. **FastAPI REST Endpoints (`api/routers/compare.py`):**
+   - `POST /compare`: Evaluates deterministic attribute comparison and returns verdicts, mismatch flags, and gap alerts.
+   - `POST /tier`: Evaluates all invariant guards and calibrated probability to return authoritative tier decisions.
+5. **Safety Invariants Property Test Suite (`tests/test_safety_invariants.py`):**
+   - Hypothesis property tests for every invariant $S1$ through $S15$, each executing $\ge 300$ random examples. Zero skips.
+   - Golden verdict matrix test checking canonical physical test cases.
+   - Deliberate mutation check verifying that disabling Tier 1 invariant gating immediately breaks the test suite.
+6. **API Integration Test Suite (`tests/test_comparator_tiering_api.py`):**
+   - End-to-end integration tests for `/compare` and `/tier` endpoints covering exact matches, missing attributes, directional upgrades, and tier routing.
+
+### Acceptance Gate Evaluation (Phase 4)
+
+| Check | Requirement | Result | Output / Evidence |
+|---|---|---|---|
+| 1. Code Quality & Linting | `uv run ruff check .` and `uv run ruff format --check .` | **PASS** | `All checks passed! 87 files already formatted` |
+| 2. Hypothesis Invariant Tests | S1 to S15 tested with $\ge 300$ examples each, 0 skips | **PASS** | 15 invariant tests passed in `test_safety_invariants.py` |
+| 3. Golden Verdict Matrix | Standard test vectors for exact, missing, mismatch, upgrade | **PASS** | `test_verdict_matrix_golden_cases` PASSED |
+| 4. Deliberate Mutation Test | Breaking Tier 1 gating causes immediate test failure | **PASS** | `test_deliberate_mutation_breaks_tier1_suite` PASSED |
+| 5. Single Source of Truth for Tier 1 | `scan_tier1.py` reports 0 unauthorized Tier 1 assignments | **PASS** | `0 location(s) outside ['tiering.py']` |
+| 6. REST API Integration | `POST /compare` and `POST /tier` endpoints pass integration tests | **PASS** | 6 tests passed in `test_comparator_tiering_api.py` |
+| 7. Verification Claims | `# VERIFY:` code markers verified against register | **PASS** | `make verify-claims` PASSED |
+| 8. Full Test Suite | All tests pass via `uv run pytest` | **PASS** | `88 passed in 4.09s` |
+
+**Gate Status: ACCEPTED**
+Suggested tag: `git tag phase-4`
+
 
 

@@ -18,7 +18,8 @@ All tests run with `uv run pytest`.
 | [test_ingest.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_ingest.py) | `api/services/` | CSV and XLSX parsing, verbatim raw payloads, row error reporting, SHA-256 file hash idempotency, and transactional audit logging. |
 | [test_extractors.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_extractors.py) | `api/extractors/` | `ExtractedValue` contract, token-boundary TOML/YAML lexicons, size NB parsing (fractions, inch, mm, DN), pressure class (ASME vs PN), conflict detection, and character evidence spans. |
 | [test_pack_registry.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_pack_registry.py) | `packs/`, `api/extractors/` | Sector pack loading (12 specs), identity modes (PARAMETRIC, DRAWING), statutory flags, pack unmounting resilience, and `/extract` API endpoints. |
-
+| [test_safety_invariants.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_safety_invariants.py) | `api/services/` | Hypothesis property tests for Safety Invariants S1-S15 (>=300 examples each), golden verdict matrix test, and deliberate mutation check. |
+| [test_comparator_tiering_api.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/test_comparator_tiering_api.py) | `api/routers/` | Integration tests for `/compare` and `/tier` REST endpoints (exact match, missing/mismatch, directional upgrade, tier routing). |
 
 ---
 
@@ -29,6 +30,12 @@ Run tests using `uv`:
 ```powershell
 # Run all tests in the repository
 uv run pytest tests/ -v
+
+# Run safety invariants property suite (Hypothesis >=300 runs each)
+uv run pytest tests/test_safety_invariants.py -v
+
+# Run comparator and tiering API integration tests
+uv run pytest tests/test_comparator_tiering_api.py -v
 
 # Run only core mathematical tests
 uv run pytest tests/test_core_utils.py -v

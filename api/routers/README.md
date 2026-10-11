@@ -27,7 +27,8 @@ The `api/routers/` directory exposes the REST endpoints of Samanvay:
 | `GET` | `/extract/specs` | Public | Lists all registered subcategory specifications across loaded packs. |
 | `GET` | `/extract/specs/{subcat}` | Public | Returns detailed specification attributes and identity mode. |
 | `POST` | `/extract/sync` | Authenticated (Maker) | Synchronizes in-memory specifications into PostgreSQL database tables. |
-
+| `POST` | `/compare` | Public | Compares requirement attributes with candidate attributes with verdicts. |
+| `POST` | `/tier` | Public | Evaluates safety invariants S1-S15 and assigns harmonization tier (1, 2, 3). |
 
 ---
 
@@ -65,7 +66,21 @@ curl -X POST http://localhost:8000/uom/convert `
   -d '{"qty": 1000, "raw_uom": "M", "category": "REBAR", "attributes": {"diameter_mm": 12}}'
 ```
 
-### 3.5 Verify Audit Chain
+### 3.5 Test Attribute Comparison Endpoint
+```powershell
+curl -X POST http://localhost:8000/compare `
+  -H "Content-Type: application/json" `
+  -d '{"subcategory": "VALVES.GATE", "requirement_attributes": {"size_nb": 100, "pressure_class": "ASME_150"}, "candidate_attributes": {"size_nb": 100, "pressure_class": "ASME_300"}}'
+```
+
+### 3.6 Test Safety Tiering Endpoint
+```powershell
+curl -X POST http://localhost:8000/tier `
+  -H "Content-Type: application/json" `
+  -d '{"subcategory": "VALVES.GATE", "requirement_attributes": {"size_nb": 100, "pressure_class": "ASME_150", "body_material": "A216_WCB", "end_connection": "FLANGED", "facing": "RF", "design_standard": "API_600", "trim_code": "TRIM_8", "bonnet_type": "BOLTED", "operator": "HANDWHEEL", "fire_safe": "API_607", "sour_service": "NO"}, "candidate_attributes": {"size_nb": 100, "pressure_class": "ASME_150", "body_material": "A216_WCB", "end_connection": "FLANGED", "facing": "RF", "design_standard": "API_600", "trim_code": "TRIM_8", "bonnet_type": "BOLTED", "operator": "HANDWHEEL", "fire_safe": "API_607", "sour_service": "NO"}, "probability": 0.98}'
+```
+
+### 3.7 Verify Audit Chain
 ```powershell
 curl http://localhost:8000/audit/verify `
   -H "Authorization: Bearer <TOKEN>"

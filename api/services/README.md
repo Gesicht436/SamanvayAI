@@ -62,10 +62,33 @@ flowchart LR
 - Guarantees idempotency using the SHA-256 file hash.
 - Writes an audit log entry in the same transaction as the document and item records.
 
+### 2.5 Deterministic Attribute Comparator (`comparator.py`)
+- Compares requirement attributes with candidate attributes one by one.
+- Returns clear verdicts for each attribute: `EXACT`, `MISSING`, `MISMATCH`, `UPGRADE`.
+- Evaluates directional substitution lattices:
+  - Hazardous area gas groups: $IIC \ge IIB \ge IIA$ (within Group II surface equipment).
+  - Temperature classes: $T6 \ge T5 \ge T4 \ge T3 \ge T2 \ge T1$.
+  - Motor energy efficiency: $IE4 > IE3 > IE2 > IE1 > EFF3$.
+  - Transformer capacity: higher kVA is a candidate upgrade.
+  - Circuit breaker breaking capacity: higher kA is a candidate upgrade.
+  - Pressure class: higher class is NOT an upgrade because bolt patterns differ.
+- Safety Rule ($S11$): Group I (mining) and Group II (surface) never equal and never substitute.
+
+### 2.6 Safety Tiering Engine (`tiering.py`)
+- Serves as the single authoritative decision point for harmonization tiers.
+- Enforces Safety Invariants $S1$ to $S15$:
+  - `Tier 1 (Auto-Harmonize)`: All HARD and REQUIRED attributes match exactly with high confidence ($P \ge \tau_{auto}$).
+  - `Tier 2 (Steward Review)`: Incomplete attributes, directional upgrades, extraction flags, drawing revisions, or medium probability ($ \tau_{review} \le P < \tau_{auto} $).
+  - `Tier 3 (Distinct)`: Any HARD attribute mismatch, OEM part number mismatch, or low probability ($P < \tau_{review}$).
+- Enforces Stream A inventory pooling rules (lots with unknown or expired shelf-life are ineligible).
+- Identity is never substitution: directional upgrades route to Tier 2 review.
+
 ---
 
 ## 3. File Index
 
+- [comparator.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/comparator.py): Deterministic attribute comparator and directional substitution lattices.
+- [tiering.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/tiering.py): Safety tiering engine and single authoritative point of truth for Tier 1.
 - [script_detector.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/script_detector.py): Unicode script ranges and language identification.
 - [normalize.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/normalize.py): NFKC, quote mapping, Indic transliteration, and category-gated abbreviation expansion.
 - [uom.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/uom.py): Unit standardization and canonical physical conversions.
@@ -78,27 +101,42 @@ flowchart LR
 
 Run these commands using `uv`:
 
-### 4.1 Test Script Detection
+### 4.1 Test Attribute Comparison
+```powershell
+uv run python -c "from api.services.comparator import compare_items; res = compare_items({'size_nb': 100, 'pressure_class': 'ASME_150'}, {'size_nb': 100, 'pressure_class': 'ASME_300'}, 'VALVES.GATE'); print('Hard mismatch:', res.has_hard_mismatch)"
+```
+
+### 4.2 Test Directional Substitution Upgrade
+```powershell
+uv run python -c "from api.services.comparator import compare_items; res = compare_items({'gas_group': 'IIA', 'temp_class': 'T4'}, {'gas_group': 'IIC', 'temp_class': 'T6'}, 'MOTORS.EX'); print('Upgrade detected:', res.has_upgrade)"
+```
+
+### 4.3 Test Tiering Engine Decision
+```powershell
+uv run python -c "from api.services.comparator import compare_items; from api.services.tiering import assign_tier; comp = compare_items({'size_nb': 100, 'pressure_class': 'ASME_150'}, {'size_nb': 100, 'pressure_class': 'ASME_150'}, 'VALVES.GATE'); res = assign_tier(comp); print('Assigned Tier:', res.tier, 'Reasons:', res.reason_codes)"
+```
+
+### 4.4 Test Script Detection
 ```powershell
 uv run python -c "from api.services.script_detector import detect_scripts; print(detect_scripts('वाल्व GATE VALVE'))"
 ```
 
-### 4.2 Test Text Normalizer
+### 4.5 Test Text Normalizer
 ```powershell
 uv run python -c "from api.services.normalize import normalize_text; print(normalize_text('वाल्व 2″ SS 304 GT #150', category='VALVES'))"
 ```
 
-### 4.3 Test Fasteners STD Rule
+### 4.6 Test Fasteners STD Rule
 ```powershell
 uv run python -c "from api.services.normalize import normalize_text; print('With size:', normalize_text('HEX BOLT STD M16', category='FASTENERS').clean_text); print('Without size:', normalize_text('HEX BOLT STD', category='FASTENERS').clean_text, normalize_text('HEX BOLT STD', category='FASTENERS').flags)"
 ```
 
-### 4.4 Test Canonical UoM Rebar Conversion
+### 4.7 Test Canonical UoM Rebar Conversion
 ```powershell
 uv run python -c "from api.services.uom import convert_to_canonical; print(convert_to_canonical(1000, 'M', category='REBAR', attributes={'diameter_mm': 12}))"
 ```
 
-### 4.5 Test IS 808 Beam Mass Calculation
+### 4.8 Test IS 808 Beam Mass Calculation
 ```powershell
 uv run python -c "from api.services.uom import convert_to_canonical; print(convert_to_canonical(12, 'M', category='SECTIONS', attributes={'designation': 'ISMB 300'}))"
 ```
@@ -109,7 +147,8 @@ uv run python -c "from api.services.uom import convert_to_canonical; print(conve
 
 - [Root Architecture README](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/README.md): High-level system design.
 - [Extractor Framework README](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/extractors/README.md): Attribute extraction and Spec Registry.
+- [Routers README](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/routers/README.md): HTTP endpoints including `/compare` and `/tier`.
+- [Tests README](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/tests/README.md): Safety invariant test suite.
 - [Dictionaries README](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/dictionaries/README.md): Reference tables and dictionaries.
-- [Routers README](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/routers/README.md): HTTP endpoints.
 - [Verification Register](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/docs/verification.md): External standards tracking.
 
