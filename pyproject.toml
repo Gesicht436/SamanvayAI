@@ -24,6 +24,18 @@ dependencies = [
     "uvicorn[standard]>=0.54.0",
 ]
 
+[project.optional-dependencies]
+ml = [
+    "pillow>=10.4.0",
+    "torch>=2.2.0",
+    "sentence-transformers>=3.0.0",
+    "transformers>=4.40.0",
+    "xgboost>=2.0.0",
+    "shap>=0.45.0",
+    "easyocr>=1.7.1",
+    "paddleocr>=2.8.0",
+]
+
 [dependency-groups]
 dev = [
     "httpx>=0.28.1",
@@ -42,7 +54,7 @@ asyncio_mode = "auto"
 [tool.ruff]
 line-length = 120
 target-version = "py312"
-exclude = [".agents", ".venv", "web"]
+exclude = [".agents", ".venv", "web", "Samanvay.AI"]
 
 [tool.ruff.lint]
 ignore = ["B008"]

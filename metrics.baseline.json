@@ -1,0 +1,96 @@
+{
+  "hard_negative_pairs": 170,
+  "hard_negative_false_merges": 0,
+  "hard_negative_interval_95": [
+    0.0,
+    0.021465554980944553
+  ],
+  "missing_attr_cases": 76,
+  "missing_attr_routed_ok": 76,
+  "missing_attr_interval_95": [
+    0.9526212461330699,
+    1.0
+  ],
+  "low_ocr_in_tier1": 0,
+  "mtc_conforms_unverified": 0,
+  "auto_tier_tp": 600,
+  "auto_tier_fp": 0,
+  "auto_tier_precision": 1.0,
+  "auto_tier_precision_interval_95": [
+    0.9938707286693258,
+    1.0
+  ],
+  "precision_target": 0.995,
+  "baselines_comparison": {
+    "cosine_false_merges": 115,
+    "cosine_false_merge_rate": 0.6764705882352942,
+    "trigram_false_merges": 95,
+    "trigram_false_merge_rate": 0.5588235294117647,
+    "samanvay_false_merges": 0,
+    "samanvay_false_merge_rate": 0.0
+  },
+  "sector_parity": {
+    "COMMON": {
+      "hard_negatives": 76,
+      "false_merges": 0,
+      "false_merge_rate": 0.0,
+      "missing_cases": 36,
+      "missing_routed_ok": 36,
+      "missing_route_rate": 1.0
+    },
+    "POWER": {
+      "hard_negatives": 25,
+      "false_merges": 0,
+      "false_merge_rate": 0.0,
+      "missing_cases": 11,
+      "missing_routed_ok": 11,
+      "missing_route_rate": 1.0
+    },
+    "STEEL": {
+      "hard_negatives": 26,
+      "false_merges": 0,
+      "false_merge_rate": 0.0,
+      "missing_cases": 10,
+      "missing_routed_ok": 10,
+      "missing_route_rate": 1.0
+    },
+    "MINING": {
+      "hard_negatives": 19,
+      "false_merges": 0,
+      "false_merge_rate": 0.0,
+      "missing_cases": 7,
+      "missing_routed_ok": 7,
+      "missing_route_rate": 1.0
+    },
+    "HEAVY_ENG": {
+      "hard_negatives": 24,
+      "false_merges": 0,
+      "false_merge_rate": 0.0,
+      "missing_cases": 12,
+      "missing_routed_ok": 12,
+      "missing_route_rate": 1.0
+    }
+  },
+  "org_parity": {
+    "OIL-1": {
+      "evaluated_pairs": 100,
+      "false_merges": 0,
+      "false_merge_rate": 0.0
+    },
+    "POWER-1": {
+      "evaluated_pairs": 101,
+      "false_merges": 0,
+      "false_merge_rate": 0.0
+    },
+    "STEEL-1": {
+      "evaluated_pairs": 126,
+      "false_merges": 0,
+      "false_merge_rate": 0.0
+    },
+    "MINE-1": {
+      "evaluated_pairs": 95,
+      "false_merges": 0,
+      "false_merge_rate": 0.0
+    }
+  }
+}
