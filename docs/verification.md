@@ -23,4 +23,5 @@ Every claim must be checked against a primary source before inclusion in seed fi
 | `VERIFY-012` | SAP ECC/S4 MARA/MAKT field lengths (MAKTX 40, MATNR 18, BISMT 18) | SAP Dictionary MARA/MAKT | `api/services/erp.py` | `PENDING` | - | - | Default field length limits for SAP cross-reference export |
 | `VERIFY-013` | Oracle Cloud ERP item description max length 60, ITEM_NUMBER 20 | Oracle SCM Item Master Spec | `api/services/erp.py` | `PENDING` | - | - | Default field length limits for Oracle Cloud ERP export |
 | `VERIFY-014` | IBM Maximo ITEM.DESCRIPTION max length 50, ITEMNUM 16 | IBM Maximo Asset Schema | `api/services/erp.py` | `PENDING` | - | - | Default field length limits for IBM Maximo export |
+| `VERIFY-015` | ASTM/API starter grade references seeded with verified=false | ASTM A105, A216, A350, A182, A335, API 5L, A213 | `db/migrations/versions/0006_mtc_verified_and_grades.py` | `PENDING` | - | - | Seeded as verified=false per Invariant S15 until human steward validation |
 

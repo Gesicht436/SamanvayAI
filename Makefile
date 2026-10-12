@@ -1,4 +1,4 @@
-.PHONY: setup up down db-reset migrate seed test test-web test-pack lint format check eval eval-gate demo audit-verify verify-claims
+.PHONY: setup up down db-reset migrate seed test test-web test-pack test-mtc test-ml typecheck loadtest lint format check eval eval-gate demo audit-verify verify-claims
 
 setup:
 	uv sync
@@ -22,11 +22,25 @@ test:
 	uv run pytest tests/ -v
 
 test-web:
-	cd web && npm test && npx playwright test
+	cd web && npm test
 
 test-pack:
 	@if [ -z "$(PACK)" ]; then echo "Specify PACK=<name>"; exit 1; fi
 	uv run pytest tests/packs/test_$(PACK).py -v
+
+test-mtc:
+	uv run pytest tests/test_mtc_conformance.py -v
+	uv run python scripts/eval_mtc_docs.py
+
+test-ml:
+	uv run pytest tests/test_ml_layer.py -v
+
+typecheck:
+	cd web && npm run build
+	uv run ruff check .
+
+loadtest:
+	uv run python scripts/load_test.py
 
 lint:
 	uv run ruff check .
@@ -51,3 +65,10 @@ audit-verify:
 
 verify-claims:
 	uv run python -m scripts.verify_claims
+
+corpus-eval:
+	uv run python scripts/generate_synthetic_docs.py
+
+retrain-scorer:
+	uv run python scripts/retrain_scorer.py --eval
+

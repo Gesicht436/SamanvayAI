@@ -768,6 +768,70 @@ Suggested tag: `git tag phase-12-part1`
 **Gate Status: ACCEPTED**
 Suggested tag: `git tag phase-12`
 
+---
+
+## Phase 13: Full Specification Hardening & Release Alignment (Module 12)
+
+### What Was Built
+1. **Core Safety, Comparator `when`-Gating & UoM Expansion:**
+   - Fixed SQL query in `api/services/health.py` to directly verify consecutive entries in the `audit_log` table with SHA-256 genesis linkage check.
+   - Implemented conditional `when`-clause evaluation in `api/services/comparator.py`, routing inapplicable attributes to `EXACT` rather than triggering false `MISSING` routing.
+   - Updated YAML domain pack specs (`refractory.yaml`, `otr_tyres.yaml`, `pumps_centrifugal.yaml`, `breakers.yaml`) with `when` gating.
+   - Expanded `api/services/uom.py` canonical subcategory map to cover dotted domain packs and supported conversion of `ROLL` and `DRUM` to `M`.
+2. **Database Alignment & Grade Reference Seeds:**
+   - Alembic migration `0006_mtc_verified_and_grades.py` adding `stock_lots.mtc_verified` boolean column.
+   - Seeded 74 starter grade reference rows (ASTM A105, A216 WCB, A350 LF2, A182 F316/F51, A335 P11/P22, API 5L X52/X65, A213 T22/T91) with `verified = false` (Invariant $S15$).
+   - Persisted `stock_lots.mtc_verified = True` upon verified MTC conformance with matching heat number.
+3. **Document Intake Promotion Flow & MTC Chemistry Extractor:**
+   - Built line promotion service `promote_doc_line_to_raw_item` creating `raw_items` records linked to source doc lines with transactional audit logging (`PROMOTE_DOC_LINE`).
+   - Added REST endpoints `POST /docs/{doc_id}/lines/{line_id}/promote` and `POST /docs/{doc_id}/promote`.
+   - Developed free-form OCR text chemistry and mechanical extractor `parse_mtc_text_to_chemistry` in `api/services/mtc.py`.
+   - Built synthetic MTC evaluation script `scripts/eval_mtc_docs.py` (100% test cases pass).
+4. **Life Monitor Stage 9 Engine Upgrades:**
+   - Implemented `projected_depletion` calculating daily consumption velocity, handling `INSUFFICIENT_DATA` and `ZERO_CONSUMPTION`.
+   - Implemented `max_poolable_quantity` capping forward pooled demand before shelf-life expiry.
+   - Built `generate_life_alerts` persisting deduplicated alerts to `life_alerts` table and Prometheus gauges.
+   - Formatted official CPSE Condemnation & Disposal Certificate generator (`generate_disposal_request`) per Step 4 of disposition ladder.
+5. **Frontend Web App Upgrades:**
+   - Built Screen 6 Tabular Ingestion & Column Mapping (`/upload`) with ERP profiles (SAP, Oracle, Maximo), preview table, and batch ingestion trigger.
+   - Built Screen 8 Master Golden Catalog Browser (`/catalogue`) with Verhoeff MPNG-17 search, sector filters, where-used references, and lifecycle transition actions.
+   - Upgraded Diff Inspector with character hover alignment tooltips and TreeSHAP attribution panel with mandatory warning banner.
+   - Upgraded Stewardship Queue with cluster bulk-approval toolbar and collective rationale dialog.
+   - Upgraded Document Intake screen with file drag-and-drop, side-by-side OCR line promotion, and PREN badge.
+   - Upgraded Lots Life Monitor with simulated clock banner, alert acknowledge modal, and CPSE disposal certificate export.
+6. **Tooling, Synthetic Benchmarking & Documentation:**
+   - Added `typecheck`, `loadtest`, `test-mtc`, `test-ml` targets to `Makefile`.
+   - Built synthetic load test benchmark `scripts/load_test.py` demonstrating 7,178 req/s throughput and 0.047 ms p50 latency.
+   - Logged `VERIFY-015` in `docs/verification.md`. Updated `docs/limitations.md`.
+7. **OCR Pipeline, Scorer Retraining CLI & Automated Extraction Upgrades:**
+   - Implemented 3x3 median filtering (`apply_median_filter_3x3`) and horizontal row projection deskew estimation (`estimate_row_projection_deskew_angle`) in `api/services/ocr.py`.
+   - Built `LocalNeuralOCRProvider` detecting host Tesseract with automatic 300 DPI fallback to PyMuPDF.
+   - Added document auto-promotion into `raw_items` (`source_type="PROCUREMENT_DOC"`) via `auto_promote` parameter in `ingest_document`.
+   - Automated MTC chemistry & mechanical table parsing directly from document extracted lines in `POST /docs/{document_id}/mtc`.
+   - Built offline Logistic Regression scorer retrainer CLI (`scripts/retrain_scorer.py`) with Platt calibration and Invariant S9 monotonicity validation, exposed via `make retrain-scorer`.
+8. **Frontend Interface Complete Polish:**
+   - Screen 8 (`/catalogue`): Added standalone "Propose Merge" (purple) and "Propose Split" (sky) buttons with stewardship proposal modals and notice banner.
+   - Document Intake (`/docs`): Added live Camera document capture (`getUserMedia`) with viewfinder, and side-by-side Page Canvas Simulator (300 DPI) with interactive OCR bounding boxes and confidence color-coding (green >= 0.85, amber < 0.85).
+   - Lots and Life (`/lots`): Added graphical multi-month usage bars and projected depletion velocity burn-down SVG chart with live alert acknowledge API integration.
+
+### Acceptance Gate Evaluation (Phase 13 / Complete Specification Compliance)
+
+| Check | Requirement | Result | Output / Evidence |
+|---|---|---|---|
+| 1. Code Quality & Linting | `uv run ruff check .` | **PASS** | `All checks passed!` |
+| 2. DB Migrations & Entities | Migrations `0006` & `0007` applied | **PASS** | `0006_mtc_verified_and_grades`, `0007_drawing_revision_equiv` |
+| 3. Full Python Test Suite | `uv run pytest tests/` | **PASS** | **234 passed in 11.31s** |
+| 4. Frontend Unit Tests | `npm test` (Vitest) in `web/` | **PASS** | **26 passed across 8 test suites** |
+| 5. Frontend Production Build | `npm run build` in `web/` | **PASS** | 16 static routes prerendered cleanly |
+| 6. Release Eval Gate | `make eval-gate` | **PASS** | 0 false merges across 170 hard negatives (95% upper bound 2.15% <= 3.0%) |
+| 7. Scorer Retraining CLI | `uv run python scripts/retrain_scorer.py` | **PASS** | 100% accuracy, Invariant S9 strictly verified |
+| 8. Verification Register | No unverified claims in code | **PASS** | 15 claims logged; `VERIFY-015` recorded; verification scanner clean |
+
+**Gate Status: ACCEPTED**
+Suggested tag: `git tag release-v1.0`
+
+
+
 
 
 

@@ -13,6 +13,7 @@ Extraction forms Stage 3 of the harmonization pipeline. To preserve Safety Invar
 
 ## 3. File Index
 - `base.py`: Declares `ExtractedValue` dataclass, `none_with()` constructor, and `BaseExtractor` abstract interface.
+- `cross_validator.py`: Stage 2 three-layer attribute cross-validator reconciling rule extractions with auxiliary NER/LLM signals.
 - `lexicon.py`: TOML/YAML dictionary extractor engine with token boundary regexes and conflict detection.
 - `parsers/size_nb.py`: Piping Nominal Bore parser converting inches, fractions, and DN numbers to canonical mm integers.
 - `parsers/pressure_class.py`: Pressure class parser separating ASME ratings from metric PN ratings.

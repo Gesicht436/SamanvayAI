@@ -16,6 +16,9 @@ The scripts provide developer conveniences:
 
 | [seed_clusters.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/scripts/seed_clusters.py) | Mathematical calculation and database seeding of all 14 Section 19.2 clusters with scenario savings ranges (Low 0.5x, Base 1.0x, High 1.25x capped at 25%). |
 | [eval_harness.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/scripts/eval_harness.py) | Comprehensive evaluation harness: 3 baselines comparison, sector and organisation parity, metrics.json generation, and release gate runner. |
+| [generate_synthetic_docs.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/scripts/generate_synthetic_docs.py) | Generates 20 synthetic procurement & technical documents (8 MTC, 6 PO, 4 ITP, 2 BOQ) with JSON sidecars and evaluates OCR line recall. |
+| [eval_mtc_docs.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/scripts/eval_mtc_docs.py) | Synthetic MTC document intake and chemistry extraction evaluation harness testing 17 elements and Invariant S15. |
+| [load_test.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/scripts/load_test.py) | Synthetic load benchmark testing throughput, p50, and p99 latency against candidate generation and matching. |
 | [gate_check.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/scripts/gate_check.py) | Hard release gate auditor verifying zero false merges, 100% missing attribute routing, OCR/MTC invariants, and precision targets. |
 | [clopper_pearson.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/scripts/clopper_pearson.py) | Standard-library implementation of exact Clopper-Pearson binomial confidence intervals and sample size calculators. |
 | [cold_start_dedup.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/scripts/cold_start_dedup.py) | CLI for cold-start deduplication clustering, report generation, and scale benchmarking. |

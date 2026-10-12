@@ -65,6 +65,7 @@ flowchart LR
 ### 2.5 Deterministic Attribute Comparator (`comparator.py`)
 - Compares requirement attributes with candidate attributes one by one.
 - Returns clear verdicts for each attribute: `EXACT`, `MISSING`, `MISMATCH`, `UPGRADE`.
+- Evaluates `when` condition gating: attributes that are inapplicable by design (such as `facing` when end connection is threaded, or `cement_class` on refractory bricks) evaluate to `EXACT` (inapplicable) instead of routing incorrectly to `MISSING`.
 - Evaluates directional substitution lattices:
   - Hazardous area gas groups: $IIC \ge IIB \ge IIA$ (within Group II surface equipment).
   - Temperature classes: $T6 \ge T5 \ge T4 \ge T3 \ge T2 \ge T1$.
@@ -280,6 +281,7 @@ uv run python -c "from api.services.comparator import compare_items; from api.se
 - [oem.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/oem.py): OEM catalogue onboarding, part normalization, supersessions, and Maker-Checker approval.
 - [audit.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/audit.py): Transactional audit logging helper.
 - [comparator.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/comparator.py): Deterministic attribute comparator and directional substitution lattices.
+- [drawing.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/drawing.py): Drawing number normalization, key derivation, and Maker-Checker revision equivalence management.
 - [tiering.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/tiering.py): Safety tiering engine and single authoritative point of truth for Tier 1.
 - [stewardship.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/stewardship.py): Maker-Checker task governance, domain-tag access controls, feedback capture, and audit logging.
 - [classify.py](file:///C:/Users/mayank/Developement/Projects/SamanvayAI/api/services/classify.py): Subcategory classifier across 21 families with uncertainty flags.
