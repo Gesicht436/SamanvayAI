@@ -117,3 +117,36 @@ This document logs all ported features, modifications, tests, metrics, and depen
 - **Dependencies Pinned**:
   - `sentence-transformers>=3.0.0`, `torch>=2.2.0`, `datasets>=2.19.0` in optional extra `ml`.
 
+---
+
+## Phase 4: NER
+
+- **What was ported**:
+  - NER fine-tuning pipeline `scripts/train_ner.py` adapted from B's `machine_learning/train_ner.py` with character-offset BIO alignment and held-out evaluation.
+  - Per-label performance reporting: implemented `compute_per_label_metrics` calculating exact Precision, Recall, and F1 per class from observed confusion counts.
+  - Label reconciliation: resolved B's 6 training labels (`ITEM_TYPE`, `SIZE`, `PRESSURE_RATING`, `METALLURGY`, `FACING_END`, `STANDARD`) to A's 12 canonical token classes (`TOKEN_CLASSES`), with context-aware disambiguation of `FACING_END` into `FACING` vs `END_CONN`.
+  - Added `LearnedNERExtractor` and `get_ner_extractor` in `api/ml/ner.py` with graceful fallback to regex when fine-tuned weights or transformers dependencies are absent.
+  - Added `cross_check_ner_with_deterministic_extractors` enforcing Safety Invariant S12:
+    - NER is never the sole source of a HARD or statutory attribute.
+    - Disagreement between NER and deterministic extractors penalizes attribute confidence, raises `NER_DETERMINISTIC_DISAGREEMENT`, and NEVER overrides the deterministic extractor.
+    - Attributes discovered solely by NER are flagged `NER_UNVALIDATED_BY_DETERMINISTIC_RULES` and capped at low confidence (<= 0.40) to prevent auto-harmonization in Tier 1.
+- **What was changed from B**:
+  - Resolved B's discrepancy where training data only covered 6 label types despite declaring 25 in documentation.
+  - Discarded B's unverified assumption of model authority; NER output is strictly treated as an auxiliary cross-validation signal.
+  - All ML dependencies kept in optional extra `ml`, ensuring base installation and all tests execute deterministically.
+- **Tests Added**:
+  - `tests/test_ner_safety.py` (6 tests):
+    - `test_b_to_a_label_reconciliation_mapping`: verifies mapping and disambiguation of B's labels to A's 12 classes.
+    - `test_invariant_s12_ner_disagreement_lowers_confidence_never_overrides`: verifies Class 150 vs Class 300 disagreement penalizes confidence and raises disagreement flag without overriding deterministic value.
+    - `test_invariant_s12_ner_sole_source_cannot_auto_harmonize`: verifies unbacked NER attributes receive low confidence and unvalidated flag.
+    - `test_learned_ner_fallback_without_weights`: verifies fallback to regex tagger with `REGEX_NER_FALLBACK` flag.
+    - `test_per_label_metrics_calculation_in_train_ner`: verifies exact P/R/F1 calculation from observed counts.
+    - `test_train_ner_smoke_run`: verifies end-to-end smoke training execution.
+  - Total test count: 259 passed (up from 253 in Phase 3, 234 baseline).
+- **Eval-Harness Before / After**:
+  - Baseline through Phase 3: 0/170 false merges ([0.00%, 2.15%]), 76/76 missing attribute routed to Tier 2 (100.0%).
+  - Phase 4: identical, 0/170 false merges ([0.00%, 2.15%]), 76/76 missing attribute routed to Tier 2 (100.0%). All gates PASS.
+- **Dependencies Pinned**:
+  - `transformers>=4.42.0`, `torch>=2.2.0`, `seqeval>=1.2.2` in optional extra `ml`.
+
+
