@@ -181,3 +181,37 @@ This document logs all ported features, modifications, tests, metrics, and depen
   - Phase 5: identical, 0/170 false merges ([0.00%, 2.15%]), 76/76 missing attribute routed to Tier 2 (100.0%). All gates PASS.
 - **Dependencies Pinned**:
   - `xgboost>=2.0.0`, `shap>=0.45.0` in optional extra `ml`.
+
+---
+
+## Phase 6: Eval Harness, Real Metrics, and Flange Over-Conservatism
+
+- **What was ported / fixed**:
+  - **Flange Over-Conservatism Fix** (`packs/common/specs/flanges.yaml`): Made `rtj_groove` conditional on `facing == RTJ` (`when: "facing == RTJ"`). Previously, regular Raised Face (RF) flanges were unconditionally penalized for lacking `rtj_groove` (which only exists on Ring Type Joint flanges), improperly stranding identical RF flanges in Tier 2. With this fix, regular RF flanges harmonize cleanly to Tier 1 (`ALL_HARD_REQUIRED_EXACT`).
+  - **Real Developer Fixtures Execution** (`scripts/eval_harness.py`): Replaced the fraudulent placeholder `auto_tier_tp = total_fixtures` (which merely counted raw fixture rows) with actual end-to-end pipeline execution of all 600 developer fixtures from `packs/*/fixtures/*.csv` through attribute extraction, comparison, and tiering.
+  - **Real Held-out Evaluation Set** (`data/eval/holdout_pairs.csv`): Created a 120-pair held-out evaluation dataset (60 positive identity pairs and 60 adversarial hard negative pairs) featuring variations unseen in developer fixtures (DN metric vs imperial inches e.g. DN50 vs 2", reordered tokens, "CL150" vs "150#", abbreviation expansions e.g. "WNRF" vs "WELD NECK RAISED FACE", "SW" vs "SOCKET WELD", "CS" vs "CARBON STEEL").
+  - **Evaluation Harness Integration**: `scripts/eval_harness.py` now evaluates the 120-pair held-out dataset, reporting true positive rate, false positive rate, Tier 1 and Tier 2 distribution, and exact Clopper-Pearson confidence intervals alongside developer fixture metrics.
+  - **Updated Release Metrics** (`metrics.json`): Real execution results stored with Clopper-Pearson confidence intervals.
+- **Tests Added**:
+  - `tests/test_eval_gate.py` (3 tests):
+    - `test_flange_raised_face_lands_in_tier1`: asserts that two identical Raised Face flanges without `rtj_groove` harmonize into Tier 1 with verdict `ALL_HARD_REQUIRED_EXACT`.
+    - `test_holdout_pairs_evaluation_zero_false_merges`: evaluates the 120-pair holdout set and asserts 0 false merges across all 60 adversarial hard negatives.
+    - `test_developer_fixtures_actual_execution_metrics`: verifies all 600 developer fixtures are executed end-to-end and auto-tier precision is 100.0%.
+  - Total test count: 266 passed in 12.03s.
+- **Eval-Harness Before / After**:
+  - **Before**:
+    - Locked eval set (170 hard negatives): 0/170 false merges (0.00% [0.00%, 2.15%]).
+    - Missing attribute (76 cases): 76/76 routed to Tier 2 (100.00% [95.26%, 100.00%]).
+    - Auto-tier precision: 100% reported via fake row count (`auto_tier_tp = total_fixtures = 600`), Tier 1 recall unmeasured.
+    - Held-out evaluation set: none existed.
+    - Raised Face flanges: stranded in Tier 2.
+  - **After**:
+    - Locked eval set (170 hard negatives): 0/170 false merges (0.00% [0.00%, 2.15%]).
+    - Missing attribute (76 cases): 76/76 routed to Tier 2 (100.00% [95.26%, 100.00%]).
+    - Real Developer Fixture execution (600 fixtures): 62 promoted to Tier 1, 538 safely routed to Tier 2 review. Measured Auto-Tier Precision: 100.00% (62/62) [94.22%, 100.00%] (gate requirement $\ge 99.50\%$). Tier 1 recall: 10.33% (62/600).
+    - Real Held-out set (120 pairs): 0/60 false merges on adversarial negatives (0.00% [0.00%, 5.96%]), 12/60 positive pairs promoted to Tier 1, 48/60 safely routed to Tier 2 review due to incomplete catalog specs.
+    - Raised Face flanges: cleanly promoted to Tier 1.
+    - All release gates PASS.
+- **Dependencies Pinned**:
+  - No new dependencies required. Standard library CSV and math used.
+

@@ -143,3 +143,37 @@ def test_eval_harness_end_to_end_baselines_and_parity():
     assert len(org_parity) == 4  # OIL-1, POWER-1, STEEL-1, MINE-1
     for org, stats in org_parity.items():
         assert stats["false_merges"] == 0, f"Organization {org} had false merges: {stats}"
+
+    # 8. Real developer fixtures execution metrics
+    assert metrics["total_fixtures_evaluated"] == 600
+    assert metrics["auto_tier_tp"] == 62
+    assert metrics["auto_tier_tier2"] == 538
+    assert metrics["tier_1_recall"] > 0.10
+
+    # 9. Holdout evaluation set verification
+    h = metrics.get("holdout_evaluation", {})
+    assert h.get("total_pairs") == 120
+    assert h.get("hard_negative_pairs") == 60
+    assert h.get("hard_negative_false_merges") == 0
+    assert h.get("hard_negative_false_merge_rate") == 0.0
+
+
+def test_flange_raised_face_lands_in_tier1():
+    """Validates that regular raised-face flanges land in Tier 1 and rtj_groove is conditional."""
+    from api.extractors.registry import default_registry
+    from api.services.comparator import compare_items
+    from api.services.tiering import Tier, assign_tier
+
+    default_registry.load_packs("packs")
+    desc = "FLANGE WNRF 4 IN 150# A105 SCH 40"
+    ext = default_registry.extract_attributes(desc, "FLANGES.FLANGE")
+    attrs = {k: ev.value for k, ev in ext.items() if ev.value is not None}
+
+    comp = compare_items(attrs, attrs, "FLANGES.FLANGE")
+    tier_res = assign_tier(comp, probability=0.99)
+
+    assert tier_res.tier == Tier.ONE_AUTO.value
+    assert "ALL_HARD_REQUIRED_EXACT" in tier_res.reason_codes
+    # rtj_groove should be inapplicable, not missing
+    assert "MISSING_REQUIRED_ATTRIBUTE" not in tier_res.reason_codes
+

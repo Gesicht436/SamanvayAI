@@ -14,4 +14,4 @@ attributes:
   - {name: facing, role: HARD}
   - {name: material_grade, role: HARD}
   - {name: bore_schedule, role: HARD, when: "flange_type == WELD_NECK"}
-  - {name: rtj_groove, role: REQUIRED}
+  - {name: rtj_groove, role: REQUIRED, when: "facing == RTJ"}

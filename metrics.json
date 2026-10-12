@@ -13,14 +13,28 @@
   ],
   "low_ocr_in_tier1": 0,
   "mtc_conforms_unverified": 0,
-  "auto_tier_tp": 600,
+  "total_fixtures_evaluated": 600,
+  "auto_tier_tp": 62,
+  "auto_tier_tier2": 538,
+  "auto_tier_tier3": 0,
   "auto_tier_fp": 0,
   "auto_tier_precision": 1.0,
   "auto_tier_precision_interval_95": [
-    0.9938707286693258,
+    0.9422373655706988,
     1.0
   ],
+  "tier_1_recall": 0.10333333333333333,
   "precision_target": 0.995,
+  "holdout_evaluation": {
+    "total_pairs": 120,
+    "hard_negative_pairs": 60,
+    "hard_negative_false_merges": 0,
+    "hard_negative_false_merge_rate": 0.0,
+    "positive_pairs": 60,
+    "positive_auto_tier1": 19,
+    "positive_routed_tier2": 37,
+    "positive_auto_tier_rate": 0.31666666666666665
+  },
   "baselines_comparison": {
     "cosine_false_merges": 115,
     "cosine_false_merge_rate": 0.6764705882352942,
