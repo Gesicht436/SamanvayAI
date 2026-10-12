@@ -13,6 +13,11 @@ Enforces Section 10.2:
 
 from __future__ import annotations
 
+import json
+import re
+from pathlib import Path
+
+import pymupdf
 import pytest
 from fastapi.testclient import TestClient
 
@@ -20,9 +25,12 @@ from api.main import app
 from api.models.entities import GradeReference, StockLot
 from api.security.jwt_auth import create_access_token
 from api.services.mtc import (
+    _clean_chem_header,
     compute_ce_iiw,
     compute_pren,
     evaluate_mtc_conformance,
+    get_grade_limits,
+    parse_mtc_text_to_chemistry,
     sanitize_chemistry,
 )
 
@@ -279,4 +287,149 @@ def test_mtc_verified_lot_and_grade_seeds_present():
             mtc_verified=False,
         )
         assert lot.mtc_verified is False
+
+
+def test_mtc_sample_pdf_fixtures_extraction_both_modes():
+    """Verify that all sample MTC/Challan PDFs extract chemistry and mechanical values matching ground truth
+
+    using both plain text extraction and layout/sorted-block extraction.
+    """
+    fixtures_dir = Path(__file__).parent / "fixtures" / "mtc"
+    gt_file = fixtures_dir / "sample_mtc_ground_truth.json"
+    assert gt_file.exists(), "sample_mtc_ground_truth.json must exist"
+
+    ground_truth = json.loads(gt_file.read_text(encoding="utf-8"))
+
+    for item in ground_truth:
+        fname = item["filename"]
+        pdf_path = fixtures_dir / fname
+        assert pdf_path.exists(), f"Sample PDF {fname} must exist"
+
+        doc = pymupdf.open(pdf_path)
+
+        # Mode 1: Plain text extraction
+        plain_text = "".join(page.get_text("text") for page in doc)
+        chem_plain, mech_plain, _meta_plain, _flags_plain = parse_mtc_text_to_chemistry(plain_text)
+
+        # Mode 2: Layout/sorted blocks extraction
+        layout_lines: list[str] = []
+        for page in doc:
+            blocks = page.get_text("blocks")
+            sorted_blocks = sorted(blocks, key=lambda b: (round(b[1] / 10) * 10, b[0]))
+            for b in sorted_blocks:
+                layout_lines.append(b[4])
+        layout_text = "\n".join(layout_lines)
+        chem_layout, mech_layout, _meta_layout, _flags_layout = parse_mtc_text_to_chemistry(layout_text)
+
+        # Verify chemistry against ground truth
+        expected_chem_headers = [_clean_chem_header(h) for h in item["chemical"][0]]
+        expected_chem_vals = [float(re.sub(r"(?<=\d),(?=\d)", ".", v)) for v in item["chemical"][1]]
+        for h, v in zip(expected_chem_headers, expected_chem_vals, strict=False):
+            assert h is not None, f"Could not clean header {h}"
+            assert chem_plain.get(h) == v, f"{fname} plain text mismatch for element {h}: {chem_plain.get(h)} != {v}"
+            assert chem_layout.get(h) == v, f"{fname} layout text mismatch for element {h}: {chem_layout.get(h)} != {v}"
+
+        # Verify mechanical properties against ground truth
+        mech_headers = item["mechanical"][0]
+        mech_vals = item["mechanical"][1]
+
+        if "Yield (MPa)" in mech_headers:
+            y_val = float(mech_vals[mech_headers.index("Yield (MPa)")])
+            assert mech_plain.get("yield_mpa") == y_val
+            assert mech_layout.get("yield_mpa") == y_val
+
+        if "Tensile (MPa)" in mech_headers:
+            t_val = float(mech_vals[mech_headers.index("Tensile (MPa)")])
+            assert mech_plain.get("tensile_mpa") == t_val
+            assert mech_layout.get("tensile_mpa") == t_val
+
+        if "Elongation (%)" in mech_headers:
+            e_val = float(mech_vals[mech_headers.index("Elongation (%)")])
+            assert mech_plain.get("elongation_pct") == e_val
+            assert mech_layout.get("elongation_pct") == e_val
+
+        if "Hardness (HBW)" in mech_headers:
+            h_val = float(mech_vals[mech_headers.index("Hardness (HBW)")])
+            assert mech_plain.get("hardness") == {"scale": "HBW", "value": h_val}
+            assert mech_layout.get("hardness") == {"scale": "HBW", "value": h_val}
+
+        if "Hardness (HRC)" in mech_headers:
+            h_val = float(mech_vals[mech_headers.index("Hardness (HRC)")])
+            assert mech_plain.get("hardness") == {"scale": "HRC", "value": h_val}
+            assert mech_layout.get("hardness") == {"scale": "HRC", "value": h_val}
+
+        if "Hydro Shell (bar)" in mech_headers:
+            hs_val = float(mech_vals[mech_headers.index("Hydro Shell (bar)")])
+            assert mech_plain.get("hydro_shell_bar") == hs_val
+            assert mech_layout.get("hydro_shell_bar") == hs_val
+
+        if "Visual Inspection" in mech_headers:
+            vis_val = mech_vals[mech_headers.index("Visual Inspection")].upper()
+            assert mech_plain.get("visual") == vis_val
+            assert mech_layout.get("visual") == vis_val
+
+
+def test_mtc_decimal_comma_table_without_splitting():
+    """Regression test: decimal commas like '0,21 1,15' must not be split on comma into 'C=0, Mn=21'."""
+    text_content = (
+        "MILL TEST CERTIFICATE EN 10204 3.1\n"
+        "CHEMICAL COMPOSITION (%)\n"
+        "C% Mn% Si% P% S%\n"
+        "0,21 1,15 0,35 0,018 0,012\n"
+        "MECHANICAL PROPERTIES\n"
+        "Yield (MPa) Tensile (MPa) Elongation (%)\n"
+        "310 520 28,5\n"
+    )
+    chem, mech, _meta, _flags = parse_mtc_text_to_chemistry(text_content)
+    assert chem["C"] == 0.21, f"Expected C=0.21, got {chem.get('C')}"
+    assert chem["Mn"] == 1.15, f"Expected Mn=1.15, got {chem.get('Mn')}"
+    assert chem["Si"] == 0.35, f"Expected Si=0.35, got {chem.get('Si')}"
+    assert chem["P"] == 0.018, f"Expected P=0.018, got {chem.get('P')}"
+    assert chem["S"] == 0.012, f"Expected S=0.012, got {chem.get('S')}"
+    assert mech["elongation_pct"] == 28.5
+
+
+def test_mtc_b16_5_is_not_misread_as_boron():
+    """Regression test: 'B16.5' standard citation must never be extracted as Boron (B=16.5)."""
+    text_content = (
+        "MATERIAL TEST REPORT\n"
+        "STANDARD: ASME B16.5 / ASTM A105\n"
+        "DESCRIPTION: FLANGE WELD NECK 4 INCH CLASS 300\n"
+        "HEAT NO: HT-99881\n"
+        "CHEMICAL ANALYSIS:\n"
+        "C: 0.20%\n"
+        "Mn: 0.90%\n"
+        "Si: 0.25%\n"
+        "P: 0.015%\n"
+        "S: 0.010%\n"
+    )
+    chem, _mech, _meta, _flags = parse_mtc_text_to_chemistry(text_content)
+    assert chem.get("B") is None, f"Boron was erroneously extracted from B16.5: {chem.get('B')}"
+    assert chem["C"] == 0.20
+    assert chem["Mn"] == 0.90
+
+
+def test_mtc_grade_limits_f316_vs_f316l_carbon_distinction():
+    """Verify that grade specifications strictly distinguish ASTM A182 F316 (C max 0.080%)
+
+    from ASTM A182 F316L (C max 0.030% per ASTM A182 Table 2).
+    """
+    limits_f316 = get_grade_limits("ASTM A182 F316")
+    limits_f316l = get_grade_limits("ASTM A182 F316L")
+
+    assert limits_f316 is not None
+    assert limits_f316l is not None
+
+    c_limit_316 = next(item for item in limits_f316 if item["property"] == "C")
+    c_limit_316l = next(item for item in limits_f316l if item["property"] == "C")
+
+    assert c_limit_316["max_value"] == 0.080
+    assert c_limit_316l["max_value"] == 0.030
+
+    # A chemistry with C = 0.035%:
+    # Conforms to F316 (0.035 <= 0.080)
+    # Fails for F316L (0.035 > 0.030)
+    assert 0.035 <= c_limit_316["max_value"]
+    assert 0.035 > c_limit_316l["max_value"]
+
 

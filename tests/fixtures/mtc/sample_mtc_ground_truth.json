@@ -1,0 +1,207 @@
+[
+  {
+    "filename": "sample_mtc_flange_01.pdf",
+    "doc_type": "MILL TEST CERTIFICATE (EN 10204 3.1)",
+    "cert_no": "MTC-2025-FLG-8819",
+    "po_no": "PO-IOCL-PNP-77410",
+    "description": "WELD NECK FLANGE 4 INCH CLASS 300 RF",
+    "standard": "ASME B16.5 / NACE MR0175",
+    "material_grade": "ASTM A105N (NORMALIZED)",
+    "heat_no": "HT-98421-B",
+    "qty": "45 PCS",
+    "chemical": [
+      [
+        "C%",
+        "Mn%",
+        "Si%",
+        "P%",
+        "S%"
+      ],
+      [
+        "0.19",
+        "0.92",
+        "0.24",
+        "0.015",
+        "0.012"
+      ]
+    ],
+    "mechanical": [
+      [
+        "Yield (MPa)",
+        "Tensile (MPa)",
+        "Elongation (%)",
+        "Hardness (HBW)"
+      ],
+      [
+        "310",
+        "525",
+        "29.5",
+        "156"
+      ]
+    ]
+  },
+  {
+    "filename": "sample_mtc_valve_02.pdf",
+    "doc_type": "INSPECTION TEST CERTIFICATE (EN 10204 3.1)",
+    "cert_no": "MTC-2025-VLV-4491",
+    "po_no": "PO-ONGC-HZR-55102",
+    "description": "GATE VALVE 2 INCH CLASS 150 RF FLANGED",
+    "standard": "API 600 / ASME B16.34",
+    "material_grade": "ASTM A216 WCB",
+    "heat_no": "HT-77104-K",
+    "qty": "20 PCS",
+    "chemical": [
+      [
+        "C%",
+        "Mn%",
+        "Si%",
+        "P%",
+        "S%"
+      ],
+      [
+        "0.22",
+        "0.85",
+        "0.38",
+        "0.018",
+        "0.014"
+      ]
+    ],
+    "mechanical": [
+      [
+        "Yield (MPa)",
+        "Tensile (MPa)",
+        "Elongation (%)",
+        "Hardness (HBW)"
+      ],
+      [
+        "275",
+        "510",
+        "26.0",
+        "168"
+      ]
+    ]
+  },
+  {
+    "filename": "sample_mtc_flange_ss_03.pdf",
+    "doc_type": "MATERIAL TEST REPORT (EN 10204 3.1)",
+    "cert_no": "MTC-2025-SS-1109",
+    "po_no": "PO-BPCL-MUM-99301",
+    "description": "FLANGE BLIND 6 INCH CLASS 600 RTJ",
+    "standard": "ASME B16.5",
+    "material_grade": "ASTM A182 F316L",
+    "heat_no": "HT-33190-X",
+    "qty": "15 PCS",
+    "chemical": [
+      [
+        "C%",
+        "Mn%",
+        "Cr%",
+        "Ni%",
+        "Mo%"
+      ],
+      [
+        "0.024",
+        "1.45",
+        "16.85",
+        "10.40",
+        "2.15"
+      ]
+    ],
+    "mechanical": [
+      [
+        "Yield (MPa)",
+        "Tensile (MPa)",
+        "Elongation (%)",
+        "Hardness (HBW)"
+      ],
+      [
+        "245",
+        "570",
+        "42.0",
+        "172"
+      ]
+    ]
+  },
+  {
+    "filename": "sample_mtc_bolt_04.pdf",
+    "doc_type": "FASTENER QUALITY CERTIFICATE (EN 10204 3.1)",
+    "cert_no": "MTC-2025-BLT-3320",
+    "po_no": "PO-IOCL-MTH-11928",
+    "description": "STUD BOLTS WITH 2 HEAVY HEX NUTS 1\" X 8\"",
+    "standard": "ASME B18.2.1 / ASTM A193",
+    "material_grade": "ASTM A193 B7 / A194 2H",
+    "heat_no": "HT-55201-P",
+    "qty": "250 SETS",
+    "chemical": [
+      [
+        "C%",
+        "Cr%",
+        "Mo%",
+        "P%",
+        "S%"
+      ],
+      [
+        "0.41",
+        "0.95",
+        "0.21",
+        "0.012",
+        "0.009"
+      ]
+    ],
+    "mechanical": [
+      [
+        "Yield (MPa)",
+        "Tensile (MPa)",
+        "Elongation (%)",
+        "Hardness (HRC)"
+      ],
+      [
+        "795",
+        "920",
+        "17.5",
+        "32"
+      ]
+    ]
+  },
+  {
+    "filename": "sample_challan_valve_05.pdf",
+    "doc_type": "DELIVERY CHALLAN / MATERIAL INWARD SLIP",
+    "cert_no": "DC-2025-99014",
+    "po_no": "PO-ONGC-URN-66289",
+    "description": "BALL VALVE 4 INCH CLASS 300 BW ENDS",
+    "standard": "API 6D",
+    "material_grade": "ASTM A216 WCB / SS316 TRIM",
+    "heat_no": "HT-11983-M",
+    "qty": "12 PCS",
+    "chemical": [
+      [
+        "C%",
+        "Mn%",
+        "Si%",
+        "P%",
+        "S%"
+      ],
+      [
+        "0.21",
+        "0.88",
+        "0.35",
+        "0.016",
+        "0.011"
+      ]
+    ],
+    "mechanical": [
+      [
+        "Hydro Shell (bar)",
+        "Hydro Seat (bar)",
+        "Air Seat (bar)",
+        "Visual"
+      ],
+      [
+        "77.0",
+        "56.5",
+        "6.0",
+        "ACCEPTED"
+      ]
+    ]
+  }
+]
