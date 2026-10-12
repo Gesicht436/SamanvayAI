@@ -146,6 +146,33 @@ class TestCandidatesAndScoring(unittest.TestCase):
         self.assertEqual(tier_lowered.tier, 2)
         self.assertIn("PROBABILITY_REVIEW_RANGE", tier_lowered.reason_codes)
 
+    def test_offline_scorer_retraining_cli(self):
+        """Verify Section 8.0: Offline scorer retraining CLI refits weights upholding Invariant S9."""
+        from scripts.retrain_scorer import (
+            evaluate_model,
+            fit_logistic_regression,
+            load_dataset,
+            verify_safety_invariants,
+        )
+
+        x_mat, y_vec = load_dataset(use_synthetic=True)
+        self.assertGreaterEqual(len(x_mat), 10)
+
+        intercept, weights = fit_logistic_regression(x_mat, y_vec, max_iter=200)
+        from scripts.retrain_scorer import FEATURE_NAMES
+
+        w_dict = {FEATURE_NAMES[i]: weights[i] for i in range(len(FEATURE_NAMES))}
+
+        # Safety Invariant S9
+        violations = verify_safety_invariants(intercept, w_dict)
+        self.assertEqual(violations, [])
+        self.assertLess(w_dict["n_mismatch"], 0.0)
+        self.assertGreater(w_dict["attr_agree_ratio"], 0.0)
+
+        metrics = evaluate_model(intercept, weights, x_mat, y_vec)
+        self.assertGreaterEqual(metrics["accuracy"], 0.90)
+
 
 if __name__ == "__main__":
     unittest.main()
+

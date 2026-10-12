@@ -1,0 +1,32 @@
+{
+  "model_type": "LogisticRegression_Platt",
+  "features": [
+    "attr_agree_ratio",
+    "n_missing",
+    "n_mismatch",
+    "trigram_sim",
+    "cosine_sim",
+    "alnum_token_jaccard",
+    "mpn_exact",
+    "alias_exact",
+    "extraction_conf_min"
+  ],
+  "intercept": -0.002,
+  "weights": {
+    "attr_agree_ratio": 1.137,
+    "n_missing": -0.8087,
+    "n_mismatch": -1.8708,
+    "trigram_sim": 0.5619,
+    "cosine_sim": 0.5774,
+    "alnum_token_jaccard": 0.5971,
+    "mpn_exact": 0.3042,
+    "alias_exact": 0.4066,
+    "extraction_conf_min": 0.0904
+  },
+  "metrics": {
+    "accuracy": 1.0,
+    "log_loss": 0.096,
+    "samples": 20.0
+  },
+  "invariant_s9_verified": true
+}
