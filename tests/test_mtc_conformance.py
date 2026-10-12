@@ -249,3 +249,34 @@ def test_mtc_api_endpoint():
     assert data["chemistry"]["C"] == 0.21
     assert data["heat_treatment"] == "NORMALIZED"
     assert "UT" in data["ndt"]
+
+
+def test_mtc_verified_lot_and_grade_seeds_present():
+    """Verify grade_reference starter rows are present and stock_lots.mtc_verified is boolean."""
+    from sqlalchemy import select
+
+    from api.database import SyncSessionLocal
+    from api.models.entities import GradeReference, StockLot
+
+    with SyncSessionLocal() as session:
+        # 1. Verify starter grades seeded in DB
+        grades = session.scalars(select(GradeReference.grade).distinct()).all()
+        assert "ASTM A105" in grades
+        assert "ASTM A216 WCB" in grades
+        assert "ASTM A182 F51" in grades
+        assert "API 5L X52" in grades
+
+        # Invariant S15: seeded rows MUST have verified = False until checked
+        unverified_count = session.scalars(
+            select(GradeReference).where(GradeReference.verified.is_(False))
+        ).all()
+        assert len(unverified_count) >= 60
+
+        # 2. Verify StockLot entity has mtc_verified column
+        lot = StockLot(
+            org_id="OIL-1",
+            batch_no="HEAT-TEST-VERIFY-1",
+            mtc_verified=False,
+        )
+        assert lot.mtc_verified is False
+

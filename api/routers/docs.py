@@ -165,6 +165,7 @@ async def upload_document(
     invoice_no: str | None = Form(None),
     invoice_date: str | None = Form(None),
     block_duplicates: bool = Form(True),
+    auto_promote: bool = Form(False),
     db: AsyncSession = Depends(get_db),
     current_user: AuthUser = Depends(get_current_user),
 ):
@@ -197,6 +198,7 @@ async def upload_document(
         invoice_date=invoice_date,
         uploaded_by=_parse_uuid(current_user.sub),
         block_duplicates=block_duplicates,
+        auto_promote=auto_promote,
     )
 
     return DocumentResponse(
@@ -288,6 +290,33 @@ async def get_document_lines(
     return DocumentLinesResponse(**res)
 
 
+@router.post("/mtc/evaluate", response_model=MtcEvaluationResponse)
+async def evaluate_standalone_mtc(
+    req: MtcEvaluationRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: AuthUser = Depends(get_current_user),
+):
+    """Parses and evaluates MTC chemistry without requiring an existing document ID (Section 10.2).
+
+    Enforces Invariant S15:
+    - Never yields CONFORMS against an unverified reference row.
+    """
+    eval_result = await evaluate_mtc_conformance(
+        session=db,
+        org_id=current_user.org_id,
+        grade_claimed=req.grade_claimed,
+        product_form=req.product_form,
+        heat_no=req.heat_no,
+        raw_chemistry=req.chemistry,
+        raw_mechanical=req.mechanical,
+        heat_treatment=req.heat_treatment,
+        ndt=req.ndt,
+        document_id=None,
+        actor_id=_parse_uuid(current_user.sub),
+    )
+    return MtcEvaluationResponse(**eval_result)
+
+
 @router.post("/{document_id}/mtc", response_model=MtcEvaluationResponse)
 async def evaluate_mtc(
     document_id: UUID,
@@ -307,14 +336,39 @@ async def evaluate_mtc(
     if not doc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
 
+    chemistry = dict(req.chemistry) if req.chemistry else {}
+    mechanical = dict(req.mechanical) if req.mechanical else {}
+    grade_claimed = req.grade_claimed
+    heat_no = req.heat_no
+
+    # Automated OCR parser extraction if chemistry not provided directly
+    if not chemistry:
+        from api.models.entities import DocLine
+        from api.services.mtc import parse_mtc_text_to_chemistry
+
+        stmt_lines = select(DocLine).where(DocLine.document_id == document_id).order_by(DocLine.page, DocLine.id)
+        res_lines = await db.execute(stmt_lines)
+        doc_lines = res_lines.scalars().all()
+        if doc_lines:
+            combined_text = "\n".join(l.raw_text for l in doc_lines if l.raw_text)
+            parsed_chem, parsed_mech, parsed_meta, _ = parse_mtc_text_to_chemistry(combined_text)
+            if parsed_chem:
+                chemistry = parsed_chem
+            if parsed_mech and not mechanical:
+                mechanical = parsed_mech
+            if parsed_meta.get("heat_no") and not heat_no:
+                heat_no = parsed_meta["heat_no"]
+            if parsed_meta.get("grade") and not grade_claimed:
+                grade_claimed = parsed_meta["grade"]
+
     eval_result = await evaluate_mtc_conformance(
         session=db,
         org_id=current_user.org_id,
-        grade_claimed=req.grade_claimed,
+        grade_claimed=grade_claimed,
         product_form=req.product_form,
-        heat_no=req.heat_no,
-        raw_chemistry=req.chemistry,
-        raw_mechanical=req.mechanical,
+        heat_no=heat_no,
+        raw_chemistry=chemistry,
+        raw_mechanical=mechanical,
         heat_treatment=req.heat_treatment,
         ndt=req.ndt,
         document_id=doc.id,
@@ -322,3 +376,85 @@ async def evaluate_mtc(
     )
 
     return MtcEvaluationResponse(**eval_result)
+
+
+class PromoteLineResponse(BaseModel):
+    raw_item_id: str
+    item_code: str
+    subcategory: str | None
+    clean_text: str | None
+    status: str = "PROMOTED"
+
+
+class PromoteDocResponse(BaseModel):
+    document_id: str
+    promoted_count: int
+    items: list[PromoteLineResponse]
+
+
+@router.post("/{document_id}/lines/{line_id}/promote", response_model=PromoteLineResponse)
+async def promote_document_line(
+    document_id: UUID,
+    line_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: AuthUser = Depends(get_current_user),
+):
+    """Promote an extracted document line item into a raw_item for matching."""
+    from api.services.docs import promote_doc_line_to_raw_item
+
+    raw_item = await promote_doc_line_to_raw_item(
+        session=db,
+        document_id=document_id,
+        doc_line_id=line_id,
+        org_id=current_user.org_id,
+        actor_id=_parse_uuid(current_user.sub),
+    )
+    return PromoteLineResponse(
+        raw_item_id=str(raw_item.id),
+        item_code=raw_item.item_code or "",
+        subcategory=raw_item.subcategory,
+        clean_text=raw_item.clean_text,
+        status="PROMOTED",
+    )
+
+
+@router.post("/{document_id}/promote", response_model=PromoteDocResponse)
+async def promote_all_document_lines(
+    document_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: AuthUser = Depends(get_current_user),
+):
+    """Promote all extracted lines of a document into raw_items."""
+    from api.models.entities import DocLine
+    from api.services.docs import promote_doc_line_to_raw_item
+
+    stmt = select(DocLine).where(DocLine.document_id == document_id, DocLine.raw_item_id.is_(None))
+    res = await db.execute(stmt)
+    lines = res.scalars().all()
+
+    promoted_items = []
+    actor_id = _parse_uuid(current_user.sub)
+    for l in lines:
+        raw_item = await promote_doc_line_to_raw_item(
+            session=db,
+            document_id=document_id,
+            doc_line_id=l.id,
+            org_id=current_user.org_id,
+            actor_id=actor_id,
+        )
+        promoted_items.append(
+            PromoteLineResponse(
+                raw_item_id=str(raw_item.id),
+                item_code=raw_item.item_code or "",
+                subcategory=raw_item.subcategory,
+                clean_text=raw_item.clean_text,
+                status="PROMOTED",
+            )
+        )
+
+    return PromoteDocResponse(
+        document_id=str(document_id),
+        promoted_count=len(promoted_items),
+        items=promoted_items,
+    )
+

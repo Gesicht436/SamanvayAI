@@ -93,6 +93,7 @@ async def ingest_document(
     storage_path: str = "./data/storage",
     block_duplicates: bool = True,
     ocr_provider_name: str | None = None,
+    auto_promote: bool = False,
 ) -> Document:
     """Ingests a document through upload, camera, or paste.
 
@@ -204,6 +205,7 @@ async def ingest_document(
     session.add(doc)
     await session.flush()
 
+    saved_dlines = []
     for line_obj in lines_to_save:
         dline = DocLine(
             document_id=doc.id,
@@ -216,8 +218,19 @@ async def ingest_document(
             fields=line_obj.fields,
         )
         session.add(dline)
+        saved_dlines.append(dline)
 
     await session.flush()
+
+    if auto_promote:
+        for dline in saved_dlines:
+            await promote_doc_line_to_raw_item(
+                session=session,
+                document_id=doc.id,
+                doc_line_id=dline.id,
+                org_id=org_id,
+                actor_id=uploaded_by,
+            )
 
     # Record transactional audit log
     audit_after = json.dumps(
@@ -244,6 +257,13 @@ async def ingest_document(
             "rationale": f"Ingested {doc_type} via {capture_channel} ({len(lines_to_save)} lines)",
         },
     )
+
+    try:
+        from api.services.observability import metrics
+
+        metrics.inc_counter("samanvay_docs_ingested_total", labels={"doc_type": doc_type, "status": doc.status})
+    except Exception:  # noqa: BLE001, S110
+        pass
 
     return doc
 
@@ -347,3 +367,95 @@ async def get_document_lines_details(
             for l in lines
         ],
     }
+
+
+async def promote_doc_line_to_raw_item(
+    session: AsyncSession,
+    document_id: UUID,
+    doc_line_id: UUID,
+    org_id: str,
+    actor_id: UUID | None = None,
+) -> Any:
+    """Promote an extracted document line item into a raw_item for downstream harmonization."""
+    stmt_line = select(DocLine).where(DocLine.id == doc_line_id, DocLine.document_id == document_id)
+    res_line = await session.execute(stmt_line)
+    line = res_line.scalar_one_or_none()
+    if not line:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document line not found")
+
+    from api.extractors.registry import default_registry
+    from api.models.entities import RawItem
+    from api.services.classify import classify_subcategory
+    from api.services.normalize import normalize_text
+
+    norm_res = normalize_text(line.raw_text)
+    clean_text = norm_res.clean_text
+
+    cls_res = classify_subcategory(clean_text)
+    subcat = cls_res.subcategory
+    confidence = cls_res.confidence
+
+    extracted: dict[str, Any] = {}
+    flags: list[str] = list(norm_res.flags) + list(cls_res.flags)
+    if line.ocr_conf is not None and float(line.ocr_conf) < 0.70:
+        flags.append("LOW_OCR_CONFIDENCE")
+
+    if subcat:
+        ext_dict = default_registry.extract_attributes(clean_text, subcat)
+        for aname, aev in ext_dict.items():
+            if aev.value is not None:
+                extracted[aname] = aev.value
+            flags.extend(aev.flags)
+
+    item_code = f"DOC-{document_id.hex[:6].upper()}-L{line.page or 1}-{str(doc_line_id)[:6].upper()}"
+
+    raw_item = RawItem(
+        org_id=org_id,
+        source_type="PROCUREMENT_DOC",
+        doc_line_id=line.id,
+        ocr_conf=line.ocr_conf,
+        raw_payload={
+            "document_id": str(document_id),
+            "doc_line_id": str(doc_line_id),
+            "page": line.page,
+            "bbox": line.bbox,
+            "ocr_engine": line.ocr_engine,
+            "fields": line.fields,
+            "category_confidence": confidence,
+        },
+        item_code=item_code,
+        raw_description=line.raw_text,
+        clean_text=clean_text,
+        subcategory=subcat,
+        extracted=extracted,
+        extraction_flags=list(set(flags)),
+    )
+    session.add(raw_item)
+    await session.flush()
+
+    line.raw_item_id = raw_item.id
+
+    audit_after = json.dumps(
+        {
+            "id": str(raw_item.id),
+            "org_id": org_id,
+            "item_code": item_code,
+            "document_id": str(document_id),
+            "doc_line_id": str(doc_line_id),
+            "subcategory": subcat,
+        }
+    )
+    await session.execute(
+        text(
+            "INSERT INTO audit_log (actor, action, entity, entity_id, before, after, rationale, prev_hash, this_hash) "
+            "VALUES (:actor, 'PROMOTE_DOC_LINE', 'raw_items', :entity_id, NULL, CAST(:after AS jsonb), :rationale, '', '')"
+        ),
+        {
+            "actor": actor_id,
+            "entity_id": str(raw_item.id),
+            "after": audit_after,
+            "rationale": f"Promoted document line {doc_line_id} from doc {document_id} to raw_items",
+        },
+    )
+
+    return raw_item

@@ -153,6 +153,123 @@ def compute_pren(chemistry: dict[str, float | None]) -> tuple[float | None, list
     return round(pren, 1), []
 
 
+def parse_mtc_text_to_chemistry(
+    text: str,
+) -> tuple[dict[str, float | None], dict[str, Any], dict[str, Any], list[str]]:
+    """Parse free-form OCR text from MTC certificates into chemistry, mechanical, metadata, and flags.
+
+    Extracts:
+    - 17 chemical elements (C, Mn, Si, P, S, Cr, Ni, Mo, Cu, V, Nb, N, Al, W, Co, Ti, B)
+    - Mechanical properties: yield (ReH/Rp0.2), tensile (Rm), elongation (A%), hardness
+    - Metadata: heat_no, grade_claimed, heat_treatment, ndt
+    """
+    raw_chem: dict[str, Any] = {}
+    mechanical: dict[str, Any] = {}
+    metadata: dict[str, Any] = {}
+    flags: list[str] = []
+
+    chem_map = {elem.upper(): elem for elem in CHEM_ELEMENTS}
+
+    # 1. Check tabular header-data lines (e.g. line of elements followed by line of values)
+    lines = [l.strip() for l in text.splitlines() if l.strip()]
+    for idx, line in enumerate(lines[:-1]):
+        tokens = [t.strip().upper() for t in re.split(r"[\s,|/]+", line) if t.strip()]
+        valid_elems = [chem_map[t] for t in tokens if t in chem_map]
+        if len(valid_elems) >= 3:
+            next_line = lines[idx + 1]
+            val_tokens = [v.strip().replace(",", ".") for v in re.split(r"[\s,|/]+", next_line) if v.strip()]
+            val_numbers = [v for v in val_tokens if re.match(r"^[0-9]+(?:\.[0-9]+)?$", v)]
+            if len(val_numbers) >= len(valid_elems):
+                for e_sym, v_num in zip(valid_elems, val_numbers, strict=False):
+                    raw_chem[e_sym] = v_num
+            break
+
+    # 2. Key-value element extraction on same line for any remaining elements
+    for elem in CHEM_ELEMENTS:
+        if elem not in raw_chem:
+            pattern = rf"(?:\b|%){elem}\s*[:=\-]\s*([0-9]+[.,][0-9]+)\s*%?"
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match:
+                raw_chem[elem] = match.group(1)
+
+    clean_chem, chem_flags = sanitize_chemistry(raw_chem)
+    flags.extend(chem_flags)
+
+    # 3. Mechanical properties
+    yield_match = re.search(
+        r"(?:\b(?:yield(?:\s*strength)?|ReH|Rp0\.2|YS)\b)\s*[:=\-]?\s*([0-9]+(?:\.[0-9]+)?)\s*(?:MPa|N/mm2)?",
+        text,
+        re.IGNORECASE,
+    )
+    if yield_match:
+        try:
+            mechanical["yield_mpa"] = float(yield_match.group(1))
+        except ValueError:
+            pass
+
+    tensile_match = re.search(
+        r"(?:\b(?:tensile(?:\s*strength)?|Rm|TS)\b)\s*[:=\-]?\s*([0-9]+(?:\.[0-9]+)?)\s*(?:MPa|N/mm2)?",
+        text,
+        re.IGNORECASE,
+    )
+    if tensile_match:
+        try:
+            mechanical["tensile_mpa"] = float(tensile_match.group(1))
+        except ValueError:
+            pass
+
+    el_match = re.search(
+        r"(?:\b(?:elongation|EL)\b|A%)\s*[:=\-]?\s*([0-9]+(?:\.[0-9]+)?)\s*%?",
+        text,
+        re.IGNORECASE,
+    )
+    if el_match:
+        try:
+            mechanical["elongation_pct"] = float(el_match.group(1))
+        except ValueError:
+            pass
+
+    hardness_match = re.search(
+        r"(?:hardness|HBW|HRC|HV)\s*[:=\-]?\s*([0-9]+(?:\.[0-9]+)?)\s*(HBW|HRC|HV)?",
+        text,
+        re.IGNORECASE,
+    )
+    if hardness_match:
+        try:
+            scale = hardness_match.group(2) or "HBW"
+            mechanical["hardness"] = {"scale": scale.upper(), "value": float(hardness_match.group(1))}
+        except ValueError:
+            pass
+
+    # 3. Metadata
+    heat_match = re.search(r"(?:heat(?:\s*(?:no\.?|number|#))?)\s*[:=\-]?\s*([A-Za-z0-9\-]+)", text, re.IGNORECASE)
+    if heat_match:
+        metadata["heat_no"] = heat_match.group(1).strip()
+
+    grade_match = re.search(
+        r"(?:grade|material(?:\s*grade)?)\s*[:=\-]?\s*([A-Za-z0-9\s\-]+?)(?:\s*(?:heat|size|dia|class|\n|$))",
+        text,
+        re.IGNORECASE,
+    )
+    if grade_match:
+        metadata["grade_claimed"] = grade_match.group(1).strip()
+
+    ht_candidates = ["NORMALIZED", "QUENCHED & TEMPERED", "ANNEALED", "AS ROLLED", "SOLUTION ANNEALED"]
+    for ht in ht_candidates:
+        if ht.lower() in text.lower():
+            metadata["heat_treatment"] = ht
+            break
+
+    ndt_found = []
+    for ndt_code in ["UT", "MT", "PT", "RT", "MPI", "PMI"]:
+        if re.search(rf"\b{ndt_code}\b", text):
+            ndt_found.append(ndt_code)
+    if ndt_found:
+        metadata["ndt"] = ndt_found
+
+    return clean_chem, mechanical, metadata, flags
+
+
 async def evaluate_mtc_conformance(
     session: AsyncSession,
     org_id: str,
@@ -289,6 +406,7 @@ async def evaluate_mtc_conformance(
             # Invariant S15: lot is marked MTC-verified ONLY by CONFORMS plus a heat/batch number match
             if conformance == "CONFORMS":
                 lot_mtc_verified = True
+                matched_lot.mtc_verified = True
 
     # 6. Create cert_records row
     cert = CertRecord(
