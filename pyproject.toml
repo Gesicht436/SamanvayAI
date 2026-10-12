@@ -59,5 +59,10 @@ exclude = [".agents", ".venv", "web", "Samanvay.AI"]
 [tool.ruff.lint]
 ignore = ["B008"]
 
+[[tool.uv.index]]
+name = "pytorch-cuda"
+url = "https://download.pytorch.org/whl/cu132"
+explicit = true
 
-
+[tool.uv.sources]
+torch = { index = "pytorch-cuda" }

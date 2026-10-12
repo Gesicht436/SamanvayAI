@@ -178,7 +178,7 @@ async def execute_match_pipeline(
             # Safety Invariant S9 & S14: Scorer may lower probability or tier, NEVER raise
             eval_prob = min(scoring.prob, ml_res.prob)
 
-            explainer = TreeSHAPExplainer()
+            explainer = TreeSHAPExplainer(model=reranker.model)
             report = explainer.explain(rf, eval_prob)
             ml_attribution_bullets = report.bullets
 

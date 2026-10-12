@@ -149,4 +149,35 @@ This document logs all ported features, modifications, tests, metrics, and depen
 - **Dependencies Pinned**:
   - `transformers>=4.42.0`, `torch>=2.2.0`, `seqeval>=1.2.2` in optional extra `ml`.
 
+---
 
+## Phase 5: Reranker and Explainability
+
+- **What was ported**:
+  - XGBoost reranker pipeline `scripts/train_reranker.py` adapted from B's `machine_learning/reranker/train.py`, featuring stratified train/validation split, exact AUC calculation (Mann-Whitney U statistic), and early stopping.
+  - Unified ML training runner `scripts/train_all.py` supporting `--smoke` and handling optional dependencies gracefully.
+  - Active learning review queue `api/ml/active_learning.py` with uncertainty sampling formula ($u = 1.0 - \min(1.0, 2 \times |\text{prob} - 0.5|)$).
+  - Real TreeSHAP explanation provider `TreeSHAPExplainer` in `api/ml/explain.py` extracting exact margins via `booster.predict(matrix, pred_contribs=True)`.
+  - Identity-safe feature engineering in `api/ml/rerankers.py`: vectorization (`to_vector()`, `to_dict()`, `feature_names()`) and single shared XGBoost model architecture with categorical `sector_id` feature.
+- **What was changed from B**:
+  - **Single Shared XGBoost Model with Sector Feature**: We chose a single shared XGBoost model rather than 5 disjoint sector models. The rationale: materials across valves, fittings, pipes, flanges, and gaskets share foundational physical verification mechanics (sizeNB, rating/class, ASTM metallurgy, standards). Pooling all sectors into one shared model gives vastly higher sample density across rare sectors while preventing overfitting. The categorical `sector_id` feature allows trees to learn sector-specific thresholds where required.
+  - **Eliminated Non-Identity Rewards**: B had `pressure_upgrade` and positive scores for upgraded metallurgy. In A, identity is not substitution! Higher classes and substitute grades receive negative verdicts (-1.0), never positive match points.
+  - **Eliminated Fake Numbers in Explainability**: Replaced A's hardcoded constants in `api/ml/explain.py` with real TreeSHAP contributions when a trained booster is loaded. When none is loaded, the explainer returns an honest `'Attribution unavailable: No trained TreeSHAP model is loaded.'` report preserving the disclaimer header (`DISCLAIMER_TITLE`), emitting zero fake numbers.
+  - **Persistent Active Learning Queue**: B had an in-memory `deque` which lost all human corrections on restart. A's implementation persists queue items atomically to `data/active_learning_queue.jsonl` with thread-safe `RLock`.
+  - **Tier 1 Exclusion**: Invariant safety rule ensures Tier 1 matches (definitive master identities) are never enqueued for review.
+  - **Safety Invariant S9/S14 Enforcement**: Hard attribute mismatches clamp model probability to $\le 0.20$, missing required attributes cap probability to $\le 0.85$, and `assign_tier` strictly routes hard mismatches to Tier 3 regardless of ML probability.
+- **Tests Added**:
+  - `tests/test_reranker_explain_safety.py` (6 tests):
+    - `test_invariant_s9_reranker_never_overrides_hard_mismatch_or_raises_to_tier_1`: verifies reranker probability = 0.99 cannot override hard attribute mismatch to Tier 1 (routes strictly to Tier 3).
+    - `test_reranker_features_are_strictly_identity_safe`: scans feature names for forbidden upgrade/substitution reward terms and verifies upgraded class yields negative match feature.
+    - `test_sector_reranker_safety_clamp`: verifies physical mismatches clamp output probability $\le 0.20$.
+    - `test_treeshap_explainer_honesty_when_no_model_loaded`: asserts explainer returns 'Attribution unavailable' with standard disclaimer header and empty contributions when model is None.
+    - `test_treeshap_explainer_computes_real_contributions_when_model_provided`: asserts explainer parses real booster contributions and generates plain text bullets.
+    - `test_active_learning_uncertainty_and_persistence`: verifies uncertainty sampling, Tier 1 skip, persistent disk reload, and training example export.
+  - Updated `tests/test_ml_layer.py`: verified honest fallback and TreeSHAP attribution with model.
+  - Total test count: 265 passed (up from 259 in Phase 4, 234 baseline).
+- **Eval-Harness Before / After**:
+  - Baseline through Phase 4: 0/170 false merges ([0.00%, 2.15%]), 76/76 missing attribute routed to Tier 2 (100.0%).
+  - Phase 5: identical, 0/170 false merges ([0.00%, 2.15%]), 76/76 missing attribute routed to Tier 2 (100.0%). All gates PASS.
+- **Dependencies Pinned**:
+  - `xgboost>=2.0.0`, `shap>=0.45.0` in optional extra `ml`.

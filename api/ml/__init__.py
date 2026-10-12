@@ -7,6 +7,11 @@ Exports:
 - explain: TreeSHAP local feature attribution reporter with disclaimer header.
 """
 
+from api.ml.active_learning import (
+    ActiveLearningItem,
+    ActiveLearningQueue,
+    get_active_learning_queue,
+)
 from api.ml.explain import AttributionReport, FeatureContribution, TreeSHAPExplainer
 from api.ml.ner import NERExtractor, TokenSpan
 from api.ml.rerankers import (
@@ -25,6 +30,8 @@ from api.ml.subvectors import (
 )
 
 __all__ = [
+    "ActiveLearningItem",
+    "ActiveLearningQueue",
     "AttributionReport",
     "EmbeddingProvider",
     "FeatureContribution",
@@ -38,6 +45,7 @@ __all__ = [
     "build_domain_texts",
     "build_reranker_features",
     "calculate_composite_cosine",
+    "get_active_learning_queue",
     "measure_number_limitation_cosine",
     "resolve_domain_weights",
 ]

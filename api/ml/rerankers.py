@@ -7,8 +7,16 @@ Provides five sector reranker models:
 - mining
 - heavy_eng
 
+Architecture Choice:
+One shared XGBoost model with a categorical sector feature encoding.
+Reason: Maximizes statistical representation transfer on shared physical properties
+(size, pressure, materials, standards) across all material families, while preventing
+overfitting on small sector slices. Sector-specific nuances are preserved through
+sector extra features.
+
+Identity-Safety Guarantee:
 Features are strictly identity-safe: no feature rewards a 'higher class' or 'better metallurgy'
-as a match.
+as a match. Upgrade items receive negative verdicts (-1.0), never positive match points.
 
 Safety Invariants:
 - S9, S14: Like every scorer, it may lower a tier or probability, but NEVER raises a gated item to Tier 1.
@@ -16,13 +24,18 @@ Safety Invariants:
 
 from __future__ import annotations
 
+import logging
 import math
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 from api.services.comparator import ItemComparisonResult, Verdict
 
+logger = logging.getLogger(__name__)
+
 SECTOR_MODELS: list[str] = ["common", "power", "steel", "mining", "heavy_eng"]
+SECTOR_TO_ID: dict[str, float] = {s: float(i) for i, s in enumerate(SECTOR_MODELS)}
 
 
 @dataclass
@@ -30,22 +43,62 @@ class RerankerFeatures:
     """Identity-safe feature vector for candidate reranking."""
 
     # Base features
-    composite_cosine: float
-    dim_cos: float
-    met_cos: float
-    pt_cos: float
-    std_cos: float
-    item_type_match: float  # 1.0 = equal, 0.0 = unknown, -1.0 = diff
-    size_match: float
-    pressure_match: float
-    material_match: float
-    facing_match: float
-    standard_match: float
-    attr_coverage: float
-    n_missing: float
+    composite_cosine: float = 0.0
+    dim_cos: float = 0.0
+    met_cos: float = 0.0
+    pt_cos: float = 0.0
+    std_cos: float = 0.0
+    item_type_match: float = 0.0  # 1.0 = equal, 0.0 = unknown, -1.0 = diff
+    size_match: float = 0.0
+    pressure_match: float = 0.0
+    material_match: float = 0.0
+    facing_match: float = 0.0
+    standard_match: float = 0.0
+    attr_coverage: float = 0.0
+    n_missing: float = 0.0
 
     # Sector extras
     sector_extras: dict[str, float] = field(default_factory=dict)
+    sector: str = "common"
+
+    @classmethod
+    def feature_names(cls) -> list[str]:
+        return [
+            "composite_cosine",
+            "dim_cos",
+            "met_cos",
+            "pt_cos",
+            "std_cos",
+            "item_type_match",
+            "size_match",
+            "pressure_match",
+            "material_match",
+            "facing_match",
+            "standard_match",
+            "attr_coverage",
+            "n_missing",
+            "sector_id",
+        ]
+
+    def to_vector(self) -> list[float]:
+        """Returns ordered float vector for XGBoost model inference."""
+        sec_id = SECTOR_TO_ID.get(self.sector.lower(), 0.0)
+        return [
+            float(self.composite_cosine),
+            float(self.dim_cos),
+            float(self.met_cos),
+            float(self.pt_cos),
+            float(self.std_cos),
+            float(self.item_type_match),
+            float(self.size_match),
+            float(self.pressure_match),
+            float(self.material_match),
+            float(self.facing_match),
+            float(self.standard_match),
+            float(self.attr_coverage),
+            float(self.n_missing),
+            sec_id,
+        ]
 
     def to_dict(self) -> dict[str, float]:
         """Flattens feature dictionary for SHAP and tree attribution."""
@@ -63,6 +116,7 @@ class RerankerFeatures:
             "standard_match": self.standard_match,
             "attr_coverage": round(self.attr_coverage, 4),
             "n_missing": self.n_missing,
+            "sector_id": SECTOR_TO_ID.get(self.sector.lower(), 0.0),
         }
         for k, v in self.sector_extras.items():
             base[f"extra_{k}"] = round(v, 4)
@@ -77,6 +131,8 @@ class RerankingResult:
     sector: str
     features: RerankerFeatures
     is_fallback: bool
+    is_model_fallback: bool = False
+    fallback_reason: str | None = None
     model_name: str = "xgboost_sector_reranker"
 
 
@@ -90,20 +146,20 @@ def build_reranker_features(
 ) -> RerankerFeatures:
     """Extracts identity-safe features from comparison verdicts and subvectors."""
     dom_cos = domain_cosines or {}
-    verdicts = {v.attr: v.verdict for v in comparison.verdicts}
+    verdicts = {attr: res.verdict for attr, res in comparison.verdicts.items()}
 
     def _match_val(attr_name: str) -> float:
         v = verdicts.get(attr_name)
-        if v == Verdict.EXACT or v == Verdict.EQUIVALENT:
+        if v == Verdict.EXACT:
             return 1.0
-        if v == Verdict.MISMATCH or v == Verdict.UPGRADE:
+        if v in (Verdict.MISMATCH, Verdict.UPGRADE):
             return -1.0
         return 0.0  # MISSING or unknown
 
-    n_exact = sum(1 for v in comparison.verdicts if v.verdict in (Verdict.EXACT, Verdict.EQUIVALENT))
+    n_exact = sum(1 for res in comparison.verdicts.values() if res.verdict == Verdict.EXACT)
     total_attrs = max(1, len(comparison.verdicts))
     attr_coverage = n_exact / total_attrs
-    n_missing = float(sum(1 for v in comparison.verdicts if v.verdict == Verdict.MISSING))
+    n_missing = float(sum(1 for res in comparison.verdicts.values() if res.verdict == Verdict.MISSING))
 
     # Sector specific extras
     extras: dict[str, float] = {}
@@ -139,6 +195,7 @@ def build_reranker_features(
         attr_coverage=attr_coverage,
         n_missing=n_missing,
         sector_extras=extras,
+        sector=sec_lower,
     )
 
 
@@ -150,13 +207,55 @@ class SectorReranker:
     - Heavily penalizes mismatches and missing attributes.
     """
 
-    def __init__(self, sector: str = "common") -> None:
+    def __init__(
+        self,
+        sector: str = "common",
+        model_path: str | Path | None = None,
+        model: Any = None,
+    ) -> None:
         self.sector = sector.lower() if sector.lower() in SECTOR_MODELS else "common"
-        self.is_fallback = self.sector != sector.lower()
+        self.is_fallback: bool = self.sector != sector.lower()
+        self.model = model
+        self.is_model_fallback: bool = self.model is None
+        self.fallback_reason: str | None = None
+
+        if self.model is None and model_path is not None and Path(model_path).exists():
+            try:
+                from xgboost import XGBClassifier
+
+                self.model = XGBClassifier()
+                self.model.load_model(str(model_path))
+                self.is_model_fallback = False
+            except Exception as exc:  # noqa: BLE001
+                self.model = None
+                self.is_model_fallback = True
+                self.fallback_reason = "ML_MODEL_UNAVAILABLE"
+                logger.info("SectorReranker falling back to formula: %s", exc)
+        elif self.model is None:
+            self.is_model_fallback = True
+            self.fallback_reason = "ML_MODEL_UNAVAILABLE"
 
     def predict_score(self, features: RerankerFeatures) -> float:
-        """Evaluates logistic ensemble score across identity-safe features."""
-        # Base log-odds intercept
+        """Evaluates model score across identity-safe features."""
+        # 1. Real XGBoost model if loaded
+        if self.model is not None:
+            try:
+                vec = features.to_vector()
+                raw_prob = float(self.model.predict_proba([vec])[0][1])
+                prob = max(0.0, min(1.0, raw_prob))
+
+                # Hard guardrails: S9, S14
+                # An ML score can never override a HARD attribute mismatch
+                if features.size_match < 0 or features.pressure_match < 0 or features.material_match < 0:
+                    prob = min(prob, 0.20)
+                elif features.n_missing > 0:
+                    prob = min(prob, 0.85)
+
+                return round(prob, 4)
+            except Exception as exc:  # noqa: BLE001
+                logger.debug("Trained model prediction failed, falling back to formula: %s", exc)
+
+        # 2. Interpretable logistic formula fallback
         z = -1.2
 
         # Weighted contributions from identity-safe features
@@ -206,9 +305,13 @@ class SectorReranker:
     def rerank(self, features: RerankerFeatures) -> RerankingResult:
         """Executes reranking prediction with sector provenance."""
         prob = self.predict_score(features)
+        model_name = "xgboost_sector_reranker" if self.model is not None else "fallback_formula"
         return RerankingResult(
             prob=prob,
             sector=self.sector,
             features=features,
             is_fallback=self.is_fallback,
+            is_model_fallback=self.is_model_fallback,
+            fallback_reason=self.fallback_reason,
+            model_name=model_name,
         )

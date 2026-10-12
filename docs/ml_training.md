@@ -53,19 +53,37 @@ This document describes the training pipelines, split rules, loss formulations, 
 
 ---
 
-## 3. Sector Reranker (Section 8.3)
+## 3. Sector Reranker & Explainability (Section 8.3)
 
-### Architecture
-- **Model**: Gradient boosted decision trees (`xgboost.XGBClassifier`).
-- **Safety Invariant S9**: Reranker feature space is strictly identity-safe. No feature rewards an upgraded pressure class or superior metallurgy as a match.
-- **Explainability**: Local feature importance via TreeSHAP (`shap.TreeExplainer`) with attribution disclaimer.
+### Architecture Decision: Shared XGBoost Model with Sector Feature
+- **Model Choice**: Single shared `xgboost.XGBClassifier` across all sectors with categorical `sector_id` feature, rather than 5 disconnected sector models.
+- **Rationale**: Piping, valves, fittings, flanges, and electrical materials share identical physical verification principles (sizeNB, rating/class, ASTM metallurgy, standards). A single unified model maximizes training data sample density across common physical interactions while preventing catastrophic overfitting on smaller sectors (e.g. mining or heavy engineering). The `sector_id` feature allows trees to split on sector-specific tolerances where necessary.
+- **Identity-Safe Features**: 14 ordered features (`composite_cosine`, `dim_cos`, `met_cos`, `pt_cos`, `std_cos`, `item_type_match`, `size_match`, `pressure_match`, `material_match`, `facing_match`, `standard_match`, `attr_coverage`, `n_missing`, `sector_id`). Upgrades and mismatches yield -1.0, never positive match points.
+- **Safety Invariant S9/S14 Enforcement**:
+  - Hard physical mismatches clamp output probability to $\le 0.20$.
+  - Missing required attributes cap output probability to $\le 0.85$ (strictly below $\tau_{\text{auto}} = 0.95$).
+  - Regardless of model score, `assign_tier` strictly enforces that hard attribute mismatches route to Tier 3 and never Tier 1.
+- **TreeSHAP Explainability**: Local attribution computed directly from booster margins (`booster.predict(..., pred_contribs=True)`). When no trained model is loaded, the explainer returns an honest `'Attribution unavailable: No trained TreeSHAP model is loaded.'` report preserving the standard disclaimer header, emitting zero fake numbers.
 
-### Full Training Command
-- **Hardware**: Modern multi-core CPU (8 cores) or CUDA GPU.
-- **Estimated Time**: ~5 minutes.
-- **Command**:
+### Active Learning Review Queue
+- **Uncertainty Sampling**: $u = 1.0 - \min(1.0, 2 \times |\text{prob} - 0.5|)$. Matches closest to decision boundary are queued first.
+- **Safety Rule**: Tier 1 matches are definitive master identities and are never enqueued.
+- **Persistence**: Thread-safe queue writes atomically to `data/active_learning_queue.jsonl` with LRU eviction for unresolved items. Resolved expert decisions are exported via `training_examples()` to retrain the reranker.
+
+### Training Commands & Hardware
+- **Hardware**: CPU (single modern core sufficient) or CUDA GPU.
+- **Estimated Time**: < 30 seconds for 50,000 pair records.
+- **Smoke Command**:
+  ```bash
+  uv run python scripts/train_reranker.py --smoke
+  ```
+- **Full Training Command**:
   ```bash
   uv run python scripts/train_reranker.py \
-    --data-dir data/ml_training/reranker \
-    --output-dir data/models/reranker_xgboost
+    --input data/ml_training/reranker_pairs.jsonl \
+    --output models/reranker.xgb
+  ```
+- **Unified Pipeline Training**:
+  ```bash
+  uv run python scripts/train_all.py --smoke
   ```

@@ -189,7 +189,7 @@ def test_safety_invariants_s9_s14_in_reranker() -> None:
 
 
 def test_treeshap_feature_attribution_report() -> None:
-    """Tests TreeSHAP feature attribution provider and plain-language bullets."""
+    """Tests TreeSHAP feature attribution provider fallback when no model is loaded and attribution with model."""
     explainer = TreeSHAPExplainer(threshold=0.05)
     features = RerankerFeatures(
         composite_cosine=0.95,
@@ -207,15 +207,42 @@ def test_treeshap_feature_attribution_report() -> None:
         n_missing=1.0,
     )
 
+    # 1. Fallback when no model is loaded (Invariant: never emit fake numbers)
     report = explainer.explain(features, predicted_prob=0.18)
 
     assert report.title == DISCLAIMER_TITLE
     assert report.title == "Model score attribution (does not decide the tier)"
-    assert len(report.bullets) > 0
+    assert len(report.bullets) == 1
+    assert "Attribution unavailable" in report.bullets[0]
+    assert report.contributions == []
+
+    # 2. When a model/booster is provided
+    class MockBooster:
+        def predict(self, matrix, pred_contribs=False):
+            # len(feature_names) + 1 bias
+            feature_names = features.feature_names()
+            contribs = [0.0] * (len(feature_names) + 1)
+            # Pressure mismatch contribution (negative)
+            p_idx = feature_names.index("pressure_match")
+            contribs[p_idx] = -0.45
+            # Missing attributes contribution (negative)
+            m_idx = feature_names.index("n_missing")
+            contribs[m_idx] = -0.20
+            # Size match contribution (positive)
+            s_idx = feature_names.index("size_match")
+            contribs[s_idx] = 0.25
+            contribs[-1] = 0.50  # bias
+            return [contribs]
+
+    mock_explainer = TreeSHAPExplainer(model=MockBooster(), threshold=0.05)
+    report_with_model = mock_explainer.explain(features, predicted_prob=0.18)
+
+    assert report_with_model.title == DISCLAIMER_TITLE
+    assert len(report_with_model.bullets) > 0
     # Should include bullets explaining pressure mismatch penalty
-    assert any("pressure" in b.lower() for b in report.bullets)
+    assert any("pressure" in b.lower() for b in report_with_model.bullets)
     # Should include missing attribute penalty
-    assert any("missing" in b.lower() for b in report.bullets)
+    assert any("missing" in b.lower() for b in report_with_model.bullets)
 
 
 def test_vector_recall_candidate_retrieval(monkeypatch: pytest.MonkeyPatch) -> None:
