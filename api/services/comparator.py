@@ -174,10 +174,19 @@ def evaluate_attribute_verdict(
     cand_val: Any,
     subcategory: str = "",
 ) -> AttributeVerdictResult:
-    """Compares a single attribute value between requirement and candidate.
+    """Compares a single attribute value between requirement and candidate."""
 
-    Enforces directional lattices for designated physical attributes.
-    """
+    # Unwrap dict or ExtractedValue objects
+    if isinstance(req_val, dict) and "value" in req_val:
+        req_val = req_val.get("value")
+    elif hasattr(req_val, "value"):
+        req_val = req_val.value
+
+    if isinstance(cand_val, dict) and "value" in cand_val:
+        cand_val = cand_val.get("value")
+    elif hasattr(cand_val, "value"):
+        cand_val = cand_val.value
+
     # 1. Missing data handling
     if req_val is None or cand_val is None or req_val == "" or cand_val == "":
         return AttributeVerdictResult(
