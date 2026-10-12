@@ -411,3 +411,205 @@ async def record_usage_event(
     )
 
     return event
+
+
+def projected_depletion(
+    events: list[dict[str, Any] | UsageEvent],
+    remaining_qty: float,
+    window_days: int = 90,
+    min_events: int = 3,
+    as_of_date: datetime.date | None = None,
+) -> dict[str, Any]:
+    """Compute consumption velocity and projected depletion date per Section 11.0.
+
+    Strict Rule: If len(events) < min_events: returns INSUFFICIENT_DATA.
+    """
+    if len(events) < min_events:
+        return {
+            "status": "INSUFFICIENT_DATA",
+            "events_count": len(events),
+            "min_events_required": min_events,
+            "consumption_rate_per_day": None,
+            "days_to_deplete": None,
+            "projected_depletion_date": None,
+        }
+
+    now_d = as_of_date or datetime.datetime.now(datetime.UTC).date()
+    window_start = now_d - datetime.timedelta(days=window_days)
+
+    total_consumption = 0.0
+    valid_window_events = 0
+    for ev in events:
+        if isinstance(ev, UsageEvent):
+            ts = ev.ts.date() if isinstance(ev.ts, datetime.datetime) else ev.ts
+            amt = float(ev.amount)
+        else:
+            raw_ts = ev.get("ts")
+            if isinstance(raw_ts, str):
+                ts = datetime.datetime.fromisoformat(raw_ts).date()
+            elif isinstance(raw_ts, (datetime.datetime, datetime.date)):
+                ts = raw_ts.date() if isinstance(raw_ts, datetime.datetime) else raw_ts
+            else:
+                ts = now_d
+            amt = float(ev.get("amount", 0.0))
+
+        if ts >= window_start:
+            total_consumption += amt
+            valid_window_events += 1
+
+    if valid_window_events < min_events or total_consumption <= 0:
+        return {
+            "status": "ZERO_CONSUMPTION",
+            "events_count": valid_window_events,
+            "consumption_rate_per_day": 0.0,
+            "days_to_deplete": None,
+            "projected_depletion_date": None,
+        }
+
+    daily_rate = total_consumption / float(window_days)
+    if remaining_qty <= 0:
+        days_to_deplete = 0
+    else:
+        days_to_deplete = int(remaining_qty / daily_rate)
+
+    depletion_date = now_d + datetime.timedelta(days=days_to_deplete)
+
+    return {
+        "status": "PROJECTED",
+        "events_count": valid_window_events,
+        "consumption_rate_per_day": round(daily_rate, 4),
+        "days_to_deplete": days_to_deplete,
+        "projected_depletion_date": depletion_date.isoformat(),
+    }
+
+
+def max_poolable_quantity(
+    item_qty: float,
+    consumption_rate_per_day: float | None,
+    remaining_shelf_life_days: int | None,
+) -> float:
+    """Cap forward pooled quantity before expiry per Section 11.0 & 13.1.
+
+    Ensures CPSEs never pool quantity that cannot be consumed before expiry.
+    """
+    if item_qty <= 0:
+        return 0.0
+
+    if consumption_rate_per_day is not None and consumption_rate_per_day > 0 and remaining_shelf_life_days is not None:
+        if remaining_shelf_life_days <= 0:
+            return 0.0
+        max_consumable = consumption_rate_per_day * float(remaining_shelf_life_days)
+        return min(float(item_qty), round(max_consumable, 3))
+
+    return float(item_qty)
+
+
+async def generate_life_alerts(
+    session: AsyncSession,
+    as_of_date: datetime.date | None = None,
+) -> list[dict[str, Any]]:
+    """Nightly life alert generator per Section 11.0.
+
+    Evaluates lots against RED, AMBER, EXPIRED risk states, persists deduplicated
+    alerts to life_alerts table, and updates Prometheus gauge samanvay_life_red_lots.
+    """
+    now_d = as_of_date or datetime.datetime.now(datetime.UTC).date()
+    clk = SimulatedClock(now_d)
+
+    stmt_lots = select(StockLot)
+    res_lots = await session.execute(stmt_lots)
+    lots = res_lots.scalars().all()
+
+    created_alerts = []
+    red_count = 0
+
+    from api.models.entities import LifeAlert, LifePolicy
+
+    for lot in lots:
+        stmt_pol = select(LifePolicy).where(
+            (LifePolicy.scope_type == "GOLDEN") & (LifePolicy.scope_value == str(lot.golden_id))
+        )
+        res_pol = await session.execute(stmt_pol)
+        policies = [
+            {"basis": p.basis, "limit_value": float(p.limit_value), "source": p.source}
+            for p in res_pol.scalars().all()
+        ]
+
+        stmt_ev = select(UsageEvent).where(UsageEvent.lot_id == lot.id)
+        res_ev = await session.execute(stmt_ev)
+        events = res_ev.scalars().all()
+
+        eval_res = evaluate_lot_risk(
+            mfg_date=lot.mfg_date,
+            expiry_date=lot.expiry_date,
+            policies=policies,
+            usage_events=events,
+            clock=clk,
+        )
+
+        if eval_res.risk in ("RED", "AMBER", "EXPIRED"):
+            if eval_res.risk == "RED":
+                red_count += 1
+
+            dedupe_key = f"{lot.id}:{eval_res.risk}:{now_d.isoformat()}"
+            existing = await session.scalar(select(LifeAlert).where(LifeAlert.dedupe_key == dedupe_key))
+            if not existing:
+                alert = LifeAlert(
+                    lot_id=lot.id,
+                    kind="SHELF_LIFE_EXPIRY" if "SHELF" in eval_res.basis else "USAGE_LIMIT",
+                    risk=eval_res.risk,
+                    projected_date=now_d + datetime.timedelta(days=eval_res.remaining_days or 0),
+                    recipient_role="STORE_MANAGER",
+                    dedupe_key=dedupe_key,
+                    state="OPEN",
+                )
+                session.add(alert)
+                created_alerts.append(
+                    {
+                        "lot_id": str(lot.id),
+                        "risk": eval_res.risk,
+                        "remaining_days": eval_res.remaining_days,
+                        "dedupe_key": dedupe_key,
+                    }
+                )
+
+    await session.flush()
+
+    try:
+        from api.services.observability import metrics
+
+        metrics.set_gauge("samanvay_life_red_lots", float(red_count))
+    except Exception:  # noqa: BLE001, S110
+        pass
+
+    return created_alerts
+
+
+def generate_disposal_request(
+    lot: StockLot,
+    evaluation: LifeEvaluationResult,
+    scrap_rate_pct: float = 0.05,
+) -> dict[str, Any]:
+    """Produce formatted condemnation board disposal request export per Section 11.0 ladder Step 4."""
+    qty = float(lot.qty_remaining or 0.0)
+    return {
+        "document_type": "CPSE_CONDEMNATION_BOARD_REQUEST",
+        "lot_id": str(lot.id),
+        "org_id": lot.org_id,
+        "batch_no": lot.batch_no,
+        "plant": lot.plant,
+        "qty_remaining": qty,
+        "mfg_date": lot.mfg_date.isoformat() if lot.mfg_date else None,
+        "expiry_date": lot.expiry_date.isoformat() if lot.expiry_date else None,
+        "condemnation_basis": evaluation.basis,
+        "risk_state": evaluation.risk,
+        "condemnation_rationale": "Stock expired or unusable per mandatory safety life policy (Section 11.0)",
+        "scrap_recovery_estimate_pct": scrap_rate_pct,
+        "disposition_actions": evaluation.disposition_ladder,
+        "approval_workflow": {
+            "condemnation_board": "PENDING_CONSTITUTION",
+            "statutory_clearance": "PENDING",
+            "auction_portal": "MSTC_COMMERCE",
+        },
+    }
+

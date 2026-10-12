@@ -343,3 +343,103 @@ async def get_lot_disposition(
         risk=ev.risk,
         disposition_ladder=ev.disposition_ladder,
     )
+
+
+@router.get("/{lot_id}/depletion")
+async def get_lot_depletion(
+    lot_id: UUID,
+    window_days: int = Query(90, ge=1, le=365),
+    min_events: int = Query(3, ge=1, le=20),
+    db: AsyncSession = Depends(get_db),
+    current_user: AuthUser = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Returns consumption velocity and projected depletion date (Section 11.0)."""
+    stmt = select(StockLot).where(StockLot.id == lot_id, StockLot.org_id == current_user.org_id)
+    res = await db.execute(stmt)
+    lot = res.scalar_one_or_none()
+    if not lot:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Stock lot not found.")
+
+    stmt_ev = select(UsageEvent).where(UsageEvent.lot_id == lot.id).order_by(UsageEvent.ts.desc())
+    res_ev = await db.execute(stmt_ev)
+    events = res_ev.scalars().all()
+
+    from api.services.life import projected_depletion
+
+    qty = float(lot.qty_remaining) if lot.qty_remaining is not None else 0.0
+    return projected_depletion(events, remaining_qty=qty, window_days=window_days, min_events=min_events)
+
+
+@router.get("/{lot_id}/disposal-request")
+async def get_lot_disposal_request(
+    lot_id: UUID,
+    scrap_rate_pct: float = Query(0.05, ge=0.0, le=1.0),
+    db: AsyncSession = Depends(get_db),
+    current_user: AuthUser = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Produces formatted condemnation board disposal request export per Step 4 of Section 11.0 ladder."""
+    stmt = select(StockLot).where(StockLot.id == lot_id, StockLot.org_id == current_user.org_id)
+    res = await db.execute(stmt)
+    lot = res.scalar_one_or_none()
+    if not lot:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Stock lot not found.")
+
+    data = await _evaluate_db_lot(db, lot, RealClock())
+    ev = data["eval_res"]
+
+    from api.services.life import generate_disposal_request
+
+    return generate_disposal_request(lot, ev, scrap_rate_pct=scrap_rate_pct)
+
+
+@router.post("/alerts/{alert_id}/ack")
+async def acknowledge_alert(
+    alert_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: AuthUser = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Acknowledges a life alert, updating state to ACKED (Section 11.0)."""
+    import datetime
+
+    from api.models.entities import LifeAlert
+
+    stmt = select(LifeAlert).where(LifeAlert.id == alert_id)
+    res = await db.execute(stmt)
+    alert = res.scalar_one_or_none()
+    if not alert:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Life alert not found.")
+
+    now_ts = datetime.datetime.now(datetime.UTC)
+    alert.state = "ACKED"
+    alert.acked_at = now_ts
+    await db.flush()
+
+    return {"alert_id": alert.id, "state": alert.state, "acked_at": alert.acked_at.isoformat()}
+
+
+@router.post("/{lot_id}/alerts/ack")
+async def acknowledge_lot_alerts(
+    lot_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: AuthUser = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Acknowledges all alerts for a specific stock lot (Section 11.0)."""
+    import datetime
+
+    from api.models.entities import LifeAlert
+
+    stmt = select(LifeAlert).where(LifeAlert.lot_id == lot_id)
+    res = await db.execute(stmt)
+    alerts = res.scalars().all()
+
+    now_ts = datetime.datetime.now(datetime.UTC)
+    acked_count = 0
+    for a in alerts:
+        a.state = "ACKED"
+        a.acked_at = now_ts
+        acked_count += 1
+    await db.flush()
+
+    return {"lot_id": str(lot_id), "acked_count": acked_count, "state": "ACKED", "acked_at": now_ts.isoformat()}
+
+

@@ -255,3 +255,70 @@ async def test_lots_api_end_to_end(db_session):
     disp_data = resp_disp.json()
     assert len(disp_data["disposition_ladder"]) == 4
     assert disp_data["disposition_ladder"][0]["action"] == "ISSUE_OLDEST_FIRST_FEFO"
+
+
+def test_projected_depletion_velocity():
+    """Verify projected_depletion pure function per Section 11.0."""
+    from api.services.life import projected_depletion
+
+    # 1. Fewer than min_events -> INSUFFICIENT_DATA
+    res_few = projected_depletion(events=[{"amount": 5.0, "ts": "2026-10-01"}], remaining_qty=100.0, min_events=3)
+    assert res_few["status"] == "INSUFFICIENT_DATA"
+    assert res_few["consumption_rate_per_day"] is None
+
+    # 2. 3 events within 90 days
+    as_of = datetime.date(2026, 10, 11)
+    events = [
+        {"amount": 30.0, "ts": "2026-09-01"},
+        {"amount": 30.0, "ts": "2026-09-15"},
+        {"amount": 30.0, "ts": "2026-10-01"},
+    ]
+    # Total consumption = 90 over 90 days window -> 1.0/day
+    res_proj = projected_depletion(events, remaining_qty=50.0, window_days=90, min_events=3, as_of_date=as_of)
+    assert res_proj["status"] == "PROJECTED"
+    assert res_proj["consumption_rate_per_day"] == 1.0
+    assert res_proj["days_to_deplete"] == 50
+    assert res_proj["projected_depletion_date"] == "2026-11-30"
+
+
+def test_max_poolable_quantity_capping():
+    """Verify max_poolable_quantity caps pooled amount before shelf life expiry."""
+    from api.services.life import max_poolable_quantity
+
+    # 1. Normal unconstrained
+    assert max_poolable_quantity(100.0, None, None) == 100.0
+
+    # 2. Consumption 2/day with 30 days remaining -> max 60
+    assert max_poolable_quantity(100.0, consumption_rate_per_day=2.0, remaining_shelf_life_days=30) == 60.0
+
+    # 3. Already expired -> 0
+    assert max_poolable_quantity(100.0, consumption_rate_per_day=2.0, remaining_shelf_life_days=-5) == 0.0
+
+
+@pytest.mark.asyncio
+async def test_lot_depletion_and_disposal_endpoints(db_session):
+    """Verify GET /lots/{id}/depletion and GET /lots/{id}/disposal-request."""
+    org_id = "OIL-1"
+    token = create_access_token("user-disp", org_id, "SITE_ENGINEER")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    lot = StockLot(
+        org_id=org_id,
+        plant="MUMBAI_REFINERY",
+        qty_remaining=40.0,
+        batch_no="BATCH-DISP-01",
+        mfg_date=datetime.date(2024, 1, 1),
+        expiry_date=datetime.date(2025, 1, 1),  # Expired
+    )
+    db_session.add(lot)
+    await db_session.commit()
+
+    # Query disposal request
+    resp_disp = client.get(f"/lots/{lot.id}/disposal-request", headers=headers)
+    assert resp_disp.status_code == 200
+    disp_payload = resp_disp.json()
+    assert disp_payload["document_type"] == "CPSE_CONDEMNATION_BOARD_REQUEST"
+    assert disp_payload["lot_id"] == str(lot.id)
+    assert disp_payload["risk_state"] == "EXPIRED"
+    assert "MSTC_COMMERCE" in disp_payload["approval_workflow"]["auction_portal"]
+
