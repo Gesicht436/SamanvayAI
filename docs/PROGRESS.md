@@ -830,6 +830,54 @@ Suggested tag: `git tag phase-12`
 **Gate Status: ACCEPTED**
 Suggested tag: `git tag release-v1.0`
 
+---
+
+## Phase 14: Frontend UI/UX Overhaul — Precision Industrial Elegance & Dual-Theme Architecture
+
+### What Was Built
+1. **Design Tokens & Dual-Theme System (`web/src/app/globals.css`, `web/src/lib/theme-context.tsx`):**
+   - Implemented Tailwind CSS v4 `@custom-variant dark (&:where(.dark, .dark *));` selector for consistent class toggles.
+   - Built `ThemeProvider` supporting `"dark" | "light" | "system"` with `localStorage` state persistence.
+   - Configured high-contrast color palettes for both Clean Light Mode and Obsidian Dark Mode.
+2. **Global Shell & Productivity Utilities (`web/src/components/common/`):**
+   - **Modern Header (`Header.tsx`):** Apple-style categorized dropdowns (**Harmonization**, **Master Data**, **Intake & Spares**, **Governance**), CPSE tenant switcher, Maker/Checker role selector, 1-click theme toggle, and audit drawer button.
+   - **Command Palette (`CommandPalette.tsx`):** Global spotlight search modal (`Cmd+K` / `Ctrl+K`) for instant keyboard navigation across all 12 routes and sample `MPNG-` codes.
+   - **Audit Hash Chain Drawer (`AuditDrawer.tsx`):** Slide-out drawer with SHA-256 chain health (Seq #4092, Advisory Lock 727001), real-time status badges, and manual verification triggers.
+   - **Density Controller (`DensityToggle.tsx`):** Compact (30px), Standard (38px), and Comfortable (48px) table row density switcher.
+   - **Faceted Filter Drawer (`FacetedFilterDrawer.tsx`):** AWS Console-style collapsible facet drawer with dynamic record counts.
+   - **Safety Callout Banners (`SafetyBanner.tsx`):** Full-width regulatory banners citing Safety Invariants S1–S15.
+3. **Dual-Theme Overhaul Across All 12 Workspaces:**
+   - **Standardizer (`/standardizer`):** Apple-style search omnibar, sample chips, evidence span mark highlights, and ranked candidate cards.
+   - **Diff Inspector (`/diff`):** 50/50 split comparison view with SVG lattice connectors, TreeSHAP attributions, and hover character slice popovers.
+   - **Task Queue (`/queue`):** Card-based Maker/Checker approval feed with keyboard navigation (`J/K/A/R/Space`) and batch approvals.
+   - **Catalogue (`/catalogue`):** Faceted filter drawer, density toggle, Verhoeff MPNG-17 browser, and Merge/Split modals.
+   - **Upload (`/upload`):** ERP mapping profiles (SAP, Oracle, Maximo), CSV dropzone, and tabular error preview.
+   - **Document Intake (`/docs`):** 300 DPI page canvas simulator with bounding box overlays, `getUserMedia` camera capture modal, and MTC chemical bounds form.
+   - **Lots and Life (`/lots`):** Simulated CPSE system clock stepper banner, depletion burn-down SVG chart, FEFO ladder, and scrap condemnation certificate modal.
+   - **Locator (`/locator`):** Geographic spare locator, Haversine distance, Section 9.3 privacy masking, and Stream A transfer modal.
+   - **Procurement (`/procurement`):** Stream A surplus transfer orders with Maker-Checker review gate, and Stream B forward demand pooling with tender packs.
+   - **Dashboard (`/dashboard`):** Executive scorecards, queue depth bar charts, Section 19.2 spend pooling scenarios, and ERP cross-reference export feeds.
+   - **OEM Onboarding (`/oem`):** Bulk OEM catalogue ingestion with supersession chain mapping and Maker-Checker approval gate.
+   - **Evaluation (`/eval`):** 3 baselines comparison cards, exact binomial Clopper-Pearson confidence table, and sector/org parity tables.
+4. **Testing & Build Verification:**
+   - All 26 Vitest unit tests pass across 8 test suites.
+   - Next.js 16.4.0 Turbopack production build succeeds with all 14 routes statically prerendered.
+   - Backend test suite with 234 pytest tests passes with 0 failures.
+
+### Acceptance Gate Evaluation (Phase 14)
+
+| Check | Requirement | Result | Output / Evidence |
+|---|---|---|---|
+| 1. Dual-Theme Support | Clean Light Mode and Obsidian Dark Mode on all 12 screens | **PASS** | Verified across all components with zero style regressions |
+| 2. Zero Route Loss | All 12 specsheet routes operational | **PASS** | `/dashboard`, `/standardizer`, `/diff`, `/queue`, `/upload`, `/catalogue`, `/locator`, `/procurement`, `/oem`, `/lots`, `/docs`, `/eval` |
+| 3. Frontend Unit Tests | `npm test` (Vitest) in `web/` | **PASS** | **26 passed across 8 test suites** |
+| 4. Frontend Production Build | `npm run build` in `web/` | **PASS** | Prerendered 14 routes in 1.1s (Turbopack) |
+| 5. Full Python Test Suite | `uv run pytest tests/` | **PASS** | **234 passed in 11.66s** |
+| 6. Documentation Standard | 80% ASD-STE100 in `web/README.md` | **PASS** | Updated directory index, architecture details, and manual test guide |
+
+**Gate Status: ACCEPTED**
+Suggested tag: `git tag release-v1.1-ui-overhaul`
+
 
 
 
