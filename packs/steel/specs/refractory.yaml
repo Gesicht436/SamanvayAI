@@ -9,9 +9,9 @@ attributes:
   - {name: form, role: HARD}
   - {name: material_class, role: HARD}
   - {name: key_chemistry, role: HARD}
-  - {name: shape_code, role: HARD}
-  - {name: dimensions_mm, role: HARD}
-  - {name: cement_class, role: HARD}
+  - {name: shape_code, role: HARD, when: "form in [BRICK, PRECAST_SHAPE]"}
+  - {name: dimensions_mm, role: HARD, when: "form in [BRICK, PRECAST_SHAPE]"}
+  - {name: cement_class, role: HARD, when: "form == CASTABLE"}
   - {name: bond, role: REQUIRED}
   - {name: max_service_c, role: REQUIRED}
   - {name: bulk_density, role: REQUIRED}

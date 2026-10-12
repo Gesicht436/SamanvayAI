@@ -125,6 +125,18 @@ CATEGORY_CANONICAL_TARGET: dict[str, str] = {
     "TRANSFORMERS": "EA",
     "BEARINGS": "EA",
     "FASTENERS": "EA",  # Or SET if defined
+    # Extended dotted subcategories across domain packs (Section 18.9)
+    "STEEL.CONVEYOR_BELT": "M",
+    "MINING.WIRE_ROPE": "M",
+    "HEAVY.HYDRAULIC_HOSE": "M",
+    "POWER.BOILER_TUBE": "M",
+    "STEEL.REFRACTORY": "MT",
+    "MINING.OTR_TYRE": "EA",
+    "POWER.TRANSFORMER": "EA",
+    "POWER.BREAKER": "EA",
+    "HEAVY.PUMP_CENTRIFUGAL": "EA",
+    "HEAVY.MADE_TO_DRAWING": "EA",
+    "STEEL.MILL_ROLL": "EA",
 }
 
 # Dimension canonical base for dimension scalar reductions
@@ -253,6 +265,14 @@ def convert_to_canonical(
     # Base target unit
     if cat_upper and cat_upper in CATEGORY_CANONICAL_TARGET:
         target_uom = CATEGORY_CANONICAL_TARGET[cat_upper]
+    elif cat_upper and "." in cat_upper:
+        prefix, suffix = cat_upper.split(".", 1)
+        target_uom = (
+            CATEGORY_CANONICAL_TARGET.get(cat_upper)
+            or CATEGORY_CANONICAL_TARGET.get(suffix)
+            or CATEGORY_CANONICAL_TARGET.get(prefix)
+            or DIMENSION_CANONICAL_BASE.get(std_uom, std_uom)
+        )
     else:
         target_uom = DIMENSION_CANONICAL_BASE.get(std_uom, std_uom)
 

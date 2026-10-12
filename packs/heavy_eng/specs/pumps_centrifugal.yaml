@@ -22,3 +22,4 @@ attributes:
   - {name: driver_kw, role: REQUIRED}
   - {name: seal_plan, role: REQUIRED}
   - {name: manufacturer, role: SOFT}
+  - {name: npshr_m, role: SOFT}

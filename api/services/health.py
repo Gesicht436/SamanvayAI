@@ -18,7 +18,7 @@ Reports separate non-blended metrics:
 from collections import Counter, defaultdict
 from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 
 from api.extractors.registry import AttributeRole, default_registry
@@ -378,14 +378,63 @@ def get_dashboard_summary(db: Session, org_id: str | None = None) -> dict[str, A
 
     # 6. Audit integrity status
     try:
-        from api.core.hashchain import verify_chain
+        import hashlib
+        import json
 
-        chain_res = verify_chain(db)
-        audit_status = {
-            "status": chain_res.get("status", "OK"),
-            "verified_records": chain_res.get("verified_records", 0),
-            "head_hash": chain_res.get("head_hash"),
-        }
+        from api.core.hashchain import GENESIS
+
+        res = db.execute(
+            text(
+                "SELECT seq, at, actor, action, entity, entity_id, before, after, rationale, prev_hash, this_hash "
+                "FROM audit_log ORDER BY seq ASC"
+            )
+        )
+        rows = res.fetchall()
+        if not rows:
+            audit_status = {
+                "status": "OK",
+                "verified_records": 0,
+                "head_hash": None,
+            }
+        else:
+            expected_prev = GENESIS
+            tampered_seq = None
+            for r in rows:
+                if r.prev_hash != expected_prev:
+                    tampered_seq = r.seq
+                    break
+
+                at_str = r.at.strftime("%Y-%m-%dT%H:%M:%S.%fZ") if r.at else ""
+                actor_str = str(r.actor) if r.actor else ""
+                before_str = json.dumps(r.before) if r.before is not None else ""
+                after_str = json.dumps(r.after) if r.after is not None else ""
+                rationale_str = r.rationale or ""
+
+                payload = (
+                    r.prev_hash
+                    + f"{at_str}|{actor_str}|{r.action}|{r.entity}|{r.entity_id}|{before_str}|{after_str}|{rationale_str}"
+                )
+                computed_hash = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+                if computed_hash != r.this_hash:
+                    tampered_seq = r.seq
+                    break
+
+                expected_prev = r.this_hash
+
+            if tampered_seq is not None:
+                audit_status = {
+                    "status": "TAMPER_DETECTED",
+                    "broken_seq": tampered_seq,
+                    "verified_records": tampered_seq - 1,
+                    "head_hash": rows[-1].this_hash,
+                }
+            else:
+                audit_status = {
+                    "status": "OK",
+                    "verified_records": len(rows),
+                    "head_hash": rows[-1].this_hash,
+                }
     except Exception as e:  # noqa: BLE001
         audit_status = {"status": "ERROR", "error": str(e)}
 

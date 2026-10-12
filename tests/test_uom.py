@@ -107,3 +107,13 @@ def test_pipe_weight_to_length_conversion():
 def test_fastener_set_requires_set_definition():
     res = convert_to_canonical(50, "SET", category="FASTENERS")
     assert "MISSING_CONVERSION_ATTRIBUTE" in res.flags
+
+
+def test_conveyor_belt_roll_conversion():
+    # Conveyor belt: 3 rolls with length_m = 250 -> 750 meters
+    attrs = {"length_m": 250.0}
+    res = convert_to_canonical(3, "ROLL", category="STEEL.CONVEYOR_BELT", attributes=attrs)
+    assert res.canonical_qty == 750.0
+    assert res.canonical_uom == "M"
+    assert "MISSING_CONVERSION_ATTRIBUTE" not in res.flags
+

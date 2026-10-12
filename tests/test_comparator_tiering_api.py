@@ -141,3 +141,145 @@ def test_tier_endpoint_tier_3_on_hard_mismatch():
     assert data["tier"] == 3
     assert data["stream_a_eligible"] is False
     assert "HARD_ATTRIBUTE_MISMATCH" in data["reason_codes"]
+
+
+def test_comparator_when_condition_inapplicable_not_missing():
+    """Verify conditional attributes with unsatisfied when-clauses are not marked MISSING."""
+    from api.services.comparator import Verdict, compare_items
+
+    # Refractory bricks: form=BRICK -> cement_class (when: 'form == CASTABLE') does not apply
+    req = {
+        "form": "BRICK",
+        "material_class": "ALUMINA",
+        "key_chemistry": "AL2O3_70",
+        "shape_code": "STANDARD_9IN",
+        "dimensions_mm": "230X115X75",
+    }
+    cand = {
+        "form": "BRICK",
+        "material_class": "ALUMINA",
+        "key_chemistry": "AL2O3_70",
+        "shape_code": "STANDARD_9IN",
+        "dimensions_mm": "230X115X75",
+    }
+    result = compare_items(req, cand, subcategory="STEEL.REFRACTORY")
+    assert "cement_class" in result.verdicts
+    assert result.verdicts["cement_class"].verdict == Verdict.EXACT
+    assert "Inapplicable due to when condition" in (result.verdicts["cement_class"].notes or "")
+    assert "cement_class" not in result.missing_hard_attributes
+
+
+def test_normalize_drawing_number_contract():
+    """Verify Section 18.7.3: collapse internal spaces/hyphens, keep sheet and item suffixes."""
+    from api.services.drawing import normalize_drawing_key, normalize_drawing_number
+
+    # D-44120 and D44120 are the same
+    assert normalize_drawing_number("D-44120") == "D44120"
+    assert normalize_drawing_number("D 44120") == "D44120"
+    assert normalize_drawing_number("d-44120") == "D44120"
+
+    # Suffixes are preserved and distinct
+    assert normalize_drawing_number("D-44120-1") == "D44120-1"
+    assert normalize_drawing_number("D44120-1") == "D44120-1"
+    assert normalize_drawing_number("D44120-2") == "D44120-2"
+    assert normalize_drawing_number("D-44120-1") != normalize_drawing_number("D-44120-2")
+
+    # Sheet suffix
+    assert normalize_drawing_number("DRG-8890-SH1") == "DRG8890-SH1"
+
+    # Normalized key includes owner
+    k1 = normalize_drawing_key("bhel", "D-44120")
+    k2 = normalize_drawing_key("BHEL", "D44120")
+    assert k1 == ("BHEL", "D44120")
+    assert k1 == k2
+
+
+@pytest.mark.asyncio
+async def test_drawing_revision_equivalence_flow_and_invariant_s13():
+    """Verify Invariant S13, maker-checker constraint, and approved equivalence yielding Tier 1."""
+    import uuid
+
+    from fastapi.testclient import TestClient
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from api.database import get_async_engine
+    from api.main import app
+    from api.models.entities import User
+    from api.services.drawing import (
+        approve_revision_equivalence,
+        is_drawing_revision_equivalent,
+        propose_revision_equivalence,
+    )
+
+    engine = get_async_engine()
+    maker_id = uuid.uuid4()
+    checker_id = uuid.uuid4()
+    drg_no = f"DRG-{uuid.uuid4().hex[:6]}"
+
+    async with AsyncSession(engine) as session:
+        # Create maker and checker users to satisfy FK constraint
+        maker = User(id=maker_id, subject=f"maker-{maker_id.hex[:6]}", role="MAKER", org_id="OIL-1")
+        checker = User(id=checker_id, subject=f"checker-{checker_id.hex[:6]}", role="CHECKER", org_id="OIL-1")
+        session.add_all([maker, checker])
+        await session.commit()
+
+        # 1. Initially rev A and rev B are not equivalent
+        eq_initial = await is_drawing_revision_equivalent(session, "BHEL", drg_no, "A", "B")
+        assert eq_initial is False
+
+        # 2. Propose equivalence
+        prop = await propose_revision_equivalence(
+            db=session,
+            drawing_owner="BHEL",
+            drawing_no=drg_no,
+            rev_a="A",
+            rev_b="B",
+            rationale="Drawing rev B only updated title block; geometry and metallurgy identical.",
+            proposed_by=maker_id,
+        )
+        prop_id = prop.id
+        await session.commit()
+        assert prop_id is not None
+
+        # 3. Maker cannot approve own proposal (rev_maker_ne_checker)
+        with pytest.raises(ValueError, match="Maker cannot approve own"):
+            await approve_revision_equivalence(session, prop_id, approved_by=maker_id)
+
+        # 4. Checker approves
+        appr = await approve_revision_equivalence(session, prop_id, approved_by=checker_id)
+        appr_approved_by = appr.approved_by
+        await session.commit()
+        assert appr_approved_by == checker_id
+
+        # 5. Now rev A and rev B are equivalent (bidirectional)
+        assert await is_drawing_revision_equivalent(session, "BHEL", drg_no, "A", "B") is True
+        assert await is_drawing_revision_equivalent(session, "BHEL", drg_no, "B", "A") is True
+
+    # 6. Test via HTTP Tier endpoint
+    client = TestClient(app)
+    req_body = {
+        "subcategory": "HEAVY.MADE_TO_DRAWING",
+        "identity_mode": "DRAWING",
+        "requirement_attributes": {
+            "drawing_owner": "BHEL",
+            "drawing_number": drg_no,
+            "drawing_revision": "A",
+            "material_grade": "IS_2062_E250",
+            "item_name": "ROTOR SHAFT",
+        },
+        "candidate_attributes": {
+            "drawing_owner": "BHEL",
+            "drawing_number": drg_no,
+            "drawing_revision": "B",
+            "material_grade": "IS_2062_E250",
+            "item_name": "ROTOR SHAFT",
+        },
+    }
+    resp = client.post("/tier", json=req_body)
+    assert resp.status_code == 200, resp.text
+    tier_data = resp.json()
+    # With approved equivalence in DB, Tier 1 is granted
+    assert tier_data["tier"] == 1
+    assert tier_data["stream_a_eligible"] is True
+
+

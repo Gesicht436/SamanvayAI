@@ -315,6 +315,49 @@ def evaluate_attribute_verdict(
     )
 
 
+def _check_when_condition(condition: str | None, extracted: dict[str, Any]) -> bool:
+    """Evaluate simple when-condition string against extracted attribute values."""
+    if not condition:
+        return True
+    try:
+        if "has" in condition:
+            parts = condition.split("has")
+            key = parts[0].strip()
+            val = extracted.get(key)
+            if isinstance(val, dict):
+                val = val.get("value")
+            return bool(val)
+
+        if " in " in condition:
+            left, right = condition.split(" in ", 1)
+            left_val = extracted.get(left.strip())
+            if isinstance(left_val, dict):
+                left_val = left_val.get("value")
+            right_clean = right.strip().strip("[]").replace("'", "").replace('"', "")
+            allowed = [item.strip() for item in right_clean.split(",")]
+            return str(left_val).upper() in allowed
+
+        if "==" in condition:
+            left, right = condition.split("==", 1)
+            left_val = extracted.get(left.strip())
+            if isinstance(left_val, dict):
+                left_val = left_val.get("value")
+            right_val = right.strip().strip("'\"")
+            return str(left_val).upper() == right_val.upper()
+
+        if "!=" in condition:
+            left, right = condition.split("!=", 1)
+            left_val = extracted.get(left.strip())
+            if isinstance(left_val, dict):
+                left_val = left_val.get("value")
+            right_val = right.strip().strip("'\"")
+            return str(left_val).upper() != right_val.upper()
+
+        return True
+    except (AttributeError, ValueError, KeyError):
+        return True
+
+
 def compare_items(
     req_attrs: dict[str, Any],
     cand_attrs: dict[str, Any],
@@ -360,6 +403,21 @@ def compare_items(
                     notes="Ex Group I exemption: gas_group/t_class absent by design (Invariant S11)",
                 )
                 continue
+
+            # When-condition gating: inapplicable attributes should not be marked MISSING
+            if getattr(a_def, "when", None):
+                req_applies = _check_when_condition(a_def.when, req_attrs)
+                cand_applies = _check_when_condition(a_def.when, cand_attrs)
+                if not req_applies and not cand_applies and r_val is None and c_val is None:
+                    verdicts[name] = AttributeVerdictResult(
+                        attr=name,
+                        role=role,
+                        raw_val=r_val,
+                        candidate_val=c_val,
+                        verdict=Verdict.EXACT,
+                        notes=f"Inapplicable due to when condition ({a_def.when})",
+                    )
+                    continue
 
             v_res = evaluate_attribute_verdict(name, role, r_val, c_val, subcategory)
             verdicts[name] = v_res

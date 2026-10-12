@@ -7,6 +7,7 @@ pooling_class: ENGINEERED
 expiry_required: true
 attributes:
   - {name: section_width, role: HARD}
+  - {name: aspect_ratio, role: HARD, when: "section_width has aspect"}
   - {name: construction, role: HARD}
   - {name: rim_diameter_in, role: HARD}
   - {name: tread_code, role: HARD}

@@ -13,4 +13,5 @@ attributes:
   - {name: poles, role: HARD}
   - {name: mounting, role: HARD}
   - {name: design_standard, role: HARD}
+  - {name: frequency_hz, role: HARD}
   - {name: operating_mechanism, role: REQUIRED}
