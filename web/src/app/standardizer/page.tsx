@@ -38,34 +38,34 @@ export default function StandardizerPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Title & Intro */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-2.5">
-          <Search className="w-6 h-6 text-emerald-400" />
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
+          <Search className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
           Material Standardizer & Match Engine
         </h1>
-        <p className="text-xs text-slate-400 mt-1 max-w-3xl">
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-3xl">
           Enter unstructured, noisy, or multilingual legacy plant descriptions. The system normalizes text, extracts physical and statutory attributes with evidence spans, and retrieves ranked candidate masters under Safety Invariants S1–S15.
         </p>
       </div>
 
       {/* Input Box and Sample Chips */}
-      <div className="bg-slate-900 border border-slate-800 rounded-lg p-5 space-y-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4 shadow-sm">
         <div>
-          <label className="text-xs font-mono uppercase text-slate-300 block mb-2">
+          <label className="text-xs font-mono uppercase text-slate-700 dark:text-slate-300 block mb-2 font-semibold">
             Raw Material Description (ERP / Requisition Line)
           </label>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <textarea
               rows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="e.g. VLV GT 100 NB CL150 WCB FLG RF API600..."
-              className="flex-1 bg-slate-950 border border-slate-800 rounded-md p-3 text-sm font-mono text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-lg p-3 text-sm font-mono text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
             />
             <button
               type="button"
               onClick={() => handleMatch()}
               disabled={loading}
-              className="px-6 py-2 rounded-md font-semibold text-xs bg-emerald-600 text-slate-950 hover:bg-emerald-500 transition-colors flex items-center gap-2 shrink-0 self-stretch justify-center shadow-lg shadow-emerald-950/40 disabled:opacity-50"
+              className="px-6 py-2 rounded-lg font-semibold text-xs bg-emerald-600 text-white dark:text-slate-950 hover:bg-emerald-500 transition-colors flex items-center gap-2 shrink-0 self-stretch justify-center shadow-md disabled:opacity-50"
             >
               {loading ? (
                 <>
@@ -83,7 +83,7 @@ export default function StandardizerPage() {
         </div>
 
         {/* Quick Sample Queries */}
-        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-800/60">
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-200 dark:border-slate-800/60">
           <span className="text-[11px] font-mono text-slate-500 flex items-center gap-1">
             <PlayCircle className="w-3.5 h-3.5" /> Quick Samples:
           </span>
@@ -95,7 +95,7 @@ export default function StandardizerPage() {
                 setDescription(sample.query);
                 handleMatch(sample.query);
               }}
-              className="text-xs font-mono px-2.5 py-1 rounded bg-slate-800/80 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700/60 transition-colors"
+              className="text-xs font-mono px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white border border-slate-300 dark:border-slate-700/60 transition-colors shadow-2xs"
             >
               {sample.label}
             </button>
@@ -126,7 +126,7 @@ export default function StandardizerPage() {
             /* Ranked Candidates List */
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-slate-200 uppercase font-mono tracking-wider">
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase font-mono tracking-wider">
                   Ranked Golden Master Candidates ({result.candidates.length})
                 </h3>
                 <span className="text-xs text-slate-500 font-mono">

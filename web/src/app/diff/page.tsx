@@ -43,18 +43,18 @@ export default function DiffPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-2.5">
-          <GitCompare className="w-6 h-6 text-emerald-400" />
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
+          <GitCompare className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
           Diff Inspector & Safety Verdict Matrix
         </h1>
-        <p className="text-xs text-slate-400 mt-1 max-w-3xl">
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-3xl">
           Visual attribute-by-attribute comparator comparing raw requisition specs against national golden master records. Displays exact physical lattices, missing attribute gaps, and invariant safety refusals.
         </p>
       </div>
 
       {/* Preset Case Switcher */}
-      <div className="bg-slate-900 border border-slate-800 rounded-lg p-4 space-y-3">
-        <label className="text-xs font-mono uppercase text-slate-400 tracking-wider block">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 space-y-3 shadow-xs">
+        <label className="text-xs font-mono uppercase text-slate-500 dark:text-slate-400 tracking-wider block font-semibold">
           Select Engineering Comparison Scenario:
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
@@ -63,14 +63,14 @@ export default function DiffPage() {
               key={idx}
               type="button"
               onClick={() => setActivePresetIndex(idx)}
-              className={`p-3 text-left rounded border transition-all text-xs font-mono ${
+              className={`p-3 text-left rounded-lg border transition-all text-xs font-mono ${
                 activePresetIndex === idx
-                  ? "bg-slate-800 border-emerald-500 text-slate-100 shadow-md shadow-emerald-950/20"
-                  : "bg-slate-950 border-slate-800/80 text-slate-400 hover:text-slate-200 hover:border-slate-700"
+                  ? "bg-emerald-50 dark:bg-slate-800 border-emerald-500 text-slate-900 dark:text-slate-100 shadow-sm"
+                  : "bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700"
               }`}
             >
               <div className="font-semibold truncate">{preset.title.split(":")[0]}</div>
-              <div className="text-[11px] text-slate-400 mt-1 line-clamp-2">
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
                 {preset.title.split(":")[1]?.trim() || preset.title}
               </div>
             </button>
