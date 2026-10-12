@@ -283,6 +283,7 @@ class StockLot(Base):
     mfg_date = Column(Date, nullable=True)
     expiry_date = Column(Date, nullable=True)
     start_date = Column(Date, nullable=True)
+    mtc_verified = Column(Boolean, server_default="false", default=False, nullable=False)
 
 
 class UsageEvent(Base):
@@ -506,5 +507,19 @@ class GoldenSubvector(Base):
     domain = Column(Text, primary_key=True)  # 'dim', 'met', 'pt', 'std'
     text_repr = Column(Text, nullable=False, server_default="")
     created_at = Column(DateTime(timezone=True), server_default=text("now()"))
+
+
+class DrawingRevisionEquivalence(Base):
+    __tablename__ = "drawing_revision_equivalence"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    drawing_owner = Column(Text, nullable=False)
+    drawing_norm = Column(Text, nullable=False)
+    rev_a = Column(Text, nullable=False)
+    rev_b = Column(Text, nullable=False)
+    rationale = Column(Text, nullable=False)
+    proposed_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    approved_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    approved_at = Column(DateTime(timezone=True), nullable=True)
 
 
