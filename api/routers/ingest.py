@@ -11,7 +11,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.database import get_db
 from api.security.jwt_auth import AuthUser, get_current_user
-from api.services.ingest import ingest_tabular_document
+from api.services.ingest import (
+    enqueue_ingest_job,
+    get_job_status,
+    ingest_tabular_document,
+    process_next_ingest_job,
+)
 from api.services.normalize import normalize_text
 from api.services.uom import convert_to_canonical
 
@@ -60,6 +65,27 @@ class IngestUploadResponse(BaseModel):
     inserted_rows: int
     error_rows: int
     message: str
+
+
+class IngestJobEnqueueResponse(BaseModel):
+    job_id: int
+    status: str
+    message: str
+
+
+class IngestJobStatusResponse(BaseModel):
+    job_id: int
+    kind: str
+    state: str
+    attempts: int
+    last_error: str | None = None
+    result: dict[str, Any] | None = None
+
+
+class IngestJobProcessResponse(BaseModel):
+    processed: bool
+    job: dict[str, Any] | None = None
+    message: str | None = None
 
 
 # --- Endpoints ---
@@ -146,3 +172,77 @@ async def upload_document(
         error_rows=res.error_rows,
         message=res.message,
     )
+
+
+@router.post("/ingest/jobs", response_model=IngestJobEnqueueResponse)
+async def enqueue_job(
+    file: UploadFile = File(...),
+    doc_type: str = Form("LEGACY_MASTER"),
+    current_user: AuthUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Enqueues an asynchronous tabular ingestion job into the jobs table (Section 4.1)."""
+    if not current_user.org_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Authenticated user must belong to an organization to ingest documents.",
+        )
+
+    file_bytes = await file.read()
+    if not file_bytes:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Uploaded file is empty.",
+        )
+
+    job_id = await enqueue_ingest_job(
+        db=db,
+        org_id=current_user.org_id,
+        file_bytes=file_bytes,
+        filename=file.filename or "upload.csv",
+        uploaded_by=current_user.sub,
+        doc_type=doc_type,
+    )
+
+    return IngestJobEnqueueResponse(
+        job_id=job_id,
+        status="QUEUED",
+        message=f"Ingestion job {job_id} successfully queued for background processing.",
+    )
+
+
+@router.get("/ingest/jobs/{job_id}", response_model=IngestJobStatusResponse)
+async def get_job(
+    job_id: int,
+    current_user: AuthUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Returns the current state and result of a queued ingest job."""
+    job_info = await get_job_status(db, job_id=job_id)
+    if not job_info:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Job {job_id} not found.",
+        )
+    return IngestJobStatusResponse(**job_info)
+
+
+@router.post("/ingest/jobs/process-next", response_model=IngestJobProcessResponse)
+async def process_next_job(
+    current_user: AuthUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Dequeues and processes the next pending job using SELECT ... FOR UPDATE SKIP LOCKED (Section 4.1)."""
+    result = await process_next_ingest_job(db)
+    if not result:
+        return IngestJobProcessResponse(
+            processed=False,
+            job=None,
+            message="No queued jobs available to process.",
+        )
+    return IngestJobProcessResponse(
+        processed=True,
+        job=result,
+        message=f"Job {result['job_id']} processed with state {result['state']}.",
+    )
+

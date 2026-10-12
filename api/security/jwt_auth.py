@@ -3,6 +3,7 @@ Implements HS256 JWT encoding, decoding, maker-checker validation, and role/doma
 """
 
 from datetime import UTC, datetime, timedelta
+from uuid import UUID
 
 import jwt
 from fastapi import Depends, HTTPException, Security, status
@@ -22,6 +23,14 @@ class AuthUser(BaseModel):
     role: str = Field(..., description="Assigned user role")
     domains: list[str] = Field(default_factory=list, description="Domain tags for safety-critical checks")
     display_name: str | None = None
+
+    @property
+    def user_id(self) -> UUID | None:
+        """Parses sub claim into a UUID if valid, else returns None."""
+        try:
+            return UUID(self.sub)
+        except (ValueError, TypeError):
+            return None
 
 
 def create_access_token(

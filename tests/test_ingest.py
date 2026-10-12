@@ -119,3 +119,101 @@ async def test_database_ingest_idempotency_and_audit():
         assert res2.is_duplicate is True
         assert res2.document_id == res1.document_id
         assert res2.inserted_rows == 0
+
+
+@pytest.mark.asyncio
+async def test_async_ingest_job_queue_and_worker():
+    """Verify Section 4.1 async job queueing and SELECT ... FOR UPDATE SKIP LOCKED worker execution."""
+    import uuid
+
+    from api.services.ingest import enqueue_ingest_job, get_job_status, process_next_ingest_job
+
+    engine = get_async_engine()
+    salt = uuid.uuid4().hex[:8]
+    csv_bytes = create_sample_csv(salt=salt)
+    filename = f"async_batch_{salt}.csv"
+    org_id = "STEEL-1"
+    user_id = str(uuid.uuid4())
+
+    async with AsyncSession(engine) as session:
+        # 1. Enqueue job
+        job_id = await enqueue_ingest_job(
+            db=session,
+            org_id=org_id,
+            file_bytes=csv_bytes,
+            filename=filename,
+            uploaded_by=user_id,
+        )
+        assert isinstance(job_id, int)
+
+        # 2. Check initial job status
+        status_info = await get_job_status(session, job_id)
+        assert status_info is not None
+        assert status_info["state"] == "QUEUED"
+        assert status_info["kind"] == "TABULAR_INGEST"
+        assert status_info["result"] is None
+
+        # 3. Worker dequeues and processes job
+        process_res = await process_next_ingest_job(session)
+        assert process_res is not None
+        assert process_res["job_id"] == job_id
+        assert process_res["state"] == "COMPLETED"
+        assert process_res["result"]["inserted_rows"] == 4
+
+        # 4. Check completed job status
+        final_info = await get_job_status(session, job_id)
+        assert final_info is not None
+        assert final_info["state"] == "COMPLETED"
+        assert final_info["result"]["total_rows"] == 4
+
+
+def test_ingest_jobs_api_flow():
+    """Verify HTTP API endpoints for POST /ingest/jobs, GET /ingest/jobs/{id}, and POST /ingest/jobs/process-next."""
+    import uuid
+
+    from fastapi.testclient import TestClient
+
+    from api.main import app
+    from api.security.jwt_auth import create_access_token
+
+    client = TestClient(app)
+    token = create_access_token("test-ingest-user", "STEEL-1", "MAKER")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    salt = uuid.uuid4().hex[:6]
+    csv_bytes = create_sample_csv(salt=salt)
+
+    # 1. Enqueue job via HTTP
+    resp_enqueue = client.post(
+        "/ingest/jobs",
+        files={"file": (f"test_api_{salt}.csv", csv_bytes, "text/csv")},
+        headers=headers,
+    )
+    assert resp_enqueue.status_code == 200, resp_enqueue.text
+    enqueue_data = resp_enqueue.json()
+    job_id = enqueue_data["job_id"]
+    assert enqueue_data["status"] == "QUEUED"
+
+    # 2. Poll job status
+    resp_status = client.get(f"/ingest/jobs/{job_id}", headers=headers)
+    assert resp_status.status_code == 200
+    status_data = resp_status.json()
+    assert status_data["job_id"] == job_id
+    assert status_data["state"] in ("QUEUED", "PROCESSING", "COMPLETED")
+
+    # 3. Process next job
+    resp_process = client.post("/ingest/jobs/process-next", headers=headers)
+    assert resp_process.status_code == 200
+    process_data = resp_process.json()
+    assert process_data["processed"] is True
+    assert process_data["job"]["job_id"] == job_id
+    assert process_data["job"]["state"] == "COMPLETED"
+
+    # 4. Verify job is completed
+    resp_after = client.get(f"/ingest/jobs/{job_id}", headers=headers)
+    assert resp_after.status_code == 200
+    after_data = resp_after.json()
+    assert after_data["state"] == "COMPLETED"
+    assert after_data["result"]["inserted_rows"] == 4
+
+

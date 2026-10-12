@@ -12,9 +12,11 @@ Conforms to specsheet.md Section 4.1:
 
 from __future__ import annotations
 
+import base64
 import csv
 import hashlib
 import io
+import json
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from typing import Any
@@ -559,3 +561,126 @@ async def ingest_tabular_document(
         error_rows=parsed.error_rows,
         message=f"Successfully ingested {inserted_count} rows from {filename}.",
     )
+
+
+async def enqueue_ingest_job(
+    db: AsyncSession,
+    org_id: str,
+    file_bytes: bytes,
+    filename: str,
+    uploaded_by: str,
+    doc_type: str = "LEGACY_MASTER",
+) -> int:
+    """Enqueues an asynchronous tabular ingest job into the jobs table (Section 4.1)."""
+    payload = {
+        "org_id": org_id,
+        "filename": filename,
+        "uploaded_by": uploaded_by,
+        "doc_type": doc_type,
+        "file_b64": base64.b64encode(file_bytes).decode("ascii"),
+        "file_hash": hashlib.sha256(file_bytes).hexdigest(),
+    }
+    stmt = text(
+        "INSERT INTO jobs (kind, payload, state, attempts, run_after) "
+        "VALUES ('TABULAR_INGEST', CAST(:payload AS jsonb), 'QUEUED', 0, now()) "
+        "RETURNING id"
+    )
+    res = await db.execute(stmt, {"payload": json.dumps(payload)})
+    job_id = res.scalar_one()
+    await db.commit()
+    return job_id
+
+
+async def get_job_status(db: AsyncSession, job_id: int) -> dict[str, Any] | None:
+    """Returns the current state and result of a queued ingest job."""
+    stmt = text("SELECT id, kind, payload, state, attempts, last_error, created_at FROM jobs WHERE id = :job_id")
+    res = await db.execute(stmt, {"job_id": job_id})
+    row = res.mappings().first()
+    if not row:
+        return None
+    d = dict(row)
+    # Extract result if completed
+    payload = d.get("payload") or {}
+    result = payload.get("result")
+    return {
+        "job_id": d["id"],
+        "kind": d["kind"],
+        "state": d["state"],
+        "attempts": d["attempts"],
+        "last_error": d.get("last_error"),
+        "result": result,
+    }
+
+
+async def process_next_ingest_job(db: AsyncSession) -> dict[str, Any] | None:
+    """Dequeues and processes the next pending job using SELECT ... FOR UPDATE SKIP LOCKED (Section 4.1)."""
+    stmt = text(
+        "SELECT id, payload, attempts FROM jobs "
+        "WHERE state = 'QUEUED' AND run_after <= now() "
+        "ORDER BY id ASC LIMIT 1 FOR UPDATE SKIP LOCKED"
+    )
+    res = await db.execute(stmt)
+    job = res.mappings().first()
+    if not job:
+        return None
+
+    job_id = job["id"]
+    payload = job["payload"]
+
+    # Mark as PROCESSING
+    await db.execute(
+        text("UPDATE jobs SET state = 'PROCESSING', attempts = attempts + 1 WHERE id = :job_id"),
+        {"job_id": job_id},
+    )
+    await db.commit()
+
+    try:
+        raw_bytes = base64.b64decode(payload["file_b64"])
+        uploader_uuid = None
+        if payload.get("uploaded_by"):
+            try:
+                candidate_uid = UUID(str(payload["uploaded_by"]))
+                user_check = await db.execute(
+                    text("SELECT id FROM users WHERE id = :uid"),
+                    {"uid": candidate_uid},
+                )
+                if user_check.scalar():
+                    uploader_uuid = candidate_uid
+            except (ValueError, TypeError):
+                uploader_uuid = None
+
+        ingest_res = await ingest_tabular_document(
+            db=db,
+            org_id=payload["org_id"],
+            file_bytes=raw_bytes,
+            filename=payload["filename"],
+            uploaded_by=uploader_uuid,
+            doc_type=payload.get("doc_type", "LEGACY_MASTER"),
+        )
+        result_payload = {
+            "document_id": str(ingest_res.document_id),
+            "file_hash": ingest_res.file_hash,
+            "status": ingest_res.status,
+            "total_rows": ingest_res.total_rows,
+            "inserted_rows": ingest_res.inserted_rows,
+            "error_rows": ingest_res.error_rows,
+            "message": ingest_res.message,
+        }
+        await db.execute(
+            text(
+                "UPDATE jobs SET state = 'COMPLETED', payload = jsonb_set(payload, '{result}', CAST(:res AS jsonb)) "
+                "WHERE id = :job_id"
+            ),
+            {"job_id": job_id, "res": json.dumps(result_payload)},
+        )
+        await db.commit()
+        return {"job_id": job_id, "state": "COMPLETED", "result": result_payload}
+    except Exception as exc:  # noqa: BLE001
+        await db.rollback()
+        await db.execute(
+            text("UPDATE jobs SET state = 'FAILED', last_error = :err WHERE id = :job_id"),
+            {"job_id": job_id, "err": str(exc)},
+        )
+        await db.commit()
+        return {"job_id": job_id, "state": "FAILED", "error": str(exc)}
+
