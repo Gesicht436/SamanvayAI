@@ -2,15 +2,18 @@
 
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.database import get_db
 from api.extractors.registry import IdentityMode, default_registry
 from api.services.comparator import (
     ItemComparisonResult,
     Verdict,
     compare_items,
 )
+from api.services.drawing import is_drawing_revision_equivalent, normalize_drawing_key
 from api.services.tiering import TieringResult, assign_tier
 
 router = APIRouter(prefix="", tags=["Comparator & Tiering"])
@@ -114,10 +117,37 @@ async def compare_materials_endpoint(payload: CompareRequest) -> CompareResponse
 
 
 @router.post("/tier", response_model=TieringResult)
-async def evaluate_tier_endpoint(payload: TierRequest) -> TieringResult:
+async def evaluate_tier_endpoint(
+    payload: TierRequest,
+    db: AsyncSession = Depends(get_db),
+) -> TieringResult:
     """Evaluates safety invariants and assigns harmonization tier (Tier 1, 2, or 3)."""
     spec = default_registry.get_spec(payload.subcategory)
     identity_mode = payload.identity_mode or (spec.identity_mode if spec else IdentityMode.PARAMETRIC)
+
+    drawing_keys_match = payload.drawing_keys_match
+    drawing_revisions_match = payload.drawing_revisions_match
+    has_approved_revision_equivalence = payload.has_approved_revision_equivalence
+
+    if identity_mode == IdentityMode.DRAWING:
+        req_owner = payload.requirement_attributes.get("drawing_owner")
+        cand_owner = payload.candidate_attributes.get("drawing_owner")
+        req_dwg = payload.requirement_attributes.get("drawing_number") or payload.requirement_attributes.get("drawing_no")
+        cand_dwg = payload.candidate_attributes.get("drawing_number") or payload.candidate_attributes.get("drawing_no")
+
+        if req_owner and cand_owner and req_dwg and cand_dwg:
+            k1 = normalize_drawing_key(req_owner, req_dwg)
+            k2 = normalize_drawing_key(cand_owner, cand_dwg)
+            drawing_keys_match = (k1 == k2)
+
+            req_rev = payload.requirement_attributes.get("drawing_revision") or payload.requirement_attributes.get("revision")
+            cand_rev = payload.candidate_attributes.get("drawing_revision") or payload.candidate_attributes.get("revision")
+            if req_rev is not None and cand_rev is not None:
+                drawing_revisions_match = (str(req_rev).strip().upper() == str(cand_rev).strip().upper())
+                if drawing_keys_match and not drawing_revisions_match and not has_approved_revision_equivalence:
+                    has_approved_revision_equivalence = await is_drawing_revision_equivalent(
+                        db, k1[0], k1[1], str(req_rev), str(cand_rev)
+                    )
 
     comp_res = compare_items(
         req_attrs=payload.requirement_attributes,
@@ -137,9 +167,9 @@ async def evaluate_tier_endpoint(payload: TierRequest) -> TieringResult:
         is_category_uncertain=payload.is_category_uncertain,
         has_alias_conflict=payload.has_alias_conflict,
         oem_pn_match=payload.oem_pn_match,
-        drawing_keys_match=payload.drawing_keys_match,
-        drawing_revisions_match=payload.drawing_revisions_match,
-        has_approved_revision_equivalence=payload.has_approved_revision_equivalence,
+        drawing_keys_match=drawing_keys_match,
+        drawing_revisions_match=drawing_revisions_match,
+        has_approved_revision_equivalence=has_approved_revision_equivalence,
         statutory_missing=payload.statutory_missing,
         ocr_confidence_low=payload.ocr_confidence_low,
         lot_expired=payload.lot_expired,
@@ -149,3 +179,4 @@ async def evaluate_tier_endpoint(payload: TierRequest) -> TieringResult:
     )
 
     return decision
+

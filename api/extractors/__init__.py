@@ -1,6 +1,7 @@
 """Extractor Framework and Spec Registry package."""
 
 from api.extractors.base import BaseExtractor, ExtractedValue, none_with
+from api.extractors.cross_validator import cross_validate_attributes
 from api.extractors.lexicon import LexiconExtractor, load_lexicon_data
 from api.extractors.parsers.pressure_class import extract_pressure_class
 from api.extractors.parsers.size_nb import extract_size_nb
@@ -22,6 +23,7 @@ __all__ = [
     "LexiconExtractor",
     "SpecRegistry",
     "SubcategorySpecDef",
+    "cross_validate_attributes",
     "default_registry",
     "extract_pressure_class",
     "extract_size_nb",

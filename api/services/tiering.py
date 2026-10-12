@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 from api.extractors.registry import IdentityMode
-from api.services.comparator import ItemComparisonResult
+from api.services.comparator import ItemComparisonResult, Verdict
 
 
 class Tier(int, Enum):
@@ -116,7 +116,16 @@ def assign_tier(
     # ---------------------------------------------------------
     # 3. REQUIRED Mismatches -> Tier 3 (unless overridden by steward)
     # ---------------------------------------------------------
-    if comparison.has_required_mismatch:
+    req_mismatches = [
+        k
+        for k, v in comparison.verdicts.items()
+        if getattr(v, "role", None) in ("REQUIRED", getattr(v.role, "value", None))
+        and getattr(v, "verdict", None) == Verdict.MISMATCH
+    ]
+    if identity_mode == IdentityMode.DRAWING and has_approved_revision_equivalence:
+        req_mismatches = [k for k in req_mismatches if k not in ("drawing_revision", "revision")]
+
+    if req_mismatches or (comparison.has_required_mismatch and not (identity_mode == IdentityMode.DRAWING and has_approved_revision_equivalence)):
         reasons.append("REQUIRED_ATTRIBUTE_MISMATCH")
         return TieringResult(
             tier=Tier.THREE_DISTINCT.value,
@@ -126,6 +135,7 @@ def assign_tier(
             attribute_gap_alert=comparison.attribute_gap_alert,
             explanation="Tier 3: One or more REQUIRED attributes mismatched.",
         )
+
 
     # ---------------------------------------------------------
     # 4. Substitution Upgrade (Directional Lattice)

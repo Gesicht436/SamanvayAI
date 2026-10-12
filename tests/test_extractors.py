@@ -148,3 +148,106 @@ def test_size_nb_evidence_span():
     assert res.value == 150
     s, e = res.evidence_span
     assert raw[s:e] == "6"
+
+
+def test_cross_validator_agreement_boosts_confidence():
+    """Verify Section 4.3: when Rule and NER agree on HARD attribute, confidence boosts to 0.95+."""
+    from api.extractors.cross_validator import cross_validate_attributes
+
+    rule_attrs = {
+        "pressure_class": ExtractedValue(value="ASME_150", confidence=0.85, source="rule", evidence_span=(10, 15)),
+        "size_nb": ExtractedValue(value=50, confidence=0.90, source="rule", evidence_span=(0, 4)),
+    }
+    ner_attrs = {
+        "pressure_class": ExtractedValue(value="150", confidence=0.88, source="ner", evidence_span=(10, 15)),
+        "size_nb": ExtractedValue(value="50", confidence=0.92, source="ner", evidence_span=(0, 4)),
+    }
+
+    validated = cross_validate_attributes(
+        rule_attrs=rule_attrs,
+        aux_attrs=ner_attrs,
+        hard_attributes={"pressure_class", "size_nb"},
+    )
+
+    assert validated["pressure_class"].value == "ASME_150"
+    assert validated["pressure_class"].confidence >= 0.95
+    assert validated["pressure_class"].source == "rule+ner"
+    assert validated["size_nb"].value == 50
+    assert validated["size_nb"].confidence >= 0.95
+
+
+def test_cross_validator_hard_disagreement_yields_conflict():
+    """Verify Section 4.3: when Rule and NER disagree on HARD attribute, value becomes None with EXTRACTION_CONFLICT."""
+    from api.extractors.cross_validator import cross_validate_attributes
+
+    rule_attrs = {
+        "pressure_class": ExtractedValue(value="ASME_300", confidence=0.85, source="rule", evidence_span=(10, 15)),
+    }
+    ner_attrs = {
+        "pressure_class": ExtractedValue(value="ASME_600", confidence=0.90, source="ner", evidence_span=(20, 25)),
+    }
+
+    validated = cross_validate_attributes(
+        rule_attrs=rule_attrs,
+        aux_attrs=ner_attrs,
+        hard_attributes={"pressure_class"},
+    )
+
+    res = validated["pressure_class"]
+    assert res.value is None
+    assert res.confidence == 0.0
+    assert "EXTRACTION_CONFLICT" in res.flags
+    assert "ATTRIBUTE_EXTRACTION_CONFLICT" in res.flags
+
+
+def test_cross_validator_s12_statutory_and_hard_invariant():
+    """Verify Invariant S12: ML/NER alone cannot infer HARD or statutory attribute without rule backing."""
+    from api.extractors.cross_validator import cross_validate_attributes
+
+    rule_attrs = {}
+    ner_attrs = {
+        "ex_group": ExtractedValue(value="GROUP_I", confidence=0.92, source="ner", evidence_span=(5, 12)),
+        "ibr_cert": ExtractedValue(value="IBR_FORM_III", confidence=0.95, source="ner", evidence_span=(20, 30)),
+        "paint_shade": ExtractedValue(value="RAL_7035", confidence=0.80, source="ner", evidence_span=(40, 48)),
+    }
+
+    validated = cross_validate_attributes(
+        rule_attrs=rule_attrs,
+        aux_attrs=ner_attrs,
+        hard_attributes={"ex_group"},
+        statutory_attributes={"ibr_cert"},
+    )
+
+    # HARD attribute from NER alone is blocked
+    assert validated["ex_group"].value is None
+    assert "UNVERIFIED_ML_EXTRACTION" in validated["ex_group"].flags
+
+    # Statutory attribute from NER alone is blocked (Invariant S12)
+    assert validated["ibr_cert"].value is None
+    assert "S12_STATUTORY_RULE_REQUIRED" in validated["ibr_cert"].flags
+
+    # Soft non-statutory attribute from NER alone is accepted with capped confidence 0.70
+    assert validated["paint_shade"].value == "RAL_7035"
+    assert validated["paint_shade"].confidence <= 0.70
+
+
+def test_cross_validator_single_source_rule_and_physical_invalid():
+    """Verify single source rule confidence and physical invalid rating handling."""
+    from api.extractors.cross_validator import cross_validate_attributes
+
+    rule_attrs = {
+        "pressure_class": ExtractedValue(value="ASME_150", confidence=0.80, source="rule"),
+        "invalid_attr": ExtractedValue(value="CL175", confidence=0.0, source="rule", flags=["NON_STANDARD_RATING"]),
+    }
+
+    validated = cross_validate_attributes(
+        rule_attrs=rule_attrs,
+        aux_attrs=None,
+        hard_attributes={"pressure_class", "invalid_attr"},
+    )
+
+    assert validated["pressure_class"].value == "ASME_150"
+    assert validated["pressure_class"].confidence == 0.80
+    assert validated["invalid_attr"].value is None
+    assert "NON_STANDARD_RATING" in validated["invalid_attr"].flags
+
