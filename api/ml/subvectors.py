@@ -17,10 +17,13 @@ Safety Invariants:
 from __future__ import annotations
 
 import hashlib
+import logging
 import math
 import re
 from dataclasses import dataclass
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 # Default family domain weights per Section 8.1
 DOMAIN_WEIGHTS_BY_FAMILY: dict[str, dict[str, float]] = {
@@ -155,6 +158,112 @@ class EmbeddingProvider:
         if norm > 0.0:
             vec = [x / norm for x in vec]
         return vec
+
+
+class LearnedEmbeddingProvider:
+    """Neural embedding provider powered by SentenceTransformers (e.g. BGE-M3).
+
+    If sentence_transformers is not installed or model loading fails,
+    gracefully falls back to deterministic EmbeddingProvider with ML_MODEL_UNAVAILABLE flag.
+    """
+
+    def __init__(self, model_name_or_path: str = "BAAI/bge-m3", dimension: int = 1024) -> None:
+        self.model_name = model_name_or_path
+        self.dimension = dimension
+        self.is_fallback = False
+        self.fallback_reason: str | None = None
+        self._model: Any = None
+        self._fallback_provider = EmbeddingProvider(dimension=dimension)
+
+        try:
+            from sentence_transformers import SentenceTransformer
+
+            self._model = SentenceTransformer(model_name_or_path)
+        except Exception as exc:  # noqa: BLE001
+            self.is_fallback = True
+            self.fallback_reason = "ML_MODEL_UNAVAILABLE"
+            logger.info("LearnedEmbeddingProvider falling back to hashed encoder: %s", exc)
+
+    def encode(self, text: str, normalize_embeddings: bool = True) -> list[float]:
+        if self.is_fallback or self._model is None:
+            return self._fallback_provider.encode(text)
+
+        try:
+            vec = self._model.encode(text, normalize_embeddings=normalize_embeddings)
+            if hasattr(vec, "tolist"):
+                vec = vec.tolist()
+            if vec and isinstance(vec[0], list):
+                vec = vec[0]
+            return [float(x) for x in vec]
+        except Exception:  # noqa: BLE001
+            return self._fallback_provider.encode(text)
+
+
+def get_embedding_provider(
+    prefer_learned: bool = True,
+    model_name: str | None = None,
+    dimension: int = 384,
+) -> tuple[EmbeddingProvider | LearnedEmbeddingProvider, list[str]]:
+    """Returns an embedding provider and status flags.
+
+    When prefer_learned is True but sentence_transformers is absent,
+    returns a hashed provider with flag ['ML_MODEL_UNAVAILABLE'].
+    """
+    flags: list[str] = []
+    if prefer_learned:
+        provider = LearnedEmbeddingProvider(
+            model_name_or_path=model_name or "BAAI/bge-m3",
+            dimension=dimension,
+        )
+        if provider.is_fallback:
+            flags.append(provider.fallback_reason or "ML_MODEL_UNAVAILABLE")
+        return provider, flags
+
+    return EmbeddingProvider(dimension=dimension), flags
+
+
+def subvector_texts(value: Any) -> dict[str, str]:
+    """Extracts 4 domain texts ('dim', 'met', 'pt', 'std') from attribute dict, model, or string."""
+    if isinstance(value, str):
+        attrs = {"raw_description": value}
+    elif hasattr(value, "model_dump"):
+        attrs = value.model_dump()
+    elif isinstance(value, dict):
+        attrs = dict(value)
+    else:
+        attrs = {}
+
+    built = build_domain_texts(attrs)
+    desc = str(attrs.get("description") or attrs.get("raw_description") or attrs.get("canonical_description") or "").strip()
+    return {
+        dom: text if text else desc
+        for dom, text in built.items()
+    }
+
+
+def encode_subvectors(
+    value: Any,
+    encoder: Any = None,
+) -> tuple[dict[str, list[float]], list[str]]:
+    """Generates 4 domain vectors ('dim', 'met', 'pt', 'std') for an item.
+
+    Returns (vectors_dict, flags).
+    """
+    flags: list[str] = []
+    if encoder is None:
+        encoder, flags = get_embedding_provider(prefer_learned=True)
+    elif getattr(encoder, "is_fallback", False):
+        flags.append(getattr(encoder, "fallback_reason", "ML_MODEL_UNAVAILABLE"))
+
+    texts = subvector_texts(value)
+    vectors: dict[str, list[float]] = {}
+    for domain, text in texts.items():
+        if hasattr(encoder, "encode"):
+            vectors[domain] = encoder.encode(text)
+        else:
+            vectors[domain] = [0.0] * 384
+
+    return vectors, flags
 
 
 def cosine_similarity(vec_a: list[float], vec_b: list[float]) -> float:

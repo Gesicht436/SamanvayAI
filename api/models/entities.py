@@ -506,6 +506,18 @@ class GoldenSubvector(Base):
     golden_id = Column(UUID(as_uuid=True), ForeignKey("golden_masters.id", ondelete="CASCADE"), primary_key=True)
     domain = Column(Text, primary_key=True)  # 'dim', 'met', 'pt', 'std'
     text_repr = Column(Text, nullable=False, server_default="")
+    embedding = Column(JSONB, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=text("now()"))
+
+
+class ItemSubvector(Base):
+    __tablename__ = "item_subvectors"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    raw_item_id = Column(UUID(as_uuid=True), ForeignKey("raw_items.id", ondelete="CASCADE"), nullable=False)
+    domain = Column(Text, nullable=False)  # 'dim', 'met', 'pt', 'std'
+    text_repr = Column(Text, nullable=False, server_default="")
+    embedding = Column(JSONB, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=text("now()"))
 
 

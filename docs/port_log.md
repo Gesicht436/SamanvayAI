@@ -83,3 +83,37 @@ This document logs all ported features, modifications, tests, metrics, and depen
   - Phase 2: 0/170 false merges ([0.00%, 2.15%]), 76/76 missing attribute routed to Tier 2 (100.0%), MTC conforms against unverified reference: 0. All gates PASS.
 - **Dependencies Pinned**:
   - `pymupdf>=1.24.0` (existing dependency).
+
+---
+
+## Phase 3: Learned Embeddings and Vector Recall
+
+- **What was ported**:
+  - Bi-encoder training pipeline `scripts/train_biencoder.py` adapted from B's `machine_learning/train_biencoder.py` with leakage-safe canonical grouping (`split_pairs_by_canonical`), IR metrics computation (`Recall@1`, `Recall@5`, `Recall@10`, `MRR@10`), and dual loss architecture (`MultipleNegativesRankingLoss` for positive pairs, `TripletLoss` for hard-negative triplets).
+  - Neural embedding wrapper `LearnedEmbeddingProvider` in `api/ml/subvectors.py` behind A's existing subvector interface (`dim`/`met`/`pt`/`std`), with graceful fallback `get_embedding_provider(prefer_learned=True)`, `subvector_texts`, and `encode_subvectors`.
+  - Database schema: Alembic migration `db/migrations/versions/0008_pgvector_subvectors.py` creating `item_subvectors` with conditional `embedding vector(384)` / `embedding JSONB` support. Updated `ItemSubvector` and `GoldenSubvector` in `api/models/entities.py`.
+  - Hard negative dataset derivation: `scripts/derive_hard_negatives.py` deriving 145 hard-negative training triplets from developer fixtures with zero collision/leakage into the locked evaluation set.
+  - Training documentation: `docs/ml_training.md` specifying split rules, loss formulations, hardware requirements, and full training CLI commands.
+- **What was changed from B**:
+  - Qdrant was completely rejected in favor of PostgreSQL with pgvector (or JSONB fallback).
+  - Strict preservation of Invariants S9 & S14: vector recall only retrieves candidates into candidate pool; it can never produce Tier 1 or override a HARD/REQUIRED verdict.
+  - Strict dependency isolation: the base install and all tests run without heavy ML dependencies (`sentence-transformers`, `torch`), falling back to deterministic hashed embeddings with visible `ML_MODEL_UNAVAILABLE` flag.
+  - Gate honesty: every row in `packs/*/eval/*.csv` is strictly excluded from training data.
+- **Tests Added**:
+  - `tests/test_vector_recall_safety.py` (9 tests):
+    - `test_invariant_s9_s14_vector_recall_cannot_raise_hard_mismatch_to_tier1`: verifies vector recall candidate with 0.985 cosine cannot override Class 150 vs Class 300 mismatch to Tier 1.
+    - `test_invariant_s9_s14_vector_recall_cannot_raise_missing_attribute_to_tier1`: verifies vector recall candidate missing required attribute cannot auto-harmonize to Tier 1.
+    - `test_learned_encoder_graceful_fallback_without_ml_extra`: verifies graceful fallback with `ML_MODEL_UNAVAILABLE` flag.
+    - `test_subvector_texts_extraction`: verifies 4-domain text extraction for dicts and strings.
+    - `test_biencoder_leakage_safe_split`: verifies 100% isolation of canonical_id between train and heldout splits.
+    - `test_biencoder_retrieval_metrics_calculation`: verifies Recall@k and MRR computation with mock encoder.
+    - `test_biencoder_smoke_training_run`: verifies end-to-end smoke training execution.
+    - `test_derive_hard_negatives_zero_eval_leakage`: asserts zero collision between derived training pairs and locked eval pairs.
+    - `test_subvector_entities_and_optional_vector_storage`: verifies `ItemSubvector` and `GoldenSubvector` entity schema.
+  - Total test count: 253 passed (up from 244 in Phase 2, 234 baseline).
+- **Eval-Harness Before / After**:
+  - Baseline, Phase 1 & Phase 2: 0/170 false merges ([0.00%, 2.15%]), 76/76 missing attribute routed to Tier 2 (100.0%).
+  - Phase 3: identical, 0/170 false merges ([0.00%, 2.15%]), 76/76 missing attribute routed to Tier 2 (100.0%). All gates PASS.
+- **Dependencies Pinned**:
+  - `sentence-transformers>=3.0.0`, `torch>=2.2.0`, `datasets>=2.19.0` in optional extra `ml`.
+
