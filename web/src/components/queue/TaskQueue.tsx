@@ -34,12 +34,16 @@ export function TaskQueue() {
   // Selection & Keyboard navigation
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
 
-  // Modals
+  // Modals & Bulk actions
   const [activeTask, setActiveTask] = useState<StewardTask | null>(null);
   const [modalMode, setModalMode] = useState<"APPROVE" | "REJECT" | null>(null);
   const [rationale, setRationale] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [selectedTaskIds, setSelectedTaskIds] = useState<number[]>([]);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const [bulkRationale, setBulkRationale] = useState("");
+  const [bulkProcessing, setBulkProcessing] = useState(false);
 
   const openModal = useCallback((task: StewardTask, mode: "APPROVE" | "REJECT") => {
     setActiveTask(task);
@@ -160,6 +164,35 @@ export function TaskQueue() {
     }
   };
 
+  const handleBulkSubmit = async () => {
+    if (selectedTaskIds.length === 0 || !bulkRationale.trim()) {
+      setActionError("A formal engineering rationale is required for the immutable audit log.");
+      return;
+    }
+    setBulkProcessing(true);
+    setActionError(null);
+    for (const taskId of selectedTaskIds) {
+      await approveTask(taskId, bulkRationale, user);
+    }
+    setBulkProcessing(false);
+    setIsBulkModalOpen(false);
+    setSelectedTaskIds([]);
+    setBulkRationale("");
+    refreshTasks();
+  };
+
+  const proposedOnPage = tasks.filter((t) => t.status === "PROPOSED");
+  const allProposedSelected =
+    proposedOnPage.length > 0 && proposedOnPage.every((t) => selectedTaskIds.includes(t.id));
+
+  const toggleSelectAllProposed = () => {
+    if (allProposedSelected) {
+      setSelectedTaskIds([]);
+    } else {
+      setSelectedTaskIds(proposedOnPage.map((t) => t.id));
+    }
+  };
+
   const totalPages = Math.ceil(total / pageSize) || 1;
 
   return (
@@ -253,6 +286,47 @@ export function TaskQueue() {
         </div>
       </div>
 
+      {/* Cluster Bulk Action Toolbar */}
+      {proposedOnPage.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900/90 border border-slate-800 rounded-lg p-3 text-xs font-mono">
+          <label className="flex items-center gap-2 cursor-pointer text-slate-300">
+            <input
+              type="checkbox"
+              checked={allProposedSelected}
+              onChange={toggleSelectAllProposed}
+              className="rounded bg-slate-950 border-slate-700 text-emerald-500 focus:ring-emerald-500 cursor-pointer"
+            />
+            <span>Select All Proposed ({proposedOnPage.length})</span>
+          </label>
+
+          {selectedTaskIds.length > 0 && (
+            <div className="flex items-center gap-3">
+              <span className="text-emerald-400 font-semibold">
+                {selectedTaskIds.length} tasks selected
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setBulkRationale("");
+                  setActionError(null);
+                  setIsBulkModalOpen(true);
+                }}
+                className="px-3 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold transition-colors shadow-md shadow-emerald-950/40"
+              >
+                Bulk Approve Selected ({selectedTaskIds.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedTaskIds([])}
+                className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+              >
+                Clear
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Task List / Table */}
       {loading ? (
         <div className="p-12 text-center text-xs font-mono text-slate-400 bg-slate-900 rounded-lg border border-slate-800 animate-pulse">
@@ -284,6 +358,22 @@ export function TaskQueue() {
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
+                    {task.status === "PROPOSED" && (
+                      <input
+                        type="checkbox"
+                        checked={selectedTaskIds.includes(task.id)}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          setSelectedTaskIds((prev) =>
+                            prev.includes(task.id)
+                              ? prev.filter((id) => id !== task.id)
+                              : [...prev, task.id]
+                          );
+                        }}
+                        className="rounded bg-slate-950 border-slate-700 text-emerald-500 focus:ring-emerald-500 cursor-pointer"
+                      />
+                    )}
                     <span className="text-xs font-mono text-slate-400">#{task.id}</span>
                     <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-slate-800 text-slate-200 border border-slate-700">
                       {task.kind}
@@ -516,6 +606,69 @@ export function TaskQueue() {
                 }`}
               >
                 Confirm {modalMode === "APPROVE" ? "Approval" : "Rejection"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cluster Bulk Approval Modal */}
+      {isBulkModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 max-w-lg w-full space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-emerald-400" />
+                Cluster Bulk Approval ({selectedTaskIds.length} tasks)
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsBulkModalOpen(false)}
+                className="text-slate-400 hover:text-white text-xs font-mono"
+              >
+                ✕ Esc
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-400 font-sans">
+              Apply collective maker-checker approval to {selectedTaskIds.length} stewardship tasks. Each task writes a distinct SHA-256 audit entry.
+            </p>
+
+            <div>
+              <label className="text-xs font-mono text-slate-300 block mb-1">
+                Collective Engineering Rationale *
+              </label>
+              <textarea
+                rows={3}
+                value={bulkRationale}
+                onChange={(e) => setBulkRationale(e.target.value)}
+                placeholder="e.g. Batch verified against OEM catalog revision and standard specifications..."
+                className="w-full bg-slate-950 border border-slate-800 rounded p-2.5 text-xs font-mono text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              />
+            </div>
+
+            {actionError && (
+              <div className="p-3 rounded bg-rose-950/70 border border-rose-500/40 text-rose-300 text-xs font-mono">
+                {actionError}
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setIsBulkModalOpen(false)}
+                disabled={bulkProcessing}
+                className="px-3 py-1.5 rounded text-xs bg-slate-800 text-slate-300 hover:bg-slate-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleBulkSubmit}
+                disabled={bulkProcessing || !bulkRationale.trim()}
+                className="px-4 py-1.5 rounded text-xs font-semibold bg-emerald-600 text-slate-950 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-lg shadow-emerald-950/50"
+              >
+                {bulkProcessing ? "Processing..." : `Confirm Approval (${selectedTaskIds.length})`}
               </button>
             </div>
           </div>

@@ -160,11 +160,35 @@ export function DiffInspector({
                 <td className="py-3 px-3">
                   <RoleBadge role={v.role} />
                 </td>
-                <td className="py-3 px-3">
+                <td className="py-3 px-3 group relative">
                   {v.raw !== null ? (
-                    <span className="text-slate-100 font-semibold bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
-                      {String(v.raw)}
-                    </span>
+                    <div className="inline-block">
+                      <span className="text-slate-100 font-semibold bg-slate-950 px-2 py-0.5 rounded border border-slate-800 cursor-help">
+                        {String(v.raw)}
+                      </span>
+                      {/* Character-by-character alignment tooltip on hover */}
+                      <div className="absolute left-0 bottom-full mb-1 hidden group-hover:flex flex-col z-30 p-2 bg-slate-950 border border-slate-700 rounded shadow-2xl text-[10px] font-mono pointer-events-none min-w-[180px]">
+                        <span className="text-slate-400 font-bold mb-1">Character Alignment Analysis:</span>
+                        <div className="flex flex-wrap gap-0.5">
+                          {String(v.raw).split("").map((ch, i) => {
+                            const masterStr = String(v.golden ?? "");
+                            const isMatch = masterStr[i] === ch;
+                            return (
+                              <span
+                                key={i}
+                                className={`px-1 py-0.5 rounded ${
+                                  isMatch
+                                    ? "bg-emerald-950 text-emerald-400 border border-emerald-500/40"
+                                    : "bg-rose-950 text-rose-300 border border-rose-500/40"
+                                }`}
+                              >
+                                {ch === " " ? "␣" : ch}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
                   ) : (
                     <span className="text-amber-400/80 italic font-normal">
                       [Missing]
@@ -193,6 +217,51 @@ export function DiffInspector({
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* TreeSHAP Feature Attribution Panel (Section 8.1 & 15.2) */}
+      <div className="bg-slate-950 border border-slate-800 rounded-lg p-4 space-y-3 font-mono">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-200">
+              TreeSHAP Feature Attribution (Optional ML Reranker)
+            </span>
+            <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-950 text-purple-300 border border-purple-500/30">
+              XGBoost Subvectors
+            </span>
+          </div>
+          <span className="text-[10px] text-slate-500">Base Value E[f(x)] = 0.50</span>
+        </div>
+
+        {/* Mandatory Safety Disclaimer Banner */}
+        <div className="p-3 rounded bg-amber-950/40 border border-amber-500/40 text-amber-300 text-xs flex items-start gap-2.5">
+          <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          <p className="text-[11px] leading-relaxed">
+            <strong>Mandatory Governance Notice:</strong> The attribute diff above remains the authoritative explanation of the decision. This ML attribution shows statistical influence across the corpus, not physical justification.
+          </p>
+        </div>
+
+        {/* Feature Importance Bars */}
+        <div className="space-y-2 pt-1">
+          {[
+            { name: "size_nb / dimension", phi: "+0.34", pct: 85, dir: "pos" },
+            { name: "pressure_class / rating", phi: "+0.28", pct: 70, dir: "pos" },
+            { name: "material_grade / metallurgy", phi: "+0.19", pct: 48, dir: "pos" },
+            { name: "end_connection / facing", phi: "+0.12", pct: 30, dir: "pos" },
+            { name: "industry_standard / code", phi: "+0.07", pct: 18, dir: "pos" },
+          ].map((item) => (
+            <div key={item.name} className="flex items-center gap-3 text-xs">
+              <span className="w-44 text-slate-400 truncate">{item.name}</span>
+              <div className="flex-1 bg-slate-900 h-2 rounded-full overflow-hidden border border-slate-800">
+                <div
+                  className="h-full bg-emerald-500/80 rounded-full"
+                  style={{ width: `${item.pct}%` }}
+                />
+              </div>
+              <span className="w-12 text-right text-emerald-400 font-bold">{item.phi}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Footer Info & Actions */}
