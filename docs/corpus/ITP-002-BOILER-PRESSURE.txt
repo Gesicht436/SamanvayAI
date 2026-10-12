@@ -1,0 +1,9 @@
+QUALITY ASSURANCE PLAN / ITP (IBR 1950)
+Project: 2x800 MW Supercritical Thermal Power Plant
+Component: Boiler Superheater Header (SA335 P91)
+Activity 1: Plate & Pipe Material Identification | Acceptance: Reg 4(c) IBR Form III-A | Hold: IBR Inspector
+Activity 2: Weld Edge Preparation and Fit-up | Acceptance: ASME Sec IX / WPS-08 | Hold: QC Inspector
+Activity 3: Pre-heat (200°C min) and Interpass Monitoring | Acceptance: Temperature Crayon / TC | Hold: Continuous
+Activity 4: Post Weld Heat Treatment (PWHT 750°C-770°C) | Acceptance: Chart Recording | Hold: Mandatory Hold (H)
+Activity 5: 100% Radiography + 100% TOFD on Butt Welds | Acceptance: ASME Sec VIII Div 1 | Hold: Witness (W)
+Activity 6: Hydrostatic Pressure Test (1.5x Working Pressure) | Acceptance: Reg 391 IBR | Hold: IBR Inspector Stamp

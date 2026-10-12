@@ -1,0 +1,11 @@
+{
+  "id": "ITP-003-MILL-ROLLS",
+  "doc_type": "ITP",
+  "title": "Inspection and Test Plan - Work Roll Forgings",
+  "line_count": 8,
+  "ground_truth": {
+    "drawing": "D-44120",
+    "revision": "B",
+    "hardness_hsc": "80-85"
+  }
+}

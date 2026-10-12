@@ -1,0 +1,14 @@
+{
+  "id": "MTC-002-A350LF2",
+  "doc_type": "MTC",
+  "title": "EN 10204 3.1 Inspection Certificate - Low Temp Carbon Steel LF2",
+  "line_count": 15,
+  "ground_truth": {
+    "grade": "ASTM A350 LF2",
+    "heat_number": "HT-LF2-88102",
+    "carbon": 0.18,
+    "manganese": 1.15,
+    "yield_strength": 330,
+    "tensile_strength": 540
+  }
+}

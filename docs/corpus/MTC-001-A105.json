@@ -1,0 +1,14 @@
+{
+  "id": "MTC-001-A105",
+  "doc_type": "MTC",
+  "title": "EN 10204 3.1 Inspection Certificate - Forged Steel A105",
+  "line_count": 19,
+  "ground_truth": {
+    "grade": "ASTM A105",
+    "heat_number": "HT-A105-7721",
+    "carbon": 0.22,
+    "manganese": 0.85,
+    "yield_strength": 310,
+    "tensile_strength": 535
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "id": "BOQ-002-MINING-OVERHAUL",
+  "doc_type": "BOQ",
+  "title": "Bill of Quantities - Heavy Equipment & Conveyor Overhaul",
+  "line_count": 8,
+  "ground_truth": {
+    "package_ref": "SECL/CHP/OVERHAUL/2026/012",
+    "total_items": 5
+  }
+}

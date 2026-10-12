@@ -1,0 +1,11 @@
+{
+  "id": "PO-005-PUMPS",
+  "doc_type": "PO_GRN",
+  "title": "Purchase Order - Centrifugal Process Pumps",
+  "line_count": 7,
+  "ground_truth": {
+    "po_number": "HPCL/VR/PROJ/2026/3312",
+    "line_count": 3,
+    "buyer": "HPCL"
+  }
+}

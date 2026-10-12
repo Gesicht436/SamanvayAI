@@ -1,0 +1,8 @@
+BILL OF QUANTITIES (BOQ) - COAL HANDLING PLANT OVERHAUL
+Client: Coal India Limited (CIL) - SECL Bilaspur
+Package Ref: SECL/CHP/OVERHAUL/2026/012
+Item 01: Fire Resistant Anti-Static Conveyor Belt 1400 mm Width EP1000/4 | Qty: 2400 M | UoM: M
+Item 02: OTR Tyre 27.00R49 E-4 Radial for 100 Ton Dumper | Qty: 36 NOS | UoM: NOS
+Item 03: Centrifugal Slurry Pump 150 M3/HR Head 45 M Chrome Iron Casing | Qty: 4 SET | UoM: SET
+Item 04: High Pressure Hydraulic Hose 2SN DN 25 Length 2000 mm BSP Female | Qty: 120 NOS | UoM: NOS
+Item 05: Cast High Manganese Steel Liner Plate for Coal Chute | Qty: 48 MT | UoM: MT

@@ -1,0 +1,7 @@
+ITP: HIGH PRESSURE HYDRAULIC HOSE ASSEMBLIES
+Standard: SAE J517 100R2AT / EN 853 2SN
+Test 1: Visual and Dimensional Check (Dash Size -8, DN 12, Length 1500 mm) | Hold: QC
+Test 2: Electrical Conductivity / Anti-Static Verification | Hold: Laboratory test
+Test 3: Proof Pressure Test at 2.0x Working Pressure (550 bar, 60 seconds) | Hold: 100% Production Hold (H)
+Test 4: Burst Pressure Test (Sample 1 per 500 pcs at 4.0x WP: 1100 bar) | Hold: Witness (W)
+Test 5: Crimp Outer Diameter Measurement (Vernier Caliper +/-0.1 mm) | Hold: Inspection log check

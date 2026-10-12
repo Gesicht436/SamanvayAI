@@ -1,0 +1,11 @@
+{
+  "id": "ITP-001-VALVE-TESTING",
+  "doc_type": "ITP",
+  "title": "Inspection and Test Plan - API 598 Valve Testing",
+  "line_count": 9,
+  "ground_truth": {
+    "itp_no": "ITP-IOCL-VALVES-REV-03",
+    "stages": 6,
+    "standard": "API 598"
+  }
+}

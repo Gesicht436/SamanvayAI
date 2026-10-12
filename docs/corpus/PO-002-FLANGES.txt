@@ -1,0 +1,8 @@
+PURCHASE ORDER: PO/STEEL/2026/FLG/081
+Buyer: Steel Authority of India Ltd (SAIL) - Bhilai Plant
+Vendor: CHW Forge Private Limited, Ghaziabad
+Order Date: 2026-07-15
+Line 1: 100 NOS | ASTM A105 WELD NECK FLANGE 150 NB CLASS 300 SCH 40 RF ASME B16.5 | Rate: 3,450.00
+Line 2: 40 NOS | ASTM A105 BLIND FLANGE 150 NB CLASS 300 RF ASME B16.5 | Rate: 2,900.00
+Line 3: 80 NOS | ASTM A182 F316L SLIP ON FLANGE 80 NB CLASS 150 RF | Rate: 4,100.00
+Delivery Terms: FOR Bhilai Stores within 6 weeks.

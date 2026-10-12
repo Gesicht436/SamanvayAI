@@ -1,0 +1,11 @@
+{
+  "id": "PO-004-CONVEYOR-BELTS",
+  "doc_type": "PO_GRN",
+  "title": "Purchase Order - Mining FRAS Conveyor Belting",
+  "line_count": 7,
+  "ground_truth": {
+    "po_number": "CIL/WCL/MINING/2026/9021",
+    "line_count": 2,
+    "buyer": "WCL"
+  }
+}

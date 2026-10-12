@@ -1,0 +1,12 @@
+{
+  "id": "MTC-008-REFRACTORY",
+  "doc_type": "MTC",
+  "title": "Manufacturer Test Report - High Alumina Refractory Brick",
+  "line_count": 17,
+  "ground_truth": {
+    "product": "RESISTAL AL-70",
+    "al2o3_pct": 71.5,
+    "bulk_density": 2.65,
+    "ccs_mpa": 68
+  }
+}

@@ -247,3 +247,97 @@ def test_precheck_endpoint():
     assert data["subcategory"] == "VALVES.GATE"
     assert "extracted" in data
     assert "candidates" in data
+
+
+def test_docs_promote_line_endpoint():
+    """Verify POST /docs/{id}/lines/{line_id}/promote creates raw_item with audit log."""
+    import uuid
+
+    token = create_access_token("user-promote", "OIL-1", "MAKER")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    suffix = uuid.uuid4().hex[:8]
+
+    # Ingest paste document with a line item
+    doc_resp = client.post(
+        "/docs/paste",
+        json={
+            "pasted_text": f"GATE VALVE 100 NB CL150 WCB RF {suffix}",
+            "doc_type": "PO_GRN",
+            "invoice_no": f"PO-PROMOTE-{suffix}",
+            "invoice_date": "2026-10-11",
+        },
+        headers=headers,
+    )
+    assert doc_resp.status_code == 200
+    doc_id = doc_resp.json()["id"]
+
+    # Get line
+    lines_resp = client.get(f"/docs/{doc_id}/lines", headers=headers)
+    assert lines_resp.status_code == 200
+    line_id = lines_resp.json()["lines"][0]["line_id"]
+
+    # Promote line
+    promote_resp = client.post(f"/docs/{doc_id}/lines/{line_id}/promote", headers=headers)
+    assert promote_resp.status_code == 200
+    promote_data = promote_resp.json()
+    assert promote_data["status"] == "PROMOTED"
+    assert promote_data["raw_item_id"]
+    assert promote_data["subcategory"] == "VALVES.GATE"
+
+
+def test_pymupdf_scanned_page_300dpi_rasterization():
+    """Verify Section 10.1: scanned pages without text layer rasterize at 300 DPI and flag SCANNED_RASTER_300DPI."""
+    import pymupdf as fitz
+
+    from api.services.ocr import PyMuPDFProvider
+
+    # Create empty PDF page without digital text layer (simulating a pure scan)
+    doc = fitz.open()
+    doc.new_page()
+    pdf_bytes = doc.tobytes()
+    doc.close()
+
+    provider = PyMuPDFProvider()
+    res = provider.extract_document(pdf_bytes, filename="scanned_test.pdf")
+
+    assert len(res.pages) == 1
+    page = res.pages[0]
+    assert len(page.lines) == 1
+    line = page.lines[0]
+    assert line.ocr_engine == "pymupdf_raster"
+    assert line.raster_dpi == 300
+    assert "SCANNED_RASTER_300DPI" in line.flags
+    assert "LOW_OCR_CONFIDENCE" in line.flags
+    assert page.mean_confidence < 0.85  # Gated to Tier 2 / review
+
+
+def test_median_filter_and_deskew():
+    """Verify Section 10.1 3x3 median filtering and row-projection deskew estimation."""
+    from api.services.ocr import (
+        apply_median_filter_3x3,
+        estimate_row_projection_deskew_angle,
+        get_ocr_provider,
+    )
+
+    # 1. Median filter removes isolated speckle noise
+    grid = [
+        [0, 0, 0, 0, 0],
+        [0, 0, 1, 0, 0],  # Single noise pixel at (1, 2)
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+    ]
+    filtered = apply_median_filter_3x3(grid)
+    assert filtered[1][2] == 0  # Denoised to 0
+
+    # 2. Deskew angle on horizontal row projection
+    h_grid = [[1 if r in (2, 5, 8) else 0 for _ in range(20)] for r in range(12)]
+    angle = estimate_row_projection_deskew_angle(h_grid)
+    assert abs(angle) <= 1.0
+
+    # 3. Provider factory
+    neural_prov = get_ocr_provider("neural")
+    assert neural_prov is not None
+
+
+

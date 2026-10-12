@@ -1,0 +1,16 @@
+INSPECTION CERTIFICATE EN 10204 3.2
+Manufacturer: Outokumpu Stainless Special Steels
+Third Party Inspector: Bureau Veritas (BVQI)
+Cert No: BV-MTC-F51-2026-1184
+Grade: ASTM A182 Grade F51 / UNS S31803 / EN 1.4462
+Heat Number: HT-DUPLEX-51882
+Chemical Composition:
+C: 0.022  Mn: 1.40  Si: 0.52  P: 0.020  S: 0.002
+Cr: 22.35  Ni: 5.45  Mo: 3.12  N: 0.175
+PREN Value: 35.4
+Mechanical Properties:
+0.2% Proof Stress: 520 MPa
+Tensile Strength: 745 MPa
+Elongation A5: 32 %
+Impact Test Charpy V at -46°C: 85 J, 92 J, 88 J
+Microstructure: Ferrite Content 48%, Ausenite 52%, Free of Sigma Phase.

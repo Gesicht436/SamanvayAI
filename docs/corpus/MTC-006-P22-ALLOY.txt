@@ -1,0 +1,14 @@
+IBR FORM III-A INSPECTION CERTIFICATE
+Manufacturer: BHEL Trichy Seamless Steel Tube Plant
+Inspection Agency: Central Boilers Board (CBB)
+Cert Reference: BHEL/SSTP/P22/2026/8891
+Material Specification: ASTM A335 Grade P22 (2.25Cr-1Mo)
+Size: 76.1 mm OD x 7.1 mm Min Wall (MW)
+Heat Number: HT-P22-33011
+Heat Treatment: Normalized & Tempered (730°C)
+Ladle Analysis (%):
+C: 0.11  Mn: 0.42  Si: 0.32  P: 0.012  S: 0.008  Cr: 2.20  Mo: 0.98
+Mechanical Tests:
+Yield: 290 MPa  Tensile: 495 MPa  Elongation: 32 %
+Bend Test: PASSED 180 DEG WITHOUT CRACKING
+Ultrasonic Examination: 100% Volumetric UT Clean.

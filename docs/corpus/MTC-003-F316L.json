@@ -1,0 +1,14 @@
+{
+  "id": "MTC-003-F316L",
+  "doc_type": "MTC",
+  "title": "EN 10204 3.1 Stainless Steel F316L Certificate",
+  "line_count": 16,
+  "ground_truth": {
+    "grade": "ASTM A182 F316L",
+    "heat_number": "HT-SS-316L-9941",
+    "carbon": 0.024,
+    "chromium": 17.2,
+    "nickel": 11.4,
+    "molybdenum": 2.15
+  }
+}

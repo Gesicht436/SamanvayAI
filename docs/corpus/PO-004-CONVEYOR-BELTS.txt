@@ -1,0 +1,7 @@
+PURCHASE ORDER: CIL/WCL/MINING/2026/9021
+Buyer: Western Coalfields Limited (WCL)
+Vendor: Dunlop Conveyor Belting India
+Date: 2026-06-30
+Line 1: 500 MTR | CONVEYOR BELT FRAS 1200 MM WIDTH ST1500 STEEL CORD GRADE X | Rate: 8,400.00/M
+Line 2: 300 MTR | CONVEYOR BELT EP800/4 1000 MM WIDTH 6+2 COVER GRADE M | Rate: 3,200.00/M
+Safety Certificate: DGMS Approval number mandatory on dispatch invoice.

@@ -1,0 +1,11 @@
+{
+  "id": "ITP-002-BOILER-PRESSURE",
+  "doc_type": "ITP",
+  "title": "Inspection and Test Plan - Superheater Header Fabrication",
+  "line_count": 9,
+  "ground_truth": {
+    "component": "Superheater Header",
+    "material": "SA335 P91",
+    "stages": 6
+  }
+}

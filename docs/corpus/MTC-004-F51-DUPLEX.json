@@ -1,0 +1,13 @@
+{
+  "id": "MTC-004-F51-DUPLEX",
+  "doc_type": "MTC",
+  "title": "EN 10204 3.2 Inspection Certificate - Duplex F51 S31803",
+  "line_count": 16,
+  "ground_truth": {
+    "grade": "ASTM A182 F51",
+    "heat_number": "HT-DUPLEX-51882",
+    "pren": 35.4,
+    "yield_strength": 520,
+    "tensile_strength": 745
+  }
+}

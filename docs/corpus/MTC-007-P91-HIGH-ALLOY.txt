@@ -1,0 +1,15 @@
+TEST CERTIFICATE EN 10204 3.1
+Manufacturer: Vallourec Heat Exchanger Tubes
+Doc No: VALL-2026-P91-7712
+Date: 2026-06-18
+Grade: ASTM A335 Grade P91 (9Cr-1Mo-V-Nb)
+Heat Number: HT-P91-99201
+Heat Treatment: Normalized at 1060°C, Tempered at 770°C for 2.5 hours
+Chemical Analysis (%):
+C: 0.10  Mn: 0.40  Si: 0.30  P: 0.012  S: 0.003  Cr: 8.85  Mo: 0.95
+V: 0.21  Nb: 0.075  N: 0.048  Al: 0.015  Ni: 0.22
+Mechanical Properties:
+0.2% Proof Stress: 485 MPa
+Tensile Strength: 670 MPa
+Elongation: 23 %
+Hardness: 215 HBW (Max 250 HBW compliant).

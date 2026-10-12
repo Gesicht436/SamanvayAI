@@ -1,0 +1,7 @@
+PURCHASE ORDER: NTPC/PO/KSTPS/2026/771
+Buyer: NTPC Limited - Korba Super Thermal Power Station
+Supplier: Jindal SAW Limited, New Delhi
+Date: 2026-09-01
+Line 1: 1200 MTR | BOILER TUBE SEAMLESS ASTM A213 T11 50.8 OD X 4.5 WT IBR FORM III-A | Rate: 1,850.00/M
+Line 2: 800 MTR | BOILER TUBE SEAMLESS ASTM A213 T22 63.5 OD X 5.6 WT IBR FORM III-A | Rate: 2,450.00/M
+Statutory Requirement: Every bundle must carry IBR stamping and physical Form III-A.

@@ -1,0 +1,11 @@
+{
+  "id": "ITP-004-HYDRAULIC-HOSES",
+  "doc_type": "ITP",
+  "title": "Inspection and Test Plan - High Pressure Hydraulic Hoses",
+  "line_count": 7,
+  "ground_truth": {
+    "standard": "SAE J517 100R2AT",
+    "size": "DN12",
+    "proof_pressure_bar": 550
+  }
+}

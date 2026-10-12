@@ -1,0 +1,17 @@
+INDIAN BOILER REGULATIONS (IBR 1950) FORM III-A
+Manufacturer: Maharashtra Seamless Ltd, Nagothane
+IBR Certificate No: MSL/IBR/2026/P11/4412
+Date: 2026-08-30
+Material: Seamless Alloy Steel Boiler Tube ASTM A335 Grade P11
+Dimensions: 60.3 mm OD x 5.6 mm Wall Thickness x 6000 mm Length
+Heat Number: HT-P11-66019
+Heat Treatment: Full Annealed
+Chemical Composition:
+C: 0.12  Mn: 0.48  Si: 0.65  P: 0.015  S: 0.010  Cr: 1.25  Mo: 0.52
+Mechanical Test:
+Yield Strength: 265 MPa
+Tensile Strength: 460 MPa
+Elongation: 34 %
+Flattening Test: SATISFACTORY
+Hydrostatic Test: Tested at 18.5 MPa for 10 seconds - NO LEAKAGE
+Inspecting Authority: Directorate of Steam Boilers, Maharashtra.

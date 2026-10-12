@@ -1,0 +1,8 @@
+INSPECTION AND TEST PLAN - MILL WORK ROLLS
+Subcategory: STEEL.MILL_ROLL
+Owner: Tata Steel Cold Rolling Mill
+Drawing: D-44120 Rev B
+Step 1: Chemical Composition Analysis | Spec: Forged Steel 5% Cr | Hold: Verify OES spectrometer report
+Step 2: Ultrasonic Examination of Barrel and Necks | Spec: SEP 1921 Group 3 Class D | Hold: 100% Volumetric
+Step 3: Surface Hardness Testing on Barrel | Spec: 80 - 85 HSc (Shore C) | Hold: Multi-point Equotip check
+Step 4: Dimensional Inspection (Barrel Dia 600mm, Length 1800mm, Runout < 0.01mm) | Hold: Final Sign-off

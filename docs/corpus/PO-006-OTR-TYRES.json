@@ -1,0 +1,11 @@
+{
+  "id": "PO-006-OTR-TYRES",
+  "doc_type": "PO_GRN",
+  "title": "Purchase Order - Off-The-Road Dumper Tyres",
+  "line_count": 7,
+  "ground_truth": {
+    "po_number": "NMDC/BIOM/TYRE/2026/110",
+    "line_count": 2,
+    "buyer": "NMDC"
+  }
+}

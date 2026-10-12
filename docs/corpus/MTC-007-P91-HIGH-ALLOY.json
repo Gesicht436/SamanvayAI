@@ -1,0 +1,13 @@
+{
+  "id": "MTC-007-P91-HIGH-ALLOY",
+  "doc_type": "MTC",
+  "title": "EN 10204 3.1 Supercritical Header Pipe - ASTM A335 P91",
+  "line_count": 15,
+  "ground_truth": {
+    "grade": "ASTM A335 P91",
+    "heat_number": "HT-P91-99201",
+    "chromium": 8.85,
+    "molybdenum": 0.95,
+    "vanadium": 0.21
+  }
+}

@@ -1,0 +1,19 @@
+INSPECTION CERTIFICATE EN 10204 3.1
+Manufacturer: Bharat Forgings Ltd, Pune, India
+Certificate No: BFL/2026/MTC/08192
+Date: 2026-08-14
+Customer: Oil & Natural Gas PSU
+Product: ASTM A105 Forged Blind Flange 150 NB Class 300 RF
+Heat Number: HT-A105-7721
+Batch / Lot: LOT-2026-08
+Chemical Composition (%):
+C: 0.22  Mn: 0.85  Si: 0.24  P: 0.015  S: 0.012  Cr: 0.09  Ni: 0.06  Mo: 0.02  Cu: 0.11  V: 0.01
+Mechanical Properties:
+Yield Strength (MPa): 310
+Tensile Strength (MPa): 535
+Elongation (%): 28.0
+Hardness (HBW): 156
+Impact Test: Charpy V-Notch at 0°C: 45 J, 48 J, 42 J
+Heat Treatment: Normalized at 910°C, air cooled
+Non-Destructive Testing: Ultrasonic Test (UT) OK, Magnetic Particle (MPI) OK
+Statement of Conformance: Material strictly conforms to ASTM A105 / ASME SA105.

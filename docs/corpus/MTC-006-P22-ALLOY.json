@@ -1,0 +1,12 @@
+{
+  "id": "MTC-006-P22-ALLOY",
+  "doc_type": "MTC",
+  "title": "IBR Form III-A Boiler Tube - ASTM A335 Grade P22",
+  "line_count": 14,
+  "ground_truth": {
+    "grade": "ASTM A335 P22",
+    "heat_number": "HT-P22-33011",
+    "chromium": 2.2,
+    "molybdenum": 0.98
+  }
+}

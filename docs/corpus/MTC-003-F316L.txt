@@ -1,0 +1,16 @@
+MATERIAL TEST REPORT EN 10204 3.1
+Manufacturer: Viraj Profiles Ltd, Tarapur
+MTR Reference: VPL/SS/316L/2026/0411
+Date: 2026-09-02
+Specification: ASTM A182 / ASME SA182 Grade F316L
+Heat Number: HT-SS-316L-9941
+Heat Treatment: Solution Annealed at 1060°C quenched in water
+Chemical Composition (%):
+C: 0.024  Mn: 1.62  Si: 0.48  P: 0.028  S: 0.006
+Cr: 17.20  Ni: 11.40  Mo: 2.15  N: 0.045
+Mechanical Tests:
+Tensile Strength: 565 MPa
+Yield Strength (0.2% Offset): 245 MPa
+Elongation: 45 %
+Hardness: 160 HBW
+Intergranular Corrosion Test: ASTM A262 Practice E PASSED.

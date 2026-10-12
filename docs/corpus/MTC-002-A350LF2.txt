@@ -1,0 +1,15 @@
+INSPECTION CERTIFICATE EN 10204 3.1
+Manufacturer: Jindal Quality Steels Ltd, Raigarh
+Certificate No: JQS/MTC/LTCS/9920
+Date: 2026-07-22
+Product: ASTM A350 LF2 Class 1 Weld Neck Flange 200 NB Class 600
+Heat Number: HT-LF2-88102
+Melting Process: Electric Arc Furnace + Vacuum Degassed
+Chemical Analysis:
+C: 0.18  Mn: 1.15  Si: 0.28  P: 0.012  S: 0.008  Ni: 0.22  Cr: 0.12  Mo: 0.04
+Mechanical Properties:
+Tensile Strength: 540 MPa
+Yield Strength: 330 MPa
+Elongation: 26 %
+Charpy Impact Test at -46°C: 38 J, 41 J, 36 J (Avg 38.3 J)
+Endorsement: Conforms to NACE MR0175 / ISO 15156.

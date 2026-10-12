@@ -1,0 +1,12 @@
+BILL OF QUANTITIES (BOQ) - BOP HIGH PRESSURE PIPING
+Tender Ref: NTPC/CC/CS/2026/BOQ/099
+Section A: Valves and Inline Accessories
+Item 1.01: Gate Valve 200 NB Class 300 WCB Flanged API 600 | Qty: 45 EA | UoM: EA
+Item 1.02: Globe Valve 100 NB Class 300 WCB Flanged BS 1873 | Qty: 30 EA | UoM: EA
+Item 1.03: Swing Check Valve 150 NB Class 300 WCB Flanged | Qty: 20 EA | UoM: EA
+Section B: Seamless Pipe Spools
+Item 2.01: CS Pipe Seamless ASTM A106 Gr B 200 NB SCH 40 | Qty: 1200 M | UoM: M
+Item 2.02: CS Pipe Seamless ASTM A106 Gr B 150 NB SCH 40 | Qty: 800 M | UoM: M
+Section C: Flanges and Fasteners
+Item 3.01: WN Flange 200 NB Class 300 RF ASTM A105 | Qty: 180 NOS | UoM: NOS
+Item 3.02: Stud Bolt with 2 Heavy Hex Nuts M24 x 140 mm ASTM A193 B7 / A194 2H | Qty: 1440 SET | UoM: SET

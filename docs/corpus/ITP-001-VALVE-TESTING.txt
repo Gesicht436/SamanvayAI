@@ -1,0 +1,9 @@
+INSPECTION AND TEST PLAN (ITP)
+Document No: ITP-IOCL-VALVES-REV-03
+Equipment: Gate, Globe and Check Valves (ASME Class 150 to 600)
+Stage 1: Raw Material Chemical and Mechanical Testing | Standard: ASTM A216/A105 | Hold Point: Review MTC 3.1
+Stage 2: Non-Destructive Examination (10% RT on Butt Weld Ends) | Standard: ASME B16.34 | Hold Point: TPI Witness
+Stage 3: Shell Hydrostatic Test at 1.5x Design Pressure | Standard: API 598 | Hold Point: Mandatory Hold (H)
+Stage 4: High Pressure Backseat Test | Standard: API 598 | Hold Point: Witness (W)
+Stage 5: Low Pressure Air Seat Test at 6 bar | Standard: API 598 | Hold Point: Mandatory Hold (H)
+Stage 6: Final Visual, Dimensional and Painting Inspection | Standard: MSS-SP-25 | Hold Point: Witness (W)

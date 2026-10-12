@@ -1,0 +1,7 @@
+PURCHASE ORDER: NMDC/BIOM/TYRE/2026/110
+Buyer: National Mineral Development Corporation (NMDC) - Bailadila
+Vendor: BKT Tyres Limited, Mumbai
+Date: 2026-05-18
+Item 01: 24 NOS | OTR TYRE 27.00R49 E-4 RADIAL STEEL CORD TWO STAR ROCK | Rate: 420,000.00
+Item 02: 16 NOS | OTR TYRE 24.00-35 48PR E-4 BIAS NYLON ROCK DEEP TREAD | Rate: 260,000.00
+Cure / Ageing Notice: Date code must not exceed 6 months from manufacture date.

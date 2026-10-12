@@ -1,0 +1,11 @@
+{
+  "id": "BOQ-001-PIPING-PACKAGE",
+  "doc_type": "BOQ",
+  "title": "Bill of Quantities - Balance of Plant Piping Package",
+  "line_count": 12,
+  "ground_truth": {
+    "tender_ref": "NTPC/CC/CS/2026/BOQ/099",
+    "total_sections": 3,
+    "total_items": 7
+  }
+}

@@ -1,0 +1,10 @@
+PURCHASE ORDER NO: PO/2026/OIL/44109
+Buyer: Indian Oil Corporation Limited (IOCL)
+Vendor: L&T Valves Limited, Chennai
+PO Date: 2026-08-01
+Delivery Site: Panipat Refinery Store Depot 4
+Item 001: 50 EA | GATE VALVE 100 NB CL150 WCB RF FLANGED API 600 OS&Y | Unit Rate: INR 28,500
+Item 002: 30 EA | GLOBE VALVE 50 NB CL300 WCB RF FLANGED BS 1873 | Unit Rate: INR 19,200
+Item 003: 20 EA | CHECK VALVE DUAL PLATE 150 NB CL150 WCB API 594 | Unit Rate: INR 24,000
+Total Order Value: INR 2,481,000 + GST 18%
+Inspection Hold: Third Party Inspection by EIL mandatory prior to dispatch.

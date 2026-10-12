@@ -1,0 +1,14 @@
+{
+  "id": "MTC-005-P11-ALLOY",
+  "doc_type": "MTC",
+  "title": "IBR Form III-A & EN 10204 3.1 - ASTM A335 Grade P11",
+  "line_count": 17,
+  "ground_truth": {
+    "grade": "ASTM A335 P11",
+    "heat_number": "HT-P11-66019",
+    "od_mm": 60.3,
+    "wall_mm": 5.6,
+    "chromium": 1.25,
+    "molybdenum": 0.52
+  }
+}
