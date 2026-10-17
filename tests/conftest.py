@@ -1,5 +1,9 @@
 import asyncio
+import os
 import sys
+
+os.environ["JWT_SECRET"] = "test-secret-for-api-unit-tests-minimum-32-characters"
+os.environ["DEMO_MODE"] = "true"
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession

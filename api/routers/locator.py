@@ -9,7 +9,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Query
 
-from api.database import SyncSessionLocal
+from api.database import tenant_sync_session
 from api.security.jwt_auth import AuthUser, get_current_user
 from api.services.locator import search_spare_locator
 
@@ -26,7 +26,7 @@ def get_spare_locator(
     user: AuthUser = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Search for spare inventory across all CPSE plants with distance calculation and privacy masking."""
-    with SyncSessionLocal() as db:
+    with tenant_sync_session(user.org_id) as db:
         return search_spare_locator(
             db=db,
             current_org_id=user.org_id,
@@ -44,7 +44,7 @@ def get_surplus_availability(
     user: AuthUser = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Check Tier 1 surplus availability across partner CPSEs for a specific Golden Master."""
-    with SyncSessionLocal() as db:
+    with tenant_sync_session(user.org_id) as db:
         res = search_spare_locator(
             db=db,
             current_org_id=user.org_id,

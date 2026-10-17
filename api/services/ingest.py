@@ -12,13 +12,14 @@ Conforms to specsheet.md Section 4.1:
 
 from __future__ import annotations
 
-import base64
 import csv
 import hashlib
 import io
 import json
+import logging
 from dataclasses import dataclass, field
 from datetime import date, datetime
+from pathlib import Path
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -26,9 +27,12 @@ import openpyxl
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.config import get_settings
 from api.services.normalize import normalize_text
 from api.services.script_detector import detect_scripts
 from api.services.uom import convert_to_canonical
+
+logger = logging.getLogger(__name__)
 
 # Default column name aliases (normalized to lowercase alphanumeric)
 DEFAULT_COLUMN_ALIASES: dict[str, list[str]] = {
@@ -234,7 +238,7 @@ def _parse_date(val: Any) -> date | None:
     for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y", "%Y/%m/%d"):
         try:
             return datetime.strptime(val_str, fmt).date()
-        except ValueError:
+        except (ValueError, OSError):
             continue
     return None
 
@@ -572,12 +576,18 @@ async def enqueue_ingest_job(
     doc_type: str = "LEGACY_MASTER",
 ) -> int:
     """Enqueues an asynchronous tabular ingest job into the jobs table (Section 4.1)."""
+    settings = get_settings()
+    storage_root = Path(settings.storage_path).resolve()
+    org_key = hashlib.sha256(org_id.encode("utf-8")).hexdigest()[:16]
+    upload_path = storage_root / "ingest-jobs" / org_key / f"{uuid4().hex}.bin"
+    upload_path.parent.mkdir(parents=True, exist_ok=True)
+    upload_path.write_bytes(file_bytes)
     payload = {
         "org_id": org_id,
         "filename": filename,
         "uploaded_by": uploaded_by,
         "doc_type": doc_type,
-        "file_b64": base64.b64encode(file_bytes).decode("ascii"),
+        "file_path": str(upload_path),
         "file_hash": hashlib.sha256(file_bytes).hexdigest(),
     }
     stmt = text(
@@ -585,16 +595,23 @@ async def enqueue_ingest_job(
         "VALUES ('TABULAR_INGEST', CAST(:payload AS jsonb), 'QUEUED', 0, now()) "
         "RETURNING id"
     )
-    res = await db.execute(stmt, {"payload": json.dumps(payload)})
-    job_id = res.scalar_one()
-    await db.commit()
-    return job_id
+    try:
+        res = await db.execute(stmt, {"payload": json.dumps(payload)})
+        job_id = res.scalar_one()
+        await db.commit()
+        return job_id
+    except Exception:
+        upload_path.unlink(missing_ok=True)
+        raise
 
 
-async def get_job_status(db: AsyncSession, job_id: int) -> dict[str, Any] | None:
+async def get_job_status(db: AsyncSession, job_id: int, org_id: str | None = None) -> dict[str, Any] | None:
     """Returns the current state and result of a queued ingest job."""
-    stmt = text("SELECT id, kind, payload, state, attempts, last_error, created_at FROM jobs WHERE id = :job_id")
-    res = await db.execute(stmt, {"job_id": job_id})
+    stmt = text(
+        "SELECT id, kind, payload, state, attempts, last_error, created_at FROM jobs "
+        "WHERE id = :job_id AND (:org_id IS NULL OR payload->>'org_id' = :org_id)"
+    )
+    res = await db.execute(stmt, {"job_id": job_id, "org_id": org_id})
     row = res.mappings().first()
     if not row:
         return None
@@ -612,14 +629,40 @@ async def get_job_status(db: AsyncSession, job_id: int) -> dict[str, Any] | None
     }
 
 
-async def process_next_ingest_job(db: AsyncSession) -> dict[str, Any] | None:
+def _resolve_ingest_job_file(payload: dict[str, Any]) -> Path:
+    storage_root = Path(get_settings().storage_path).resolve() / "ingest-jobs"
+    upload_path = Path(payload["file_path"]).resolve()
+    if not upload_path.is_relative_to(storage_root):
+        raise ValueError("Ingest job file path is outside the configured storage directory.")
+    return upload_path
+
+
+def _read_ingest_job_file(payload: dict[str, Any]) -> bytes:
+    if payload.get("file_path"):
+        return _resolve_ingest_job_file(payload).read_bytes()
+
+    # Older queued records used base64 inline; keep them processable during rollout.
+    import base64
+
+    return base64.b64decode(payload["file_b64"])
+
+
+def _remove_ingest_job_file(payload: dict[str, Any]) -> None:
+    if payload.get("file_path"):
+        try:
+            _resolve_ingest_job_file(payload).unlink(missing_ok=True)
+        except ValueError:
+            logger.warning("Ignoring invalid file path for ingest job cleanup")
+
+
+async def process_next_ingest_job(db: AsyncSession, org_id: str | None = None) -> dict[str, Any] | None:
     """Dequeues and processes the next pending job using SELECT ... FOR UPDATE SKIP LOCKED (Section 4.1)."""
     stmt = text(
         "SELECT id, payload, attempts FROM jobs "
-        "WHERE state = 'QUEUED' AND run_after <= now() "
+        "WHERE state = 'QUEUED' AND run_after <= now() AND (:org_id IS NULL OR payload->>'org_id' = :org_id) "
         "ORDER BY id ASC LIMIT 1 FOR UPDATE SKIP LOCKED"
     )
-    res = await db.execute(stmt)
+    res = await db.execute(stmt, {"org_id": org_id})
     job = res.mappings().first()
     if not job:
         return None
@@ -635,7 +678,7 @@ async def process_next_ingest_job(db: AsyncSession) -> dict[str, Any] | None:
     await db.commit()
 
     try:
-        raw_bytes = base64.b64decode(payload["file_b64"])
+        raw_bytes = _read_ingest_job_file(payload)
         uploader_uuid = None
         if payload.get("uploaded_by"):
             try:
@@ -674,13 +717,16 @@ async def process_next_ingest_job(db: AsyncSession) -> dict[str, Any] | None:
             {"job_id": job_id, "res": json.dumps(result_payload)},
         )
         await db.commit()
+        _remove_ingest_job_file(payload)
         return {"job_id": job_id, "state": "COMPLETED", "result": result_payload}
-    except Exception as exc:  # noqa: BLE001
+    except Exception:
+        logger.exception("Ingest job %s failed", job_id)
         await db.rollback()
         await db.execute(
             text("UPDATE jobs SET state = 'FAILED', last_error = :err WHERE id = :job_id"),
-            {"job_id": job_id, "err": str(exc)},
+            {"job_id": job_id, "err": "Ingestion failed. Contact an administrator with the job ID."},
         )
         await db.commit()
-        return {"job_id": job_id, "state": "FAILED", "error": str(exc)}
+        _remove_ingest_job_file(payload)
+        return {"job_id": job_id, "state": "FAILED", "error": "Ingestion failed."}
 

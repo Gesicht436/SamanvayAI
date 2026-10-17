@@ -13,10 +13,10 @@ import uuid
 from datetime import date
 from typing import Any
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from api.database import SyncSessionLocal
+from api.database import tenant_sync_session
 from api.security.jwt_auth import AuthUser, get_current_user
 from api.services.pool import (
     create_forward_indent,
@@ -50,7 +50,7 @@ def post_forward_indent(
     user: AuthUser = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Create a new forward demand indent for the current CPSE."""
-    with SyncSessionLocal() as db:
+    with tenant_sync_session(user.org_id) as db:
         indent = create_forward_indent(
             db=db,
             org_id=user.org_id,
@@ -83,7 +83,9 @@ def get_forward_indents(
     user: AuthUser = Depends(get_current_user),
 ) -> list[dict[str, Any]]:
     """List forward indents."""
-    with SyncSessionLocal() as db:
+    with tenant_sync_session(user.org_id) as db:
+        if cross_org and user.role != "ADMIN":
+            raise HTTPException(status_code=403, detail="Cross-organization indent listing requires ADMIN.")
         org_filter = None if cross_org else user.org_id
         return list_forward_indents(
             db=db,
@@ -99,13 +101,14 @@ def post_tender_pool(
     user: AuthUser = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Aggregate selected forward indents into a joint procurement Tender Pool."""
-    with SyncSessionLocal() as db:
+    with tenant_sync_session(user.org_id) as db:
         pool = create_tender_pool(
             db=db,
             lead_org_id=user.org_id,
             user_id=user.user_id,
             indent_ids=req.indent_ids,
             mou_ref=req.mou_ref,
+            allow_cross_org=user.role == "ADMIN",
         )
         return {
             "pool_id": str(pool.id),
@@ -127,8 +130,8 @@ def get_tender_pools(
     user: AuthUser = Depends(get_current_user),
 ) -> list[dict[str, Any]]:
     """List all joint procurement tender pools."""
-    with SyncSessionLocal() as db:
-        return list_tender_pools(db=db)
+    with tenant_sync_session(user.org_id) as db:
+        return list_tender_pools(db=db, current_org_id=user.org_id)
 
 
 @router.get("/pools/{id}/tender-pack")
@@ -137,8 +140,8 @@ def get_tender_pack(
     user: AuthUser = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Generate structured Tender Pack data and CSV export."""
-    with SyncSessionLocal() as db:
-        return generate_tender_pack(db=db, pool_id=id)
+    with tenant_sync_session(user.org_id) as db:
+        return generate_tender_pack(db=db, pool_id=id, current_org_id=user.org_id)
 
 
 @router.post("/pools/{id}/export")
@@ -147,5 +150,5 @@ def post_tender_pack_export(
     user: AuthUser = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Export tender pack (Section 15.0 endpoint compatibility)."""
-    with SyncSessionLocal() as db:
-        return generate_tender_pack(db=db, pool_id=id)
+    with tenant_sync_session(user.org_id) as db:
+        return generate_tender_pack(db=db, pool_id=id, current_org_id=user.org_id)

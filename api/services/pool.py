@@ -157,18 +157,23 @@ def create_tender_pool(
     user_id: uuid.UUID | None,
     indent_ids: list[uuid.UUID],
     mou_ref: str | None = None,
+    allow_cross_org: bool = False,
 ) -> TenderPool:
     """Group multiple open forward indents into a unified joint procurement Tender Pool."""
     if not indent_ids:
         raise HTTPException(status_code=400, detail="Must select at least one forward indent.")
+    if len(set(indent_ids)) != len(indent_ids):
+        raise HTTPException(status_code=400, detail="Indent IDs must be unique.")
 
     # 1. Fetch indents
     indents = db.execute(
-        select(ForwardIndent).where(ForwardIndent.id.in_(indent_ids))
+        select(ForwardIndent).where(ForwardIndent.id.in_(indent_ids)).with_for_update()
     ).scalars().all()
 
     if len(indents) != len(indent_ids):
         raise HTTPException(status_code=404, detail="One or more specified indents were not found.")
+    if not allow_cross_org and any(ind.org_id != lead_org_id for ind in indents):
+        raise HTTPException(status_code=403, detail="Cannot pool another organization's indent.")
 
     # Verify all indents are OPEN
     for ind in indents:
@@ -249,7 +254,7 @@ def create_tender_pool(
     return pool
 
 
-def list_tender_pools(db: Session) -> list[dict[str, Any]]:
+def list_tender_pools(db: Session, current_org_id: str | None = None) -> list[dict[str, Any]]:
     """List all tender pools with lead org and golden master info."""
     stmt = (
         select(TenderPool, GoldenMaster, Organization)
@@ -257,6 +262,14 @@ def list_tender_pools(db: Session) -> list[dict[str, Any]]:
         .join(Organization, TenderPool.lead_org == Organization.id)
         .order_by(TenderPool.created_at.desc())
     )
+    if current_org_id is not None:
+        stmt = stmt.where(
+            (TenderPool.lead_org == current_org_id)
+            | select(TenderPoolLine.pool_id)
+            .join(ForwardIndent, TenderPoolLine.indent_id == ForwardIndent.id)
+            .where(ForwardIndent.org_id == current_org_id)
+            .exists()
+        )
     rows = db.execute(stmt).all()
 
     pools = []
@@ -280,11 +293,19 @@ def list_tender_pools(db: Session) -> list[dict[str, Any]]:
     return pools
 
 
-def generate_tender_pack(db: Session, pool_id: uuid.UUID) -> dict[str, Any]:
+def generate_tender_pack(db: Session, pool_id: uuid.UUID, current_org_id: str | None = None) -> dict[str, Any]:
     """Generate structured Tender Pack data per Section 13.0 and return JSON and CSV formats."""
     pool = db.execute(select(TenderPool).where(TenderPool.id == pool_id)).scalar_one_or_none()
     if not pool:
         raise HTTPException(status_code=404, detail="Tender pool not found.")
+    if current_org_id is not None:
+        member = db.execute(
+            select(TenderPoolLine.pool_id)
+            .join(ForwardIndent, TenderPoolLine.indent_id == ForwardIndent.id)
+            .where(TenderPoolLine.pool_id == pool_id, ForwardIndent.org_id == current_org_id)
+        ).first()
+        if pool.lead_org != current_org_id and not member:
+            raise HTTPException(status_code=404, detail="Tender pool not found.")
 
     gm = db.execute(select(GoldenMaster).where(GoldenMaster.id == pool.golden_id)).scalar_one_or_none()
     lead_org = db.execute(select(Organization).where(Organization.id == pool.lead_org)).scalar_one_or_none()

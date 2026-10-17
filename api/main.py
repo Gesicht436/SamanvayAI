@@ -33,6 +33,7 @@ from api.routers import (
 async def lifespan(app: FastAPI):
     """Application startup and shutdown lifecycle handler."""
     settings = get_settings()
+    settings.validate_runtime_security()
     configure_logging()
     loaded_specs = default_registry.load_packs("packs")
     logger.info(
@@ -55,8 +56,8 @@ app = FastAPI(
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=[origin.strip() for origin in get_settings().cors_origins.split(",") if origin.strip()],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

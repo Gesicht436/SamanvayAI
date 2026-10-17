@@ -15,7 +15,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 
-from api.database import SyncSessionLocal
+from api.database import tenant_sync_session
 from api.models.entities import OemCatalogueBatch, OemPartSupersession, OemProposal
 from api.security.jwt_auth import AuthUser, get_current_user
 from api.services.audit import append_audit_entry
@@ -68,9 +68,11 @@ def onboard_oem_catalogue(
     current_user: AuthUser = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Upload and process OEM catalogue rows to generate draft proposals."""
+    if current_user.role not in ("MAKER", "ADMIN"):
+        raise HTTPException(status_code=403, detail="OEM onboarding requires MAKER or ADMIN role.")
     org_id = current_user.org_id
     user_id = _parse_uuid(current_user.sub)
-    with SyncSessionLocal() as db:
+    with tenant_sync_session(current_user.org_id) as db:
         return ingest_oem_catalogue_rows(
             db=db,
             org_id=org_id,
@@ -84,11 +86,12 @@ def onboard_oem_catalogue(
 @router.get("/batches/{batch_id}/proposals")
 def get_batch_proposals(
     batch_id: uuid.UUID,
+    current_user: AuthUser = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Retrieve all draft proposals for an OEM catalogue batch."""
-    with SyncSessionLocal() as db:
+    with tenant_sync_session(current_user.org_id) as db:
         batch = db.get(OemCatalogueBatch, batch_id)
-        if not batch:
+        if not batch or batch.org_id != current_user.org_id:
             raise HTTPException(status_code=404, detail="Batch not found")
 
         proposals = (
@@ -132,7 +135,13 @@ def review_single_proposal(
 ) -> dict[str, Any]:
     """Maker review of a single catalogue proposal."""
     user_id = _parse_uuid(current_user.sub)
-    with SyncSessionLocal() as db:
+    if current_user.role not in ("MAKER", "ADMIN"):
+        raise HTTPException(status_code=403, detail="Proposal review requires MAKER or ADMIN role.")
+    with tenant_sync_session(current_user.org_id) as db:
+        proposal = db.get(OemProposal, proposal_id)
+        batch = db.get(OemCatalogueBatch, proposal.batch_id) if proposal else None
+        if not batch or batch.org_id != current_user.org_id:
+            raise HTTPException(status_code=404, detail="Proposal not found")
         return review_proposal(
             db=db,
             proposal_id=proposal_id,
@@ -151,12 +160,17 @@ def approve_batch(
 ) -> dict[str, Any]:
     """Checker approves the catalogue batch and publishes active golden masters."""
     user_id = _parse_uuid(current_user.sub)
+    if current_user.role not in ("CHECKER", "ADMIN"):
+        raise HTTPException(status_code=403, detail="Batch approval requires CHECKER or ADMIN role.")
     if not user_id:
-        user_id = uuid.uuid4()
+        raise HTTPException(status_code=403, detail="A UUID subject is required for approval.")
     roles = [current_user.role]
     domain_tags = current_user.domains
 
-    with SyncSessionLocal() as db:
+    with tenant_sync_session(current_user.org_id) as db:
+        batch = db.get(OemCatalogueBatch, batch_id)
+        if not batch or batch.org_id != current_user.org_id:
+            raise HTTPException(status_code=404, detail="Batch not found")
         return approve_catalogue_batch(
             db=db,
             batch_id=batch_id,
@@ -173,12 +187,14 @@ def create_supersession_rule(
     current_user: AuthUser = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Register an OEM part supersession mapping row."""
+    if current_user.role != "ADMIN":
+        raise HTTPException(status_code=403, detail="Supersession management requires ADMIN role.")
     mfr_norm = normalize_oem_name(req.manufacturer)
     old_norm = normalize_oem_part_number(req.old_pn)
     new_norm = normalize_oem_part_number(req.new_pn)
     user_id = _parse_uuid(current_user.sub)
 
-    with SyncSessionLocal() as db:
+    with tenant_sync_session(current_user.org_id) as db:
         existing = db.execute(
             select(OemPartSupersession).where(
                 OemPartSupersession.manufacturer == mfr_norm,
@@ -232,4 +248,3 @@ def create_supersession_rule(
             "new_pn": row.new_pn,
             "note": row.note,
         }
-

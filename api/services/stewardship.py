@@ -142,9 +142,12 @@ async def list_steward_tasks(
     kind: str | None = None,
     limit: int = 50,
     offset: int = 0,
+    org_id: str | None = None,
 ) -> list[StewardTask]:
     """Lists steward tasks with optional filtering by state and kind."""
     query = select(StewardTask)
+    if org_id is not None:
+        query = query.where(StewardTask.payload["_org_id"].as_string() == org_id)
     if state:
         query = query.where(StewardTask.state == state.upper())
     if kind:

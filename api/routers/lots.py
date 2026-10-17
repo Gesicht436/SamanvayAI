@@ -403,7 +403,11 @@ async def acknowledge_alert(
 
     from api.models.entities import LifeAlert
 
-    stmt = select(LifeAlert).where(LifeAlert.id == alert_id)
+    stmt = (
+        select(LifeAlert)
+        .join(StockLot, StockLot.id == LifeAlert.lot_id)
+        .where(LifeAlert.id == alert_id, StockLot.org_id == current_user.org_id)
+    )
     res = await db.execute(stmt)
     alert = res.scalar_one_or_none()
     if not alert:
@@ -428,7 +432,11 @@ async def acknowledge_lot_alerts(
 
     from api.models.entities import LifeAlert
 
-    stmt = select(LifeAlert).where(LifeAlert.lot_id == lot_id)
+    stmt = (
+        select(LifeAlert)
+        .join(StockLot, StockLot.id == LifeAlert.lot_id)
+        .where(LifeAlert.lot_id == lot_id, StockLot.org_id == current_user.org_id)
+    )
     res = await db.execute(stmt)
     alerts = res.scalars().all()
 

@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, Query, Response
 from fastapi.responses import JSONResponse
 
 from api.config import get_settings
-from api.database import SyncSessionLocal
+from api.database import tenant_sync_session
 from api.models.entities import Organization
 from api.security.jwt_auth import AuthUser, get_current_user
 from api.services.erp import (
@@ -42,7 +42,7 @@ def export_erp_feed(
     """Exports material catalogue cross-reference and classification feeds for host ERP systems."""
     settings = get_settings()
 
-    with SyncSessionLocal() as db:
+    with tenant_sync_session(user.org_id) as db:
         # Resolve target from query, org profile, or app settings
         if not target:
             org = db.query(Organization).filter(Organization.id == user.org_id).first()

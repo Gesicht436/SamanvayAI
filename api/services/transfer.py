@@ -13,7 +13,7 @@ import uuid
 from typing import Any
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from api.models.entities import GoldenMaster, Organization, StockLot, TransferOrder
@@ -39,7 +39,7 @@ def request_transfer(
         raise HTTPException(status_code=400, detail="Requested quantity must be greater than zero.")
 
     # 1. Fetch stock lot and golden master
-    lot = db.execute(select(StockLot).where(StockLot.id == lot_id)).scalar_one_or_none()
+    lot = db.execute(select(StockLot).where(StockLot.id == lot_id).with_for_update()).scalar_one_or_none()
     if not lot:
         raise HTTPException(status_code=404, detail=f"Stock lot {lot_id} not found.")
 
@@ -51,10 +51,17 @@ def request_transfer(
         )
 
     rem_qty = float(lot.qty_remaining or 0.0)
-    if rem_qty < requested_qty:
+    reserved_qty = db.execute(
+        select(func.coalesce(func.sum(TransferOrder.qty), 0)).where(
+            TransferOrder.lot_id == lot_id,
+            TransferOrder.state.in_(("REQUESTED", "TECHNICAL_REVIEW", "COMMERCIAL_REVIEW")),
+        )
+    ).scalar_one()
+    available_qty = rem_qty - float(reserved_qty or 0.0)
+    if available_qty < requested_qty:
         raise HTTPException(
             status_code=400,
-            detail=f"Requested quantity {requested_qty} exceeds available lot quantity {rem_qty}.",
+            detail=f"Requested quantity {requested_qty} exceeds available unreserved lot quantity {available_qty}.",
         )
 
     gm = db.execute(select(GoldenMaster).where(GoldenMaster.id == lot.golden_id)).scalar_one_or_none()
@@ -165,10 +172,17 @@ def review_transfer_gate(
     rationale: str,
     mtc_uploaded: bool | None = None,
     pmi_done: bool | None = None,
+    current_org_id: str | None = None,
+    user_role: str | None = None,
 ) -> TransferOrder:
     """Process a workflow state change or gate approval on a transfer requisition."""
     transfer = db.execute(select(TransferOrder).where(TransferOrder.id == transfer_id)).scalar_one_or_none()
     if not transfer:
+        raise HTTPException(status_code=404, detail=f"Transfer order {transfer_id} not found.")
+    if user_role is not None and user_role not in ("CHECKER", "ADMIN"):
+        raise HTTPException(status_code=403, detail="Transfer review requires CHECKER or ADMIN role.")
+
+    if current_org_id is not None and current_org_id not in (transfer.from_org, transfer.to_org):
         raise HTTPException(status_code=404, detail=f"Transfer order {transfer_id} not found.")
 
     old_state = transfer.state
@@ -193,6 +207,16 @@ def review_transfer_gate(
 
     target_state = valid_actions[action]
 
+    allowed_transitions = {
+        "REQUESTED": {"TECHNICAL_REVIEW", "REJECTED", "APPROVED"},
+        "TECHNICAL_REVIEW": {"COMMERCIAL_REVIEW", "REJECTED", "APPROVED"},
+        "COMMERCIAL_REVIEW": {"APPROVED", "REJECTED"},
+        "APPROVED": {"DISPATCHED", "REJECTED"},
+        "DISPATCHED": {"COMPLETED"},
+    }
+    if target_state not in allowed_transitions.get(old_state, set()):
+        raise HTTPException(status_code=409, detail=f"Cannot transition transfer from {old_state} to {target_state}.")
+
     # Update attributes
     if mtc_uploaded is not None:
         transfer.mtc_uploaded = mtc_uploaded
@@ -203,11 +227,11 @@ def review_transfer_gate(
         transfer.rejection_reason = rationale
 
     # If APPROVED: Deduct reserved quantity from stock lot
-    if target_state == "APPROVED" and old_state != "APPROVED":
-        lot = db.execute(select(StockLot).where(StockLot.id == transfer.lot_id)).scalar_one_or_none()
-        if lot:
-            current_rem = float(lot.qty_remaining or 0.0)
-            lot.qty_remaining = max(0.0, current_rem - float(transfer.qty))
+    if target_state == "APPROVED":
+        lot = db.execute(select(StockLot).where(StockLot.id == transfer.lot_id).with_for_update()).scalar_one_or_none()
+        if not lot or float(lot.qty_remaining or 0.0) < float(transfer.qty):
+            raise HTTPException(status_code=409, detail="Insufficient available lot quantity for this transfer.")
+        lot.qty_remaining = float(lot.qty_remaining) - float(transfer.qty)
 
     transfer.state = target_state
     transfer.reviewed_by = user_id
@@ -238,14 +262,17 @@ def list_transfers(
         .join(GoldenMaster, TransferOrder.golden_id == GoldenMaster.id)
     )
 
+    direction = direction.upper()
     if direction == "INCOMING":
-        stmt = stmt.where(TransferOrder.from_org == current_org_id)
-    elif direction == "OUTGOING":
         stmt = stmt.where(TransferOrder.to_org == current_org_id)
-    else:
+    elif direction == "OUTGOING":
+        stmt = stmt.where(TransferOrder.from_org == current_org_id)
+    elif direction == "ALL":
         stmt = stmt.where(
             (TransferOrder.from_org == current_org_id) | (TransferOrder.to_org == current_org_id)
         )
+    else:
+        raise HTTPException(status_code=400, detail="direction must be INCOMING, OUTGOING, or ALL.")
 
     stmt = stmt.order_by(TransferOrder.created_at.desc())
     rows = db.execute(stmt).all()

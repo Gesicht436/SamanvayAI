@@ -60,9 +60,11 @@ class TestRouteSecurity(unittest.TestCase):
         self.assertEqual(res_health.status_code, 200)
         self.assertEqual(res_health.json()["status"], "OK")
 
-        res_demo = self.client.post("/auth/demo-token", json={"sub": "test", "org_id": "OIL-1", "role": "MAKER"})
+        res_demo = self.client.post("/auth/demo-token", json={})
         self.assertEqual(res_demo.status_code, 200)
         self.assertIn("access_token", res_demo.json())
+        self.assertEqual(res_demo.json()["role"], "MAKER")
+        self.assertEqual(res_demo.json()["org_id"], "OIL-1")
 
         # Test normalize endpoint
         res_norm = self.client.post("/normalize", json={"text": "GT VALVE 2INCH", "category": "VALVES"})

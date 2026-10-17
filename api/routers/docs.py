@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.config import get_settings
 from api.database import get_db
 from api.models.entities import Document
 from api.security.jwt_auth import AuthUser, get_current_user
@@ -179,7 +180,10 @@ async def upload_document(
             detail="File upload payload is required.",
         )
 
-    file_bytes = await file.read()
+    max_bytes = get_settings().upload_max_mb * 1024 * 1024
+    file_bytes = await file.read(max_bytes + 1)
+    if len(file_bytes) > max_bytes:
+        raise HTTPException(status_code=413, detail="Uploaded file exceeds the configured size limit.")
     if not file_bytes:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -428,6 +432,9 @@ async def promote_all_document_lines(
     from api.models.entities import DocLine
     from api.services.docs import promote_doc_line_to_raw_item
 
+    doc = await db.scalar(select(Document).where(Document.id == document_id, Document.org_id == current_user.org_id))
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
     stmt = select(DocLine).where(DocLine.document_id == document_id, DocLine.raw_item_id.is_(None))
     res = await db.execute(stmt)
     lines = res.scalars().all()

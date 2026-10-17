@@ -1,12 +1,16 @@
 import asyncio
 import sys
 from collections.abc import AsyncGenerator
+from contextlib import contextmanager
 
+from fastapi import Depends
 from sqlalchemy import create_engine, text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from api.config import get_settings
+from api.security.jwt_auth import AuthUser, get_current_user
 
 # psycopg3 async requires SelectorEventLoop on Windows
 if sys.platform == "win32":
@@ -38,7 +42,26 @@ def get_async_engine():
 
 
 # Sync session factory
-SyncSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=get_sync_engine())
+SyncSessionLocal = sessionmaker(autocommit=False, autoflush=False, expire_on_commit=False, bind=get_sync_engine())
+
+
+@contextmanager
+def tenant_sync_session(org_id: str):
+    """Open a synchronous session with transaction-local tenant context for RLS."""
+    with SyncSessionLocal() as session:
+        session.execute(text("SELECT set_config('app.current_org', :org_id, false)"), {"org_id": org_id})
+        try:
+            yield session
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            try:
+                session.rollback()
+                session.execute(text("SELECT set_config('app.current_org', '', false)"))
+                session.commit()
+            except SQLAlchemyError:
+                session.rollback()
 
 # Async session factory
 AsyncSessionLocal = async_sessionmaker(
@@ -50,15 +73,23 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 
-async def get_db(org_id: str = "") -> AsyncGenerator[AsyncSession, None]:
+async def get_db(user: AuthUser = Depends(get_current_user)) -> AsyncGenerator[AsyncSession, None]:
     """Dependency that yields an async database session configured with tenant RLS context."""
     async with AsyncSessionLocal() as session:
-        if org_id:
-            # Set the tenant session variable for Row-Level Security
-            await session.execute(text("SET LOCAL app.current_org = :org_id"), {"org_id": org_id})
         try:
+            await session.execute(
+                text("SELECT set_config('app.current_org', :org_id, false)"),
+                {"org_id": user.org_id},
+            )
             yield session
             await session.commit()
         except Exception:
             await session.rollback()
             raise
+        finally:
+            try:
+                await session.rollback()
+                await session.execute(text("SELECT set_config('app.current_org', '', false)"))
+                await session.commit()
+            except SQLAlchemyError:
+                await session.rollback()

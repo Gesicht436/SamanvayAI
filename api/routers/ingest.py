@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, s
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.config import get_settings
 from api.database import get_db
 from api.security.jwt_auth import AuthUser, get_current_user
 from api.services.ingest import (
@@ -146,7 +147,9 @@ async def upload_document(
             detail="Authenticated user must belong to an organization to ingest documents.",
         )
 
-    file_bytes = await file.read()
+    file_bytes = await file.read(get_settings().upload_max_mb * 1024 * 1024 + 1)
+    if len(file_bytes) > get_settings().upload_max_mb * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Uploaded file exceeds the configured size limit.")
     if not file_bytes:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -188,7 +191,9 @@ async def enqueue_job(
             detail="Authenticated user must belong to an organization to ingest documents.",
         )
 
-    file_bytes = await file.read()
+    file_bytes = await file.read(get_settings().upload_max_mb * 1024 * 1024 + 1)
+    if len(file_bytes) > get_settings().upload_max_mb * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Uploaded file exceeds the configured size limit.")
     if not file_bytes:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -218,7 +223,7 @@ async def get_job(
     db: AsyncSession = Depends(get_db),
 ):
     """Returns the current state and result of a queued ingest job."""
-    job_info = await get_job_status(db, job_id=job_id)
+    job_info = await get_job_status(db, job_id=job_id, org_id=current_user.org_id)
     if not job_info:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -233,7 +238,9 @@ async def process_next_job(
     db: AsyncSession = Depends(get_db),
 ):
     """Dequeues and processes the next pending job using SELECT ... FOR UPDATE SKIP LOCKED (Section 4.1)."""
-    result = await process_next_ingest_job(db)
+    if current_user.role != "ADMIN":
+        raise HTTPException(status_code=403, detail="Job processing requires ADMIN role.")
+    result = await process_next_ingest_job(db, org_id=current_user.org_id)
     if not result:
         return IngestJobProcessResponse(
             processed=False,

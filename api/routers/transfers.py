@@ -9,10 +9,10 @@ Exposes REST endpoints for inter-CPSE surplus transfer orders:
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from api.database import SyncSessionLocal
+from api.database import tenant_sync_session
 from api.security.jwt_auth import AuthUser, get_current_user
 from api.services.transfer import list_transfers, request_transfer, review_transfer_gate
 
@@ -41,7 +41,7 @@ def create_transfer_requisition(
     user: AuthUser = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Initiate a Stream A inter-CPSE surplus transfer requisition."""
-    with SyncSessionLocal() as db:
+    with tenant_sync_session(user.org_id) as db:
         order = request_transfer(
             db=db,
             to_org_id=user.org_id,
@@ -73,11 +73,11 @@ def create_transfer_requisition(
 
 @router.get("")
 def get_transfers(
-    direction: str = "ALL",  # INCOMING, OUTGOING, ALL
+    direction: str = Query("ALL", pattern="^(ALL|INCOMING|OUTGOING)$"),
     user: AuthUser = Depends(get_current_user),
 ) -> dict[str, Any]:
     """List transfers involving the current organization."""
-    with SyncSessionLocal() as db:
+    with tenant_sync_session(user.org_id) as db:
         return list_transfers(db=db, current_org_id=user.org_id, direction=direction)
 
 
@@ -88,7 +88,9 @@ def update_transfer_gate(
     user: AuthUser = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Advance or reject a transfer requisition through Maker-Checker workflow."""
-    with SyncSessionLocal() as db:
+    if user.role not in ("CHECKER", "ADMIN"):
+        raise HTTPException(status_code=403, detail="Transfer review requires CHECKER or ADMIN role.")
+    with tenant_sync_session(user.org_id) as db:
         order = review_transfer_gate(
             db=db,
             transfer_id=id,
@@ -97,6 +99,8 @@ def update_transfer_gate(
             rationale=req.rationale,
             mtc_uploaded=req.mtc_uploaded,
             pmi_done=req.pmi_done,
+            current_org_id=user.org_id,
+            user_role=user.role,
         )
         return {
             "transfer_id": str(order.id),

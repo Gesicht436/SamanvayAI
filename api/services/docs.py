@@ -377,7 +377,15 @@ async def promote_doc_line_to_raw_item(
     actor_id: UUID | None = None,
 ) -> Any:
     """Promote an extracted document line item into a raw_item for downstream harmonization."""
-    stmt_line = select(DocLine).where(DocLine.id == doc_line_id, DocLine.document_id == document_id)
+    stmt_line = (
+        select(DocLine)
+        .join(Document, Document.id == DocLine.document_id)
+        .where(
+            DocLine.id == doc_line_id,
+            DocLine.document_id == document_id,
+            Document.org_id == org_id,
+        )
+    )
     res_line = await session.execute(stmt_line)
     line = res_line.scalar_one_or_none()
     if not line:

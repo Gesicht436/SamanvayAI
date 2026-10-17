@@ -2,6 +2,7 @@
 
 from functools import lru_cache
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -9,7 +10,7 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables and .env file."""
 
     database_url: str = "postgresql+psycopg://postgres:postgres@localhost:5432/samanvay"
-    jwt_secret: str = "samanvay-super-secret-development-jwt-key-2026"
+    jwt_secret: str = ""
 
     # Embeddings
     embedding_provider: str = "local"
@@ -31,10 +32,12 @@ class Settings(BaseSettings):
 
     # Runtime Modes
     clock_mode: str = "real"
-    demo_mode: bool = True
+    demo_mode: bool = False
+    demo_org_id: str = "OIL-1"
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
     erp_target: str = "sap"
     storage_path: str = "./data/storage"
-    upload_max_mb: int = 15
+    upload_max_mb: int = Field(default=15, ge=1, le=100)
 
     # ML & Observability
     ml_layer: str = "off"
@@ -45,6 +48,15 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
+    def validate_runtime_security(self) -> None:
+        if (
+            not self.jwt_secret
+            or len(self.jwt_secret) < 32
+            or self.jwt_secret.startswith("replace-this-")
+            or self.jwt_secret == "samanvay-super-secret-development-jwt-key-2026"
+        ):
+            raise ValueError("JWT_SECRET must be configured with at least 32 characters.")
 
 
 @lru_cache

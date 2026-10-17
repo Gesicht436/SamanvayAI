@@ -111,6 +111,7 @@ async def list_tasks_endpoint(
         kind=kind,
         limit=limit,
         offset=offset,
+        org_id=current_user.org_id,
     )
     return [_serialize_task(t) for t in tasks]
 
@@ -123,6 +124,8 @@ async def get_task_endpoint(
 ):
     """Retrieves a single stewardship task by ID."""
     task = await get_steward_task(db, task_id)
+    if (task.payload or {}).get("_org_id") != current_user.org_id:
+        raise HTTPException(status_code=404, detail="Steward task not found.")
     return _serialize_task(task)
 
 
@@ -143,6 +146,9 @@ async def approve_task_endpoint(
             },
         )
 
+    existing = await get_steward_task(db, task_id)
+    if (existing.payload or {}).get("_org_id") != current_user.org_id:
+        raise HTTPException(status_code=404, detail="Steward task not found.")
     task = await approve_steward_task(
         session=db,
         task_id=task_id,
@@ -172,6 +178,9 @@ async def reject_task_endpoint(
             },
         )
 
+    existing = await get_steward_task(db, task_id)
+    if (existing.payload or {}).get("_org_id") != current_user.org_id:
+        raise HTTPException(status_code=404, detail="Steward task not found.")
     task = await reject_steward_task(
         session=db,
         task_id=task_id,

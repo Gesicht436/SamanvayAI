@@ -22,7 +22,7 @@ from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 
 from api.extractors.registry import AttributeRole, default_registry
-from api.models.entities import GoldenMaster, RawItem, StewardTask
+from api.models.entities import RawItem, StewardTask
 
 ROLE_WEIGHTS: dict[str, int] = {
     AttributeRole.HARD.value: 2,
@@ -312,6 +312,7 @@ def get_dashboard_summary(db: Session, org_id: str | None = None) -> dict[str, A
             func.count(StewardTask.id),
         )
         .where(StewardTask.state == "OPEN")
+        .where(StewardTask.payload["_org_id"].astext == org_id if org_id else True)
         .group_by("domain")
     )
     domain_counts = dict(db.execute(domain_query).all())
@@ -331,9 +332,10 @@ def get_dashboard_summary(db: Session, org_id: str | None = None) -> dict[str, A
 
     # 3. Harmonization metrics (before vs after)
     raw_count_stmt = select(func.count(RawItem.id))
-    golden_count_stmt = select(func.count(GoldenMaster.id))
+    golden_count_stmt = select(func.count(func.distinct(RawItem.golden_id))).where(RawItem.golden_id.is_not(None))
     if org_id:
         raw_count_stmt = raw_count_stmt.where(RawItem.org_id == org_id)
+        golden_count_stmt = golden_count_stmt.where(RawItem.org_id == org_id)
     raw_total = db.scalar(raw_count_stmt) or 0
     golden_total = db.scalar(golden_count_stmt) or 0
     compression_ratio = round(raw_total / golden_total, 2) if golden_total > 0 else 1.0
